@@ -6,24 +6,20 @@
 <style id="app-css">
 /* Layout concept: fixed pastel sidebar, card-grid dashboard in the middle, original mascot peeking up from behind the dashboard on the right. Creator mode adds a peach management layer on the same visual identity. */
 :root{
-  --bg:#F2FAFD; --card:#FFFFFF; --primary:#A8E4F5; --powder:#DDF4FC;
-  --peach:#FFB66F; --cyan:#57CBE5; --ink:#454B55; --muted:#66707C;
-  --line:rgba(69,75,85,.12); --shadow:0 10px 30px -12px rgba(87,160,185,.35);
-  --on-accent:#1E3640; --side:#E6F6FC; --ok:#2E9E6B; --warn:#C9791F; --bad:#C2475B;
+  --bg:#F8FBFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#EFF6FF;
+  --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096;
+  --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28);
+  --on-accent:#30445D; --side:#EAF3FF; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70; color-scheme:light;
   --font-display:'Fredoka','Nunito',system-ui,sans-serif;
   --font-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0F1A22; --card:#17262F; --primary:#2B5A6C; --powder:#1D3340; --ink:#E4EEF2; --muted:#9DB0BA;
-    --line:rgba(228,238,242,.12); --shadow:0 10px 30px -12px rgba(0,0,0,.6); --side:#132129;
-    --ok:#5FD39B; --warn:#F2B35E; --bad:#F08A9B; color-scheme:dark;
+    --bg:#F8FBFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#EFF6FF; --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096; --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28); --side:#EAF3FF; --on-accent:#30445D; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70; color-scheme:light;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0F1A22; --card:#17262F; --primary:#2B5A6C; --powder:#1D3340; --ink:#E4EEF2; --muted:#9DB0BA;
-  --line:rgba(228,238,242,.12); --shadow:0 10px 30px -12px rgba(0,0,0,.6); --side:#132129;
-  --ok:#5FD39B; --warn:#F2B35E; --bad:#F08A9B; color-scheme:dark;
+  --bg:#F8FBFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#EFF6FF; --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096; --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28); --side:#EAF3FF; --on-accent:#30445D; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70; color-scheme:light;
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
@@ -298,6 +294,18 @@ textarea.in{min-height:96px;resize:vertical}
 .osd summary{display:none}
 @media (max-width:1023px){.olay{grid-template-columns:minmax(0,1fr)}.olay aside{position:static;order:-1}.osd summary{display:block;cursor:pointer;font-weight:800;padding:10px 14px;background:var(--card);border-radius:18px;border:1px solid var(--line);margin-bottom:8px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Pastel blue, soft yellow and white theme */
+:root, :root[data-theme="dark"] {
+  color-scheme: light;
+  --bg:#F8FBFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#EFF6FF;
+  --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096;
+  --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28);
+  --on-accent:#30445D; --side:#EAF3FF; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: light; }
+}
 </style>
 
 <div id="root"></div>
@@ -331,7 +339,7 @@ const DEFAULT_SITE = {
   commissionStatus: "OPEN",
   defaultCurrency: "IDR",
   mascot: { image: "" },
-  appearance: { accent: "#57CBE5", banner: "", widgets: { intro: true, featured: true, latest: true, services: true, status: true, quick: true } },
+  appearance: { accent: "#B9D8F7", banner: "", widgets: { intro: true, featured: true, latest: true, services: true, status: true, quick: true } },
   socials: [
     { id: "instagram", label: "Instagram", url: "" },
     { id: "facebook", label: "Facebook", url: "" },
@@ -550,11 +558,11 @@ const PAGES = [
   { id: "about", label: "About Me", icon: "user" },
   { id: "gallery", label: "Portfolio", icon: "image" },
   { id: "services", label: "Commission Services", icon: "sparkles" },
+  { id: "track", label: "Track Order", icon: "check" },
   { id: "board", label: "Commission Board", icon: "flow" },
   { id: "workflow", label: "How to Order", icon: "flow" },
   { id: "terms", label: "Terms of Service", icon: "file" },
   { id: "contact", label: "Contact", icon: "mail" },
-  { id: "track", label: "Track Order", icon: "check" },
   { id: "commission", label: "Price List", icon: "pen", hidden: true },
 ];
 const ROUTES = PAGES.map((p) => p.id).concat(["creator"]);
@@ -926,19 +934,16 @@ function Home({ go, open }) {
 
 function About() {
   const p = CONFIG.profile, a = p.about;
-  const av = safeImg(a.image) || safeImg(p.avatar);
   const spec = a.specialties && a.specialties.length ? a.specialties : CONFIG.services.map((s) => s.title);
   return (
     <div className="page">
       <PageHead crumb="ABOUT ME" title={"About " + p.name}>{T("about_sub")}</PageHead>
       <div className="grid">
-        <section className="card tint span-5" style={{ textAlign: "center" }}>
-          <div className="art" style={{ aspectRatio: "4/5", maxWidth: 320, margin: "0 auto" }}>
-            {av ? <img src={av} alt={p.name} /> : <div style={{ display: "grid", placeItems: "center", height: "100%", padding: 20 }}><div style={{ width: "70%" }}><MascotArt /></div></div>}
-          </div>
-          <h3 style={{ marginTop: 14, fontSize: "1.5rem" }}>{p.name}</h3>
-          <p className="muted">{p.title}</p>
-          {p.bio && <p style={{ marginTop: 10 }}>{p.bio}</p>}
+        <section className="card tint span-5" style={{ textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 220 }}>
+          <span className="tag" style={{ alignSelf: "flex-start" }}>ARTIST PROFILE</span>
+          <h2 style={{ marginTop: 14, fontSize: "1.8rem" }}>{p.name}</h2>
+          <p className="muted" style={{ marginTop: 4 }}>{p.title}</p>
+          {p.bio && <p style={{ marginTop: 14 }}>{p.bio}</p>}
         </section>
         <div className="span-7" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <section className="card">
@@ -1219,7 +1224,7 @@ const TABS = [
   { id: "overview", label: "Overview", icon: "grid" },
   { id: "orders", label: "Client Orders", icon: "mail" },
   { id: "offers", label: "Service details", icon: "sparkles" },
-  { id: "profile", label: "Profile", icon: "user" },
+  { id: "profile", label: "Edit Profile", icon: "user" },
   { id: "media", label: "All images", icon: "image" },
   { id: "gallery", label: "Gallery", icon: "image" },
   { id: "commission", label: "Commission", icon: "pen" },
@@ -1346,6 +1351,7 @@ function ProfilePanel() {
   const set = (path) => (v) => upd((n) => setPath(n, path, v));
   return (
     <div className="panel">
+      <div className="note info">Edit nama artis, foto profil, bio, deskripsi, informasi singkat, dan tautan media sosial di sini. Setelah selesai, klik <b>Save changes</b> pada bar Creator Mode agar perubahan dipublikasikan.</div>
       <section className="card">
         <h2 style={{ marginBottom: 14 }}>Identity</h2>
         <div className="form">
@@ -1633,7 +1639,7 @@ function WorkflowPanel() {
   );
 }
 const WIDGETS = [["intro", "Artist introduction"], ["featured", "Featured artwork"], ["latest", "Latest works"], ["services", "Services"], ["status", "Commission status"], ["quick", "Quick information"]];
-const SWATCHES = ["#57CBE5", "#FFB66F", "#7C9CF5", "#F58FB1", "#6CCB9A", "#B79CF0"];
+const SWATCHES = ["#B9D8F7", "#FFF0B8", "#D7E9FF", "#E8DDFB", "#D9F0E3", "#F6DDE8"];
 function AppearancePanel() {
   const { site, upd } = useCreator();
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
