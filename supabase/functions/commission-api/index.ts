@@ -38,7 +38,12 @@ Deno.serve(async (req) => {
       const order = body?.order;
       const form = order?.form;
       const email = clean(form?.email, 254).toLowerCase();
-      const id = clean(order?.id, 40);
+      const { data: generatedId, error: idError } = await db.rpc("next_commission_id");
+      if (idError || !generatedId) {
+        console.error("commission ID generation failed", idError);
+        return json({ error: "Could not generate a commission number. Please try again." }, 500);
+      }
+      const id = clean(generatedId, 40);
       if (!id || !/^[A-Z0-9-]{8,40}$/.test(id)) return json({ error: "Invalid request ID." }, 400);
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "A valid client email is required." }, 400);
       if (!order?.serviceTitle || !form || typeof form !== "object") return json({ error: "Incomplete commission request." }, 400);
@@ -69,6 +74,7 @@ Deno.serve(async (req) => {
         estimate: Number(order?.estimate?.total) || 0,
         custom: Boolean(order?.estimate?.custom),
         "emailHash": emailHash,
+        client_name: clean(form?.name, 120) || "Client",
         proposal: null,
         updates: [],
         "finalFiles": [],
@@ -87,6 +93,25 @@ Deno.serve(async (req) => {
         return json({ error: "Could not initialize order tracking." }, 500);
       }
       return json({ track: safeTrack }, 201);
+    }
+
+    if (action === "public_board") {
+      const { data, error } = await db.from("order_tracks")
+        .select("id,created_at,client_name,serviceTitle,status")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) {
+        console.error("public commission board query failed", error);
+        return json({ error: "Could not load the public commission board." }, 500);
+      }
+      const items = (data || []).map((item) => ({
+        id: item.id,
+        createdAt: item.created_at,
+        clientName: item.client_name,
+        serviceTitle: item.serviceTitle,
+        status: item.status,
+      }));
+      return json({ items });
     }
 
     if (action === "track") {
