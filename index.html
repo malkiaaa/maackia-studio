@@ -1,4 +1,31 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ctext x=%2232%22 y=%2249%22 font-size=%2252%22 text-anchor=%22middle%22%3E%E2%98%81%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* Creator visual editing + shared About image */
+.about-profile-card{position:relative;isolation:isolate;overflow:hidden;min-height:380px;padding:0!important;border:1px solid rgba(255,255,255,.8)!important;background:linear-gradient(135deg,#DDF7FC 0%,#FFFFFF 54%,#FFF2C7 100%);box-shadow:0 16px 36px -22px rgba(91,157,177,.42)}
+.about-profile-card__image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:-2}
+.about-profile-card__veil{position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(255,255,255,1) 0%,rgba(255,255,255,.96) 30%,rgba(255,255,255,.70) 57%,rgba(255,255,255,.12) 100%)}
+.about-profile-card__content{position:relative;z-index:1;margin-top:auto;padding:76px 22px 22px;display:flex;flex-direction:column;align-items:flex-start}
+.about-image-actions{position:absolute;z-index:3;top:14px;right:14px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 28px)}
+.about-image-error{position:absolute;z-index:4;left:14px;right:14px;top:58px;padding:8px 10px;border-radius:12px;background:#fff;color:var(--bad);font-size:.8rem;font-weight:800}
+.home-intro-text{max-width:calc(100% - 164px)}
+.home-about-image{position:absolute;right:22px;top:50%;transform:translateY(-50%);width:clamp(100px,18%,158px);aspect-ratio:3/4;object-fit:cover;border:5px solid rgba(255,255,255,.86);border-radius:22px;box-shadow:0 12px 28px -14px rgba(47,79,94,.42)}
+.text-edit-dock{position:fixed;left:50%;bottom:calc(78px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:125;width:min(680px,calc(100vw - 28px));padding:14px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 55px -22px rgba(30,54,64,.35);display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(16px)}
+.text-edit-dock textarea{width:100%;min-height:84px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;color:var(--ink);background:#fff}
+.text-edit-dock .btns{display:flex;gap:8px;flex-wrap:wrap}
+[data-ed]{cursor:text}
+@media(max-width:767px){
+ .about-profile-card{min-height:330px}
+ .about-profile-card__content{padding:70px 16px 18px}
+ .about-image-actions{top:10px;right:10px}
+ .home-intro-text{max-width:calc(100% - 104px)}
+ .home-about-image{right:12px;width:92px;border-width:3px;border-radius:16px}
+ .text-edit-dock{bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:12px;border-radius:16px}
+}
+@media(max-width:380px){
+ .home-intro-text{max-width:100%;padding-right:0}
+ .home-about-image{position:relative;top:auto;right:auto;transform:none;width:100%;max-width:120px;margin:14px 0 0 auto}
+}
+
+</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ctext x=%2232%22 y=%2249%22 font-size=%2252%22 text-anchor=%22middle%22%3E%E2%98%81%EF%B8%8F%3C/text%3E%3C/svg%3E">
 </head><body>
 <title>Malkiaa Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -637,7 +664,7 @@ const DEFAULT_SITE = {
     location: "Indonesia",
     languages: "Indonesian / English",
     platform: "VGen",
-    about: { image: "", introduction: "", interests: [], philosophy: "", specialties: ["Character Illustration", "VTuber Illustration", "Game Character Illustration", "Graphic Design", "Custom Artwork"] },
+    about: { image: "", cardImage: "", introduction: "", interests: [], philosophy: "", specialties: ["Character Illustration", "VTuber Illustration", "Game Character Illustration", "Graphic Design", "Custom Artwork"] },
   },
   commissionStatus: "OPEN",
   defaultCurrency: "IDR",
@@ -1169,7 +1196,7 @@ function Home({ go, open }) {
   return (
     <div className="grid page">
       {w.intro && <section className="card tint span-7" style={introStyle}>
-        <div className="intro-text" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="intro-text home-intro-text" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span className="tag" style={{ alignSelf: "flex-start", background: "var(--card)" }}>{CONFIG.profile.title}</span>
           <h2 style={{ fontSize: "2.1rem", lineHeight: 1.05 }}>{CONFIG.profile.name}</h2>
           <p>{CONFIG.profile.intro}</p>
@@ -1178,6 +1205,7 @@ function Home({ go, open }) {
             <Btn kind="ghost" onClick={() => go("services")}>{T("btn_commission")}</Btn>
           </div>
         </div>
+        {safeImg(CONFIG.profile.about.cardImage) && <img className="home-about-image" src={safeImg(CONFIG.profile.about.cardImage)} alt={CONFIG.profile.name + " profile"} />}
       </section>}
 
       {w.featured && feat && <section className="card span-5 row-2 lift featured-section">
@@ -1260,6 +1288,45 @@ function ReviewsCarousel() {
   );
 }
 
+function AboutProfileCard({ p, a }) {
+  const cc = useCreator();
+  const canEdit = !!(cc && cc.editing);
+  const fileRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const src = safeImg(a.cardImage);
+  const pickPhoto = async (e) => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file || !cc) return;
+    setBusy(true); setErr("");
+    try {
+      const url = await storeImage(file, 1200);
+      cc.upd((n) => { n.profile = n.profile || {}; n.profile.about = n.profile.about || {}; n.profile.about.cardImage = url; });
+    } catch (error) {
+      setErr(error && error.message === "type" ? "Use a PNG, JPG, WebP or GIF image." : "Could not upload this image.");
+    } finally { setBusy(false); }
+  };
+  const removePhoto = () => cc && cc.upd((n) => { n.profile.about = n.profile.about || {}; n.profile.about.cardImage = ""; });
+  return (
+    <section className="card about-profile-card span-5">
+      {src && <img className="about-profile-card__image" src={src} alt={p.name + " profile card"} />}
+      {src && <div className="about-profile-card__veil" />}
+      {canEdit && <div className="about-image-actions" data-no-edit="true">
+        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pickPhoto} />
+        <button type="button" className="btn cyan sm" disabled={busy} onClick={() => fileRef.current && fileRef.current.click()}>{busy ? "Uploading…" : src ? "Change image" : "Add image"}</button>
+        {src && <button type="button" className="btn ghost sm" disabled={busy} onClick={removePhoto}>Remove</button>}
+      </div>}
+      <div className="about-profile-card__content">
+        <span className="tag" style={{ alignSelf: "flex-start" }}>ARTIST PROFILE</span>
+        <h2 style={{ marginTop: 14, fontSize: "1.8rem" }}>{p.name}</h2>
+        <p className="muted" style={{ marginTop: 4 }}>{p.title}</p>
+        {p.bio && <p style={{ marginTop: 14, whiteSpace: "pre-line" }}>{p.bio}</p>}
+      </div>
+      {err && <div className="about-image-error" role="status">{err}</div>}
+    </section>
+  );
+}
+
 function About() {
   const p = CONFIG.profile, a = p.about;
   const spec = a.specialties && a.specialties.length ? a.specialties : CONFIG.services.map((s) => s.title);
@@ -1267,13 +1334,7 @@ function About() {
     <div className="page">
       <PageHead crumb="ABOUT ME" title={"About " + p.name}>{T("about_sub")}</PageHead>
       <div className="grid">
-        <section className="card tint span-5" style={{ textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 220 }}>
-          {safeImg(a.cardImage) && <div style={{ width:"100%", maxWidth:220, aspectRatio:"16/10", borderRadius:18, overflow:"hidden", marginBottom:14, background:"var(--powder)" }}><img src={safeImg(a.cardImage)} alt={p.name + " profile card"} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} /></div>}
-          <span className="tag" style={{ alignSelf: "flex-start" }}>ARTIST PROFILE</span>
-          <h2 style={{ marginTop: 14, fontSize: "1.8rem" }}>{p.name}</h2>
-          <p className="muted" style={{ marginTop: 4 }}>{p.title}</p>
-          {p.bio && <p style={{ marginTop: 14 }}>{p.bio}</p>}
-        </section>
+        <AboutProfileCard p={p} a={a} />
         <div className="span-7" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <section className="card">
             <h2 style={{ marginBottom: 8 }}>Introduction</h2>
@@ -1295,7 +1356,7 @@ function About() {
           </div>}
           <section className="card">
             <h3 style={{ marginBottom: 12 }}>{T("find_online")}</h3>
-            <div className="btns">{CONFIG.socials.map((s) => <LinkBtn key={s.id} s={s} kind="cyan" size="sm" />)}</div>
+            <div className="btns">{CONFIG.socials.map((x) => <LinkBtn key={x.id} s={x} kind="cyan" size="sm" />)}</div>
           </section>
         </div>
       </div>
@@ -1679,7 +1740,7 @@ function ProfilePanel() {
         <h2 style={{ marginBottom: 14 }}>Identity</h2>
         <div className="form">
           <ImagePicker label="Profile picture" value={p.avatar} onChange={set(["profile", "avatar"])} maxDim={600} round />
-          <ImagePicker label="About Me ID card image" value={a.cardImage || ""} onChange={set(["profile", "about", "cardImage"])} maxDim={1200} hint="Displayed inside the Artist Profile card on the About Me page." />
+          <ImagePicker label="About Me ID card image" value={a.cardImage || ""} onChange={set(["profile", "about", "cardImage"])} maxDim={1200} hint="Shared image: updates both the Home dashboard intro card and the About Me Artist Profile card." />
           <ImagePicker label="Mascot character (transparent PNG works best)" value={site.mascot.image} onChange={set(["mascot", "image"])} maxDim={1400} />
           <TextIn label="Artist name" value={p.name} onChange={set(["profile", "name"])} />
           <TextIn label="Title" value={p.title} onChange={set(["profile", "title"])} />
@@ -3271,15 +3332,64 @@ function App() {
   };
 
   const view = route === "creator" && !creatorOn ? "home" : route;
+  const isTextEditing = creatorOn && editing && view !== "creator";
+  const mainRef = useRef(null);
+  const [editText, setEditText] = useState(null);
+
+  useEffect(() => {
+    const root = mainRef.current;
+    if (!root) return;
+    const overrides = site.textOverrides || {};
+    const selector = "h1,h2,h3,h4,p,.tag,small,span,b,strong,a,button,label,li,summary,blockquote";
+    const applyOverrides = () => {
+      root.querySelectorAll(selector).forEach((el) => {
+        if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]") || el.children.length) return;
+        const current = el.textContent || "";
+        if (!current.trim() || document.activeElement === el) return;
+        if (el.dataset.orig === undefined || (el.dataset.shown !== undefined && current !== el.dataset.shown)) el.dataset.orig = current;
+        const original = el.dataset.orig;
+        const shown = Object.prototype.hasOwnProperty.call(overrides, original) ? overrides[original] : original;
+        if (current !== shown) el.textContent = shown;
+        el.dataset.shown = shown;
+        if (isTextEditing) el.dataset.ed = "1";
+        else if (el.dataset.ed) delete el.dataset.ed;
+      });
+    };
+    applyOverrides();
+    const observer = new MutationObserver(applyOverrides);
+    observer.observe(root, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [site.textOverrides, isTextEditing, view]);
+
+  const onEditTextClick = (event) => {
+    if (!isTextEditing) return;
+    const el = event.target.closest && event.target.closest("[data-ed]");
+    if (!el || el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]")) return;
+    event.preventDefault(); event.stopPropagation();
+    setEditText({ orig: el.dataset.orig || el.textContent, val: el.dataset.shown || el.textContent });
+  };
+  const saveTextEdit = (restore) => {
+    if (!editText) return;
+    const { orig, val } = editText;
+    const next = (val || "").trim();
+    upd((n) => {
+      n.textOverrides = n.textOverrides || {};
+      if (restore || !next || next === orig) delete n.textOverrides[orig];
+      else n.textOverrides[orig] = next;
+    });
+    setEditText(null);
+  };
+
   return (
-    <CreatorCtx.Provider value={{ site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing: creatorOn && editing, setEditing }}>
+    <CreatorCtx.Provider value={{ creatorOn, site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing: creatorOn && editing, setEditing }}>
       <div className="shell">
         <Sidebar route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <main className="main">
           <TopBar route={view} go={go} query={query} setQuery={(v) => { setQuery(v); if (v) setCat("all"); }} />
           {creatorOn && view!=="creator" && <div className="creator-bar-wrap"><CreatorBar go={go} /></div>}
-          <div className="main-inner" key={view}>
+          <div className="main-inner" key={view} ref={mainRef} onClickCapture={onEditTextClick}>
+            {BUILDER_PAGES.some(([id])=>id===view) && <PageBuilderBlocks page={view} />}
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
@@ -3293,12 +3403,20 @@ function App() {
             {view.startsWith("service-") && <ServiceDetail id={view.slice(8)} go={go} />}
             {view.startsWith("order-") && <OrderFlow id={view.slice(6)} go={go} />}
             {view === "creator" && creatorOn && <CreatorPage />}
-            {BUILDER_PAGES.some(([id])=>id===view) && <PageBuilderBlocks page={view} />}
           </div>
         </main>
         {openId && <Lightbox id={openId} close={close} step={step} />}
         {gate && <AccessModal onClose={() => setGate(false)} onSuccess={onGateOk} />}
         {toast && <div className="toast" role="status">{toast}</div>}
+        {editText && <div className="text-edit-dock" role="dialog" aria-label="Edit page text" data-no-edit="true">
+          <b>Edit page text</b>
+          <textarea autoFocus rows={3} value={editText.val} onChange={(e) => setEditText({ ...editText, val: e.target.value })} />
+          <div className="btns">
+            <button className="btn peach sm" onClick={() => saveTextEdit(false)}>Save text</button>
+            <button className="btn ghost sm" onClick={() => saveTextEdit(true)}>Restore original</button>
+            <button className="btn ghost sm" onClick={() => setEditText(null)}>Cancel</button>
+          </div>
+        </div>}
       </div>
     </CreatorCtx.Provider>
   );
