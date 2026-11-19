@@ -2386,9 +2386,12 @@ const Store = {
     const sb = await this.client();
     if (!sb && _sbStatus !== "unconfigured") throw new Error("Could not connect to the database. Please check your Supabase configuration.");
     const yr = new Date().getFullYear();
-    // The server assigns a globally sequential COMMISSION number in shared mode.
-    // Local demo mode uses a visibly non-production fallback number.
-    const id = sb ? "PENDING" : "COMMISSION-" + yr + "-" + (Math.floor(Math.random() * 9000) + 1000);
+    // Shared mode receives an atomic global sequence from Supabase.
+    // Local demo mode keeps a separate sequence in this browser only.
+    const seqKey = "mk-commission-seq-" + yr;
+    const localSeq = Number(localStorage.getItem(seqKey) || 0) + 1;
+    if (!sb) localStorage.setItem(seqKey, String(localSeq));
+    const id = sb ? "PENDING" : "COMMISSION-" + yr + "-" + String(localSeq).padStart(4, "0");
     const now = new Date().toISOString();
     const tier = X(s).tiers.find((t) => t.id === f.tier);
     const est = { lines: c.lines, licenseLabel: c.lic ? c.lic.label : "", licenseAmount: c.lv, licenseCustom: c.lc, total: c.total, custom: c.custom };
