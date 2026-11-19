@@ -2,7 +2,7 @@
 // Public actions: submit, public_board, track, respond, upload.
 // Owner-only actions: test, retry. Owner access is verified against public.admins.
 // Required Supabase secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
-// Required email secret: RESEND_API_KEY (email features remain disabled until configured).
+// Required email secrets: GAS_WEBHOOK_URL and GAS_WEBHOOK_SECRET (server-side only).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
@@ -41,7 +41,6 @@ const allowedTypes = new Set([
 type EmailConfig = {
   artistEmail?: string;
   fromName?: string;
-  fromEmail?: string;
   sendArtist?: boolean;
   sendClient?: boolean;
 };
@@ -80,6 +79,19 @@ async function recordNotification(
   return data?.id || null;
 }
 
+async function findSentNotification(db: any, orderId: string, kind: string) {
+  const { data, error } = await db.from("notifications")
+    .select("*")
+    .eq("order_id", orderId)
+    .eq("kind", kind)
+    .eq("status", "sent")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) console.error("sent notification lookup failed", error);
+  return data || null;
+}
+
 async function deliverEmail(
   db: any,
   config: EmailConfig,
@@ -91,58 +103,90 @@ async function deliverEmail(
     kind: string;
     existingId?: string;
     previousAttempts?: number;
+    idempotencyKey?: string;
   },
 ) {
-  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const webhookUrl = Deno.env.get("GAS_WEBHOOK_URL");
+  const webhookSecret = Deno.env.get("GAS_WEBHOOK_SECRET");
   const fromName = clean(config.fromName, 100) || "Malkiaa Studio";
-  const fromEmail = clean(config.fromEmail, 200);
+  const recipient = clean(input.to, 254).toLowerCase();
   const attempts = (input.previousAttempts || 0) + 1;
   let status = "failed";
   let message = "";
 
-  if (!apiKey) {
-    message = "RESEND_API_KEY is not configured in Supabase Edge Function secrets.";
-  } else if (!fromEmail || !fromEmail.includes("@")) {
-    message = "A valid verified From Email must be saved in Email Notification Settings.";
+  // The database log is the first duplicate guard. Apps Script also enforces
+  // the same key under LockService, covering concurrent requests and log races.
+  if (input.orderId && input.kind !== "test") {
+    const alreadySent = await findSentNotification(db, input.orderId, input.kind);
+    if (alreadySent) {
+      return {
+        id: alreadySent.id,
+        status: "sent",
+        message: "Already recorded as sent; duplicate delivery suppressed.",
+        attempts: Number(alreadySent.attempts) || attempts,
+        recipient,
+        kind: input.kind,
+        duplicate: true,
+      };
+    }
+  }
+
+  if (!webhookUrl || !webhookSecret) {
+    message = "GAS_WEBHOOK_URL and GAS_WEBHOOK_SECRET must be configured in Supabase Edge Function secrets.";
+  } else if (!recipient || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(recipient)) {
+    message = "A valid notification recipient email is required.";
   } else {
     try {
-      const response = await fetch("https://api.resend.com/emails", {
+      const idempotencyKey = clean(
+        input.idempotencyKey || (input.orderId || "manual") + ":" + input.kind,
+        180,
+      );
+      const response = await fetch(webhookUrl, {
         method: "POST",
-        headers: {
-          "Authorization": "Bearer " + apiKey,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: fromName + " <" + fromEmail + ">",
-          to: [input.to],
-          subject: input.subject,
+          secret: webhookSecret,
+          idempotencyKey,
+          orderId: input.orderId,
+          kind: input.kind,
+          to: recipient,
+          subject: clean(input.subject, 240),
           html: input.html,
+          text: "Malkiaa Studio notification: " + clean(input.subject, 240),
+          fromName,
         }),
       });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        message = "Resend error " + response.status + ": " +
-          clean(result?.message || result?.error || "Email provider rejected the request.", 500);
-      } else {
+      const raw = await response.text();
+      let result: any = {};
+      try { result = JSON.parse(raw); } catch { /* handled as provider response error below */ }
+
+      if (response.ok && result?.ok === true &&
+          (result?.status === "sent" || result?.duplicate === true)) {
         status = "sent";
-        message = "Accepted by Resend. Inbox delivery is not guaranteed.";
+        message = result.duplicate
+          ? "Google Apps Script confirmed this notification was already sent; duplicate suppressed."
+          : "Accepted by Google Apps Script MailApp. Inbox delivery is not guaranteed.";
+      } else {
+        message = "Google Apps Script error" +
+          (response.status ? " " + response.status : "") + ": " +
+          clean(result?.message || result?.error || raw || "Webhook returned an invalid response.", 500);
       }
     } catch (error) {
-      message = "Email request failed: " + clean((error as Error)?.message, 500);
+      message = "Google Apps Script request failed: " + clean((error as Error)?.message, 500);
     }
   }
 
   const id = await recordNotification(db, {
     order_id: input.orderId,
     kind: input.kind,
-    recipient: input.to,
+    recipient,
     status,
     message,
     attempts,
     sent_at: status === "sent" ? new Date().toISOString() : null,
   }, input.existingId);
 
-  return { id, status, message, attempts, recipient: input.to, kind: input.kind };
+  return { id, status, message, attempts, recipient, kind: input.kind };
 }
 
 function commissionEmailHtml(order: any, clientName: string, isClient: boolean) {
@@ -174,9 +218,11 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
   const clientName = clean(form?.name, 120) || "Client";
   const clientEmail = clean(form?.email, 254).toLowerCase();
 
-  if (config.sendArtist !== false && clean(config.artistEmail, 254)) {
+  const artistEmail = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
+
+  if (config.sendArtist !== false) {
     results.push(await deliverEmail(db, config, {
-      to: clean(config.artistEmail, 254),
+      to: artistEmail,
       subject: "[Malkiaa Studio] New Commission Request " + order.id,
       html: commissionEmailHtml(order, clientName, false),
       orderId: order.id,
@@ -437,14 +483,14 @@ Deno.serve(async (req) => {
       const owner = await requireOwner(req, db);
       if (!owner.ok) return json({ error: owner.error }, owner.status);
       const config = await getEmailConfig(db);
-      const recipient = clean(config.artistEmail, 254);
-      if (!recipient) return json({ error: "Save the Artist Notification Email in Creator Dashboard → Email Notifications first." }, 400);
+      const recipient = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
       const result = await deliverEmail(db, config, {
         to: recipient,
         subject: "[Malkiaa Studio] Test notification",
-        html: "<p>This is a test email from Malkiaa Studio. If you received it, the Resend connection is working.</p>",
+        html: "<p>This is a test email from Malkiaa Studio. If you received it, Google Apps Script MailApp is working.</p>",
         orderId: "TEST",
         kind: "test",
+        idempotencyKey: "TEST:" + crypto.randomUUID(),
       });
       return json({ status: result.status, message: result.message, attempts: result.attempts });
     }
