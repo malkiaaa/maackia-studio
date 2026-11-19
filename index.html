@@ -2092,7 +2092,7 @@ function BuilderBlockView({ block, editing, selected, change }) {
   if(block.type==="gallery")return <div style={{...style,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{(block.images||[]).filter(Boolean).map((src,i)=><div key={i}>{image(src,"Gallery image")}</div>)}</div>;
   if(block.type==="video"){
     const u=safeUrl(block.url);let embed="";
-    try{const x=new URL(u);if(x.hostname==="youtu.be")embed="https://www.youtube-nocookie.com/embed/"+x.pathname.slice(1);else if(x.hostname.endsWith("youtube.com"))embed="https://www.youtube-nocookie.com/embed/"+(x.searchParams.get("v")||x.pathname.split("/").pop());else if(x.hostname.endsWith("vimeo.com"))embed="https://player.vimeo.com/video/"+x.pathname.split("/").filter(Boolean).pop();}catch(e){}
+    try{const x=new URL(u);if(x.hostname==="youtu.be")embed="https://www.youtube-nocookie.com/embed/"+x.pathname.slice(1);else if(x.hostname==="youtube.com"||x.hostname.endsWith(".youtube.com"))embed="https://www.youtube-nocookie.com/embed/"+(x.searchParams.get("v")||x.pathname.split("/").pop());else if(x.hostname==="vimeo.com"||x.hostname.endsWith(".vimeo.com"))embed="https://player.vimeo.com/video/"+x.pathname.split("/").filter(Boolean).pop();}catch(e){}
     return embed?<div style={style}><div style={{position:"relative",aspectRatio:"16/9"}}><iframe src={embed} title={block.title||"Embedded video"} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{position:"absolute",inset:0,width:"100%",height:"100%",border:0,borderRadius:style.borderRadius}}/></div></div>:<p className="muted">Add a YouTube or Vimeo link to show a video.</p>;
   }
   if(block.type==="audio")return safeAudio?<div style={style}><b>{block.title||"Audio"}</b><audio controls preload="none" src={safeAudio} style={{display:"block",width:"100%",marginTop:8}}/></div>:null;
@@ -2138,13 +2138,13 @@ function PageBuilderBlocks({ page }) {
     <div className="inpage-blocks">
       {blocks.map((b,i)=><article key={b.id} className={"inpage-block "+(editing&&selected===b.id?"selected":"")} onClick={()=>editing&&setSelected(b.id)} draggable={editing} onDragStart={()=>setDragId(b.id)} onDragOver={e=>editing&&e.preventDefault()} onDrop={e=>{e.preventDefault();if(dragId)moveTo(dragId,b.id);setDragId(null);}}>
         {editing&&selected===b.id&&<div className="context-toolbar"><span>{blockLabel(b.type)}</span><button onClick={e=>{e.stopPropagation();duplicate(b.id);}}>Duplicate</button><button onClick={e=>{e.stopPropagation();remove(b.id);}}>Delete</button></div>}
-        {editing&&selected===b.id&&["heading1","heading2","heading3"].includes(b.type)
+        {editing&&selected===b.id&&["heading","heading1","heading2","heading3"].includes(b.type)
           ? <input className="inline-edit-heading" value={b.title||b.content||""} onClick={e=>e.stopPropagation()} onChange={e=>change(b.id,"title",e.target.value)} aria-label="Edit heading"/>
-          : editing&&selected===b.id&&["paragraph","quote","callout","note","testimonial","container"].includes(b.type)
+          : editing&&selected===b.id&&["text","paragraph","quote","callout","note","testimonial","container"].includes(b.type)
           ? <textarea className="inline-edit-text" value={b.content||""} onClick={e=>e.stopPropagation()} onChange={e=>change(b.id,"content",e.target.value)} aria-label="Edit block text"/>
           : <BuilderBlockView block={b} editing={editing} selected={selected===b.id}/>}
         {editing&&selected===b.id&&<div className="block-properties" onClick={e=>e.stopPropagation()}>
-          {["heading1","heading2","heading3","note","callout","link","button","audio","video","image-text","testimonial","container"].includes(b.type)&&<TextIn label="Title / label" value={b.title} onChange={v=>change(b.id,"title",v)}/>}
+          {["heading","heading1","heading2","heading3","note","callout","link","button","audio","video","image-text","testimonial","container"].includes(b.type)&&<TextIn label="Title / label" value={b.title} onChange={v=>change(b.id,"title",v)}/>}
           {["image","image-text"].includes(b.type)&&<ImagePicker label="Image" value={b.image} onChange={v=>change(b.id,"image",v)}/>}
           {["link","button","audio","video"].includes(b.type)&&<TextIn label="URL" value={b.url} onChange={v=>change(b.id,"url",v)} hint={b.type==="audio"?"Use a public direct audio URL.":b.type==="video"?"YouTube or Vimeo URL.":"Use an HTTPS destination."}/>}
           {b.type==="gallery"&&<TextIn label="Image URLs (one per line)" value={(b.images||[]).join("\n")} onChange={v=>updateLines("images",v)} multiline/>}
