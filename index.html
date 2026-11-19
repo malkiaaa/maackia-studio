@@ -2147,8 +2147,8 @@ function PageBuilderBlocks({ page }) {
           {["heading1","heading2","heading3","note","callout","link","button","audio","video","image-text","testimonial","container"].includes(b.type)&&<TextIn label="Title / label" value={b.title} onChange={v=>change(b.id,"title",v)}/>}
           {["image","image-text"].includes(b.type)&&<ImagePicker label="Image" value={b.image} onChange={v=>change(b.id,"image",v)}/>}
           {["link","button","audio","video"].includes(b.type)&&<TextIn label="URL" value={b.url} onChange={v=>change(b.id,"url",v)} hint={b.type==="audio"?"Use a public direct audio URL.":b.type==="video"?"YouTube or Vimeo URL.":"Use an HTTPS destination."}/>}
-          {b.type==="gallery"&&<TextIn label="Image URLs (one per line)" value={(b.images||[]).join("\\n")} onChange={v=>updateLines("images",v)} multiline/>}
-          {["bulleted","numbered","checklist","cards","grid","columns2","columns3"].includes(b.type)&&<TextIn label={b.type.startsWith("columns")?"Column content (one per line)":"Items (one per line)"} value={(b.type.startsWith("columns")?b.columns:b.items||[]).join("\\n")} onChange={v=>updateLines(b.type.startsWith("columns")?"columns":"items",v)} multiline/>}
+          {b.type==="gallery"&&<TextIn label="Image URLs (one per line)" value={(b.images||[]).join("\n")} onChange={v=>updateLines("images",v)} multiline/>}
+          {["bulleted","numbered","checklist","cards","grid","columns2","columns3"].includes(b.type)&&<TextIn label={b.type.startsWith("columns")?"Column content (one per line)":"Items (one per line)"} value={(b.type.startsWith("columns")?b.columns:b.items||[]).join("\n")} onChange={v=>updateLines(b.type.startsWith("columns")?"columns":"items",v)} multiline/>}
           {b.type==="weather"&&<TextIn label="City / location" value={b.city} onChange={v=>change(b.id,"city",v)}/>}
           {b.type==="clock"&&<TextIn label="Timezone" value={b.timezone} onChange={v=>change(b.id,"timezone",v)}/>}
           <div className="block-style-controls"><label>Font size <input type="number" min="10" max="120" value={b.fontSize||16} onChange={e=>change(b.id,"fontSize",e.target.value)}/></label><label>Font <select value={b.fontFamily||"inherit"} onChange={e=>change(b.id,"fontFamily",e.target.value)}><option value="inherit">Default</option><option value="Georgia,serif">Georgia</option><option value="Arial,sans-serif">Arial</option><option value="Verdana,sans-serif">Verdana</option><option value="cursive">Cursive</option></select></label><label>Align <select value={b.align||"left"} onChange={e=>change(b.id,"align",e.target.value)}><option>left</option><option>center</option><option>right</option></select></label><label>Text <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.color)?b.color:"#3F4D61"} onChange={e=>change(b.id,"color",e.target.value)}/></label><label>Background <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.background)?b.background:"#FFFFFF"} onChange={e=>change(b.id,"background",e.target.value)}/></label><label>Width <select value={b.width||"100%"} onChange={e=>change(b.id,"width",e.target.value)}><option>100%</option><option>75%</option><option>50%</option><option>fit-content</option></select></label><label>Padding <input type="number" min="0" max="100" value={b.padding??16} onChange={e=>change(b.id,"padding",e.target.value)}/></label><label>Radius <input type="number" min="0" max="80" value={b.radius??12} onChange={e=>change(b.id,"radius",e.target.value)}/></label></div>
@@ -2849,21 +2849,24 @@ function App() {
   const [route, go] = useHashRoute();
   const [saved, setSaved] = useState(loadSaved);
   const [site, setSite] = useState(saved);
+  const [publishedLoaded, setPublishedLoaded] = useState(false);
   // Load the published site content from Supabase for every visitor.
   useEffect(() => {
     let active = true;
     (async () => {
       try {
         const sb = await loadSupabaseClient();
-        if (!sb) return;
+        if (!sb) { if(active)setPublishedLoaded(true); return; }
         const result = await Store.api("get_site", {});
         if (active && result.site && typeof result.site === "object") {
           const remote = mergeDeep(DEFAULT_SITE, result.site);
           setSaved(remote);
           setSite(remote);
         }
+        if(active)setPublishedLoaded(true);
       } catch (error) {
         console.warn("Could not load published site content:", error);
+        if(active)setPublishedLoaded(true);
       }
     })();
     return () => { active = false; };
@@ -2915,9 +2918,10 @@ function App() {
   useEffect(() => {
     let active=true;
     if (!creatorOn) { setDraftLoaded(false); return; }
+    if (!publishedLoaded) return;
     Store.api("get_draft_site",{},true).then(r=>{ if(!active)return; if(r.site?.builder) setSite(p=>mergeDeep(p,{builder:r.site.builder})); setDraftLoaded(true); }).catch(()=>{ if(active)setDraftLoaded(true); });
     return ()=>{active=false;};
-  },[creatorOn]);
+  },[creatorOn,publishedLoaded]);
   useEffect(() => {
     if (route === "creator" && !auth.loading && !creatorOn) { go("home"); setToast("That area is restricted. Please sign in."); }
   }, [route, auth.loading, creatorOn]);
