@@ -1822,15 +1822,27 @@ function EmailPanel() {
   const save = async () => {
     if (!cfg.artistEmail) { setMsg({ text: "Please enter the artist notification email.", ok: false }); return; }
     setSaving(true);
-    // Persist locally (the actual secret RESEND_API_KEY lives only in Supabase Edge Function secrets)
-    setEmailCfgLocal(cfg);
-    // Also persist artist email preference to Supabase app_settings if connected
-    const sb = await Store.client().catch(() => null);
-    if (sb) {
-      await sb.from("app_settings").upsert({ key: "email_config", value: { artistEmail: cfg.artistEmail, fromName: cfg.fromName, fromEmail: cfg.fromEmail, sendArtist: cfg.sendArtist, sendClient: cfg.sendClient } }, { onConflict: "key" }).catch(() => {});
+    setMsg({ text: "", ok: false });
+    try {
+      const sb = await Store.client();
+      if (!sb) throw new Error("Connect the Supabase project first.");
+      const { error } = await sb.from("app_settings").upsert({
+        key: "email_config",
+        value: {
+          artistEmail: cfg.artistEmail.trim(),
+          fromName: cfg.fromName.trim() || "Malkiaa Studio",
+          fromEmail: cfg.fromEmail.trim(),
+          sendArtist: cfg.sendArtist,
+          sendClient: cfg.sendClient,
+        },
+      }, { onConflict: "key" });
+      if (error) throw new Error(error.message);
+      setEmailCfgLocal(cfg);
+      setMsg({ text: "Email settings saved to Supabase.", ok: true });
+    } catch (error) {
+      setMsg({ text: "Could not save email settings: " + authErr(error), ok: false });
     }
     setSaving(false);
-    setMsg({ text: "Email settings saved.", ok: true });
   };
 
   const sendTest = async () => {
@@ -1845,7 +1857,7 @@ function EmailPanel() {
   return (
     <div className="panel">
       <section className="card">
-        <div className="card-head"><h2>Email Notification Settings</h2><span style={{ fontSize: ".8rem", fontWeight: 800, color: "var(--muted)" }}>Resend + Edge Function</span></div>
+        <div className="card-head"><h2>Email Notification Settings</h2><span style={{ fontSize: ".8rem", fontWeight: 800, color: "var(--muted)" }}>Resend · commission-api</span></div>
         <p className="muted" style={{ marginBottom: 16 }}>Email notifications are sent by commission-api after a request is saved. Your Resend API key must be stored as a Supabase Edge Function secret and is never exposed in the browser.</p>
         <div className="form">
           <div className="field full"><span>Artist Notification Email *</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="artist@yourdomain.com" /><small className="muted">New commission alerts go here. This address is saved securely in the Supabase app_settings table.</small></div>
