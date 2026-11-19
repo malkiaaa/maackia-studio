@@ -626,6 +626,10 @@ Deno.serve(async (req) => {
         console.error("published site content save failed", error);
         return json({ error: "Could not save website content." }, 500);
       }
+      // Once a draft is published, remove the old private draft so it cannot
+      // overwrite the newly published version when the owner opens the editor.
+      const { error: draftError } = await db.from("app_settings").delete().eq("key", "site_draft");
+      if (draftError) console.error("published draft cleanup failed", draftError);
       return json({ ok: true });
     }
 
