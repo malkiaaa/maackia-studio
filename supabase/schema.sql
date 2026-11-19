@@ -8,6 +8,33 @@ begin;
 
 create extension if not exists pgcrypto;
 
+-- Atomic yearly sequence for public commission IDs.
+create table if not exists public.commission_counters (
+  year integer primary key,
+  last_number integer not null default 0
+);
+
+create or replace function public.next_commission_id()
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  current_year integer := extract(year from now())::integer;
+  next_number integer;
+begin
+  insert into public.commission_counters (year, last_number)
+  values (current_year, 1)
+  on conflict (year) do update
+    set last_number = public.commission_counters.last_number + 1
+  returning last_number into next_number;
+  return 'COMMISSION-' || current_year::text || '-' || lpad(next_number::text, 4, '0');
+end;
+$;
+revoke all on function public.next_commission_id() from public, anon, authenticated;
+grant execute on function public.next_commission_id() to service_role;
+
 -- Creator allow-list. Add the owner's auth.users UUID here after creating the Auth user.
 create table if not exists public.admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -62,6 +89,7 @@ create table if not exists public.order_tracks (
   estimate numeric,
   custom boolean not null default false,
   "emailHash" text not null,
+  client_name text not null default 'Client',
   proposal jsonb,
   updates jsonb not null default '[]'::jsonb,
   "finalFiles" jsonb not null default '[]'::jsonb
@@ -120,6 +148,7 @@ create index if not exists track_attempts_created_at_idx
 
 -- Enable RLS on every application table.
 alter table public.admins enable row level security;
+alter table public.commission_counters enable row level security;
 alter table public.commission_requests enable row level security;
 alter table public.order_tracks enable row level security;
 alter table public.commission_management enable row level security;
@@ -180,7 +209,7 @@ create policy creator_read_notifications on public.notifications
 -- Explicit table grants: no anon access. service_role bypasses RLS in Edge Functions.
 revoke all on public.admins, public.commission_requests, public.order_tracks,
   public.commission_management, public.app_settings, public.email_notification_log,
-  public.notifications, public.track_attempts from anon, authenticated;
+  public.notifications, public.track_attempts, public.commission_counters from anon, authenticated;
 
 grant select on public.admins to authenticated;
 grant select, insert, update on public.commission_requests to authenticated;
@@ -192,7 +221,7 @@ grant select on public.notifications to authenticated;
 -- Edge Functions use the service role only on the server.
 grant all on public.admins, public.commission_requests, public.order_tracks,
   public.commission_management, public.app_settings, public.email_notification_log,
-  public.notifications, public.track_attempts to service_role;
+  public.notifications, public.track_attempts, public.commission_counters to service_role;
 
 -- Private references bucket. Upload/download authorization is issued by commission-api.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
