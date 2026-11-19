@@ -550,6 +550,7 @@ const PAGES = [
   { id: "about", label: "About Me", icon: "user" },
   { id: "gallery", label: "Portfolio", icon: "image" },
   { id: "services", label: "Commission Services", icon: "sparkles" },
+  { id: "board", label: "Commission Board", icon: "flow" },
   { id: "workflow", label: "How to Order", icon: "flow" },
   { id: "terms", label: "Terms of Service", icon: "file" },
   { id: "contact", label: "Contact", icon: "mail" },
@@ -2385,12 +2386,9 @@ const Store = {
     const sb = await this.client();
     if (!sb && _sbStatus !== "unconfigured") throw new Error("Could not connect to the database. Please check your Supabase configuration.");
     const yr = new Date().getFullYear();
-    let id = null;
-    for (let i = 0; i < 8 && !id; i++) {
-      const n = "MALK-" + yr + "-" + (Math.floor(Math.random() * 9000) + 1000);
-      id = n; /* server assigns the final ID */
-    }
-    if (!id) throw new Error("Could not generate a unique Request ID. Please try again.");
+    // The server assigns a globally sequential COMMISSION number in shared mode.
+    // Local demo mode uses a visibly non-production fallback number.
+    const id = sb ? "PENDING" : "COMMISSION-" + yr + "-" + (Math.floor(Math.random() * 9000) + 1000);
     const now = new Date().toISOString();
     const tier = X(s).tiers.find((t) => t.id === f.tier);
     const est = { lines: c.lines, licenseLabel: c.lic ? c.lic.label : "", licenseAmount: c.lv, licenseCustom: c.lc, total: c.total, custom: c.custom };
@@ -2573,7 +2571,7 @@ function OrderFlow({ id, go }) {
     </div></div>
   );
   const body = [
-    <div className="form" key="0">{tx("name", "Your name *")}{tx("email", "Email address *", { hint: err.email || "Only used for communication and order updates. It is never shown publicly." })}{tx("username", "Preferred username")}{tx("ig", "Instagram")}{tx("x", "X / Twitter")}{tx("tt", "TikTok")}{tx("yt", "YouTube")}{tx("other", "Other link")}</div>,
+    <div className="form" key="0">{tx("name", "Your name *")}<div className="note info full">Public name notice: The name you enter here will appear on the public Commission Board alongside your commission number, service, and status. Please enter a name you are comfortable displaying publicly. Your email and private order details will not be shown.</div>{tx("email", "Email address *", { hint: err.email || "Only used for communication and order updates. It is never shown publicly." })}{tx("username", "Preferred username")}{tx("ig", "Instagram")}{tx("x", "X / Twitter")}{tx("tt", "TikTok")}{tx("yt", "YouTube")}{tx("other", "Other link")}</div>,
     <div className="form" key="1">
       <Field label="What would you like me to create? *" className="full"><select className="in" value={f.want} onChange={(e) => set("want")(e.target.value)}><option value="">Select...</option>{["Character Illustration", "VTuber Illustration", "Game Character", "Chibi", "Character Design", "Other"].concat(CONFIG.services.map((q) => q.title)).filter((v, i, a) => a.indexOf(v) === i).map((o) => <option key={o}>{o}</option>)}</select>{err.want && <div className="err">{err.want}</div>}</Field>
       <Field label="Commission type *" className="full"><div className="list">{x.tiers.map((t) => <label key={t.id} className="switch"><span><b>{t.name}</b> <small className="muted">{t.price > 0 ? idr(t.price) : "Custom quote"}</small></span><input type="radio" name="tier" checked={f.tier === t.id} onChange={() => set("tier")(t.id)} /></label>)}</div>{err.tier && <div className="err">{err.tier}</div>}</Field>
@@ -2605,6 +2603,40 @@ function OrderFlow({ id, go }) {
   );
 }
 
+/* ---- visitor: public commission board */
+function CommissionBoard() {
+  const [items, setItems] = useState(null);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const result = await Store.api("public_board", {});
+        if (active) setItems(Array.isArray(result.items) ? result.items : []);
+      } catch (e) {
+        if (active) setMsg("The public commission board is temporarily unavailable. Please try again later.");
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+  return (
+    <div className="page">
+      <PageHead crumb="PUBLIC COMMISSIONS" title="Commission Board">A public overview of current and previous commission requests. Client names are shown as entered in the order form.</PageHead>
+      <div className="note info" style={{ marginBottom: 14 }}>For privacy, this board only displays the commission number, client name, service, and status. Contact details, references, pricing, and private order notes are not displayed.</div>
+      {msg && <div className="note bad" role="alert">{msg}</div>}
+      {items === null && !msg ? <div className="card empty">Loading commission board...</div> : !items || !items.length ? <div className="card empty">No commission requests have been listed yet.</div> :
+        <div className="grid">
+          {items.map((item) => <section className="card span-6" key={item.id}>
+            <div className="meta" style={{ justifyContent: "space-between" }}><span className="tag">{item.id}</span><span className="tag">{item.status || "Pending Review"}</span></div>
+            <h3 style={{ marginTop: 12 }}>{item.clientName || "Client"}</h3>
+            <p className="muted" style={{ marginTop: 4 }}>{item.serviceTitle || "Commission"}</p>
+            <small className="muted" style={{ display: "block", marginTop: 12 }}>Submitted {fmtDate(item.createdAt)}</small>
+          </section>)}
+        </div>}
+    </div>
+  );
+}
+
 /* ---- visitor: tracking */
 function Track() {
   const [rid, setRid] = useState(""); const [em, setEm] = useState(""); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [q, setQ] = useState("");
@@ -2621,7 +2653,7 @@ function Track() {
   const idx = t ? TL.findIndex((a) => a[1].includes(t.status)) : -1, p = t && t.proposal;
   return (
     <div className="page"><PageHead crumb="TRACK ORDER" title="Track Your Order">Enter your Request ID and the email you used when ordering.</PageHead><StoreBanner />
-      <form className="card form" onSubmit={look}>{<TextIn label="Request ID" value={rid} onChange={setRid} placeholder="MALK-2026-0000" />}<TextIn label="Email" value={em} onChange={setEm} /><div className="full"><Btn type="submit" disabled={busy || !rid || !em}>{busy ? "Checking..." : "Find my order"}</Btn></div>{msg && <div className="note bad full" role="alert">{msg}</div>}</form>
+      <form className="card form" onSubmit={look}>{<TextIn label="Request ID" value={rid} onChange={setRid} placeholder="COMMISSION-2026-0001" />}<TextIn label="Email" value={em} onChange={setEm} /><div className="full"><Btn type="submit" disabled={busy || !rid || !em}>{busy ? "Checking..." : "Find my order"}</Btn></div>{msg && <div className="note bad full" role="alert">{msg}</div>}</form>
       {t && <div className="grid" style={{ marginTop: 18 }}>
         <section className="card span-12"><div className="meta"><b>{t.id}</b><span className="tag">{t.serviceTitle}</span><span className="tag">{t.status}</span><span className="tag">Payment: {t.payment}</span></div>
           <div className="stages" style={{ marginTop: 14 }}>{TL.map((a, i) => <div key={a[0]} className="stage" style={i <= idx ? { background: "var(--cyan)", color: "var(--on-accent)" } : undefined}>{a[0]}</div>)}</div>
@@ -2870,6 +2902,7 @@ function App() {
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} />}
             {view === "services" && <Services go={go} setCat={setCat} />}
+            {view === "board" && <CommissionBoard />}
             {view === "terms" && <Terms lang={lang} setLang={setLang} go={go} />}
             {view === "workflow" && <Workflow go={go} />}
             {view === "contact" && <Contact />}
