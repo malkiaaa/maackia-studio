@@ -36,7 +36,7 @@ function doPost(e) {
     const fromName = String(payload.fromName || "Malkiaa Studio").trim().slice(0, 100);
     const idempotencyKey = String(payload.idempotencyKey || "").trim();
 
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(to)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
       return jsonResponse({ ok: false, status: "failed", message: "A valid recipient email is required." });
     }
     if (!subject || !html || html.length > 100000 || !idempotencyKey || idempotencyKey.length > 180) {
