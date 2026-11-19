@@ -1169,6 +1169,7 @@ function About() {
       <PageHead crumb="ABOUT ME" title={"About " + p.name}>{T("about_sub")}</PageHead>
       <div className="grid">
         <section className="card tint span-5" style={{ textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 220 }}>
+          {safeImg(a.cardImage) && <div style={{ width:"100%", maxWidth:220, aspectRatio:"16/10", borderRadius:18, overflow:"hidden", marginBottom:14, background:"var(--powder)" }}><img src={safeImg(a.cardImage)} alt={p.name + " profile card"} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} /></div>}
           <span className="tag" style={{ alignSelf: "flex-start" }}>ARTIST PROFILE</span>
           <h2 style={{ marginTop: 14, fontSize: "1.8rem" }}>{p.name}</h2>
           <p className="muted" style={{ marginTop: 4 }}>{p.title}</p>
@@ -1579,6 +1580,7 @@ function ProfilePanel() {
         <h2 style={{ marginBottom: 14 }}>Identity</h2>
         <div className="form">
           <ImagePicker label="Profile picture" value={p.avatar} onChange={set(["profile", "avatar"])} maxDim={600} round />
+          <ImagePicker label="About Me ID card image" value={a.cardImage || ""} onChange={set(["profile", "about", "cardImage"])} maxDim={1200} hint="Displayed inside the Artist Profile card on the About Me page." />
           <ImagePicker label="Mascot character (transparent PNG works best)" value={site.mascot.image} onChange={set(["mascot", "image"])} maxDim={1400} />
           <TextIn label="Artist name" value={p.name} onChange={set(["profile", "name"])} />
           <TextIn label="Title" value={p.title} onChange={set(["profile", "title"])} />
@@ -1899,21 +1901,40 @@ function AppearancePanel() {
 function MediaPanel() {
   const { site, upd } = useCreator();
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
+  const addArtwork = () => upd((n) => {
+    n.artworks.unshift({ id:uid("a"), title:"New artwork", category:(n.categories[0]||{}).id||"", year:"", image:"", description:"", tools:"", notes:"" });
+  });
+  const removeArtwork = (id) => upd((n) => {
+    n.artworks = n.artworks.filter((a) => a.id !== id);
+    if (n.featuredId === id) n.featuredId = (n.artworks[0]||{}).id||"";
+  });
   const groups = [
-    ["Site images", [["Profile picture", ["profile", "avatar"], 600, true], ["Mascot", ["mascot", "image"], 1400], ["Home banner", ["appearance", "banner"], 1800]]],
-    ["Artworks", site.artworks.map((a, i) => [a.title || "Artwork " + (i + 1), ["artworks", i, "image"], 1800])],
+    ["Site images", [["Profile picture", ["profile", "avatar"], 600, true], ["About Me ID card", ["profile","about","cardImage"], 1200], ["Mascot", ["mascot", "image"], 1400], ["Home banner", ["appearance", "banner"], 1800]]],
     ["Services", site.services.map((x, i) => [x.title, ["services", i, "image"], 1400])],
     ["Price examples", site.pricing.flatMap((g, gi) => g.items.map((it, ii) => [g.title + ": " + it.name, ["pricing", gi, "items", ii, "image"], 1400]))],
   ];
   return (
     <div className="panel">
-      <div className="note info">Every image on the site in one place. Upload to replace, or Remove to go back to the placeholder.</div>
+      <div className="note info">Manage images used across the website. Use Remove on an image picker to clear it. Add or delete portfolio images below; all changes are saved with Creator Mode.</div>
       {groups.map(([t, items]) => (
         <section key={t} className="card">
           <h2 style={{ marginBottom: 14 }}>{t}</h2>
-          <div className="form">{items.map(([l, pth, m, r]) => <ImagePicker key={pth.join(".")} label={l} value={getPath(site, pth)} onChange={sets(pth)} maxDim={m} round={r} />)}</div>
+          <div className="form">{items.map(([l, pth, m, r]) => <ImagePicker key={pth.join(".")} label={l} value={getPath(site, pth) || ""} onChange={sets(pth)} maxDim={m} round={r} />)}</div>
         </section>
       ))}
+      <section className="card">
+        <div className="card-head"><h2>Portfolio images ({site.artworks.length})</h2><Btn size="sm" icon="plus" onClick={addArtwork}>Add image</Btn></div>
+        <p className="muted" style={{marginBottom:12}}>Add creates a new portfolio item. Set its image here, then edit its title and details in Creator Dashboard → Gallery.</p>
+        <div className="list">
+          {site.artworks.map((a,i) => <div className="rowi" key={a.id}>
+            <div className="thumb">{safeImg(a.image) ? <img src={safeImg(a.image)} alt="" /> : <Icon name="image" />}</div>
+            <div className="grow"><b>{a.title || "Untitled artwork"}</b><small className="muted">Portfolio image {i+1}</small></div>
+            <div style={{minWidth:180,flex:"1 1 220px"}}><ImagePicker label="Image" value={a.image||""} onChange={sets(["artworks",i,"image"])} maxDim={1800}/></div>
+            <ConfirmDelete onYes={() => removeArtwork(a.id)} label="Delete image" />
+          </div>)}
+          {!site.artworks.length && <p className="muted">No portfolio images yet. Add one to begin.</p>}
+        </div>
+      </section>
     </div>
   );
 }
@@ -2504,6 +2525,17 @@ const Store = {
     return list.map((o) => ({ ...o, ...(man[o.id] || {}) }));
   },
 
+  async deleteOrder(id) {
+    const sb = await this.client();
+    if (sb) {
+      await this.api("delete_commission", { id }, true);
+      return;
+    }
+    const orders = lsGet("mk-orders"); delete orders[id]; lsSet("mk-orders", orders);
+    const tracks = lsGet("mk-tracks"); delete tracks[id]; lsSet("mk-tracks", tracks);
+    const manage = lsGet("mk-manage"); delete manage[id]; lsSet("mk-manage", manage);
+  },
+
   async uploadReference(file, orderId) {
     const sb = await this.client();
     if (sb) {
@@ -2933,7 +2965,7 @@ function NotifPanel() {
 }
 
 function OrdersPanel() {
-  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState("");
+  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
   const [connStatus] = useConnectionStatus();
   const load = () => Store.allOrders().then((a) => setList(a.sort((x, y) => (y.createdAt || y.created_at || "").localeCompare(x.createdAt || x.created_at || "")))).catch((e) => setErr("Could not load requests: " + (e && e.message || "")));
   useEffect(() => {
@@ -2953,7 +2985,13 @@ function OrdersPanel() {
   return (
     <div className="panel"><StoreBanner />{err && <div className="note bad">{err}</div>}<NotifPanel />
       <div className="grid">{stats.map(([l, v]) => <div key={l} className="card stat" style={{ gridColumn: "span 2" }}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
-      <section className="card"><h2 style={{ marginBottom: 12 }}>Client requests</h2>{list === null ? <p className="muted">Loading...</p> : list.length === 0 ? <p className="muted">No requests yet.</p> : <div className="list">{list.map((o) => <button key={o.id} className="rowi" style={{ textAlign: "left", cursor: "pointer", width: "100%" }} onClick={() => setSel(o)}><div className="grow"><b>{o.id} - {o.form.name}</b><small className="muted">{o.form.email} / {o.serviceTitle} / {fmtDate(o.createdAt)} / {idr(o.estimate.total)}</small></div><span className="tag">{o.status}</span></button>)}</div>}</section>
+      <section className="card"><h2 style={{ marginBottom: 12 }}>Client requests</h2>{list === null ? <p className="muted">Loading...</p> : list.length === 0 ? <p className="muted">No requests yet.</p> : <div className="list">{list.map((o) => <div key={o.id} className="rowi">
+        <button type="button" onClick={() => setSel(o)} style={{flex:1,minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
+          <div className="grow"><b>{o.id} - {(o.form||{}).name||"Client"}</b><small className="muted">{(o.form||{}).email||""} / {o.serviceTitle} / {fmtDate(o.createdAt||o.created_at)} / {idr((o.estimate||{}).total||0)}</small></div>
+        </button>
+        <span className="tag">{o.status}</span>
+        <button className="ib bad" type="button" disabled={deleting===o.id} title="Delete commission" aria-label={"Delete commission "+o.id} onClick={async()=>{if(!window.confirm("Permanently delete commission "+o.id+"? This cannot be undone."))return;setDeleting(o.id);setErr("");try{await Store.deleteOrder(o.id);await load();}catch(e){setErr("Could not delete commission: "+(e.message||""));}finally{setDeleting("");}}}><Icon name="trash"/></button>
+      </div>)}</div>}</section>
     </div>
   );
 }
