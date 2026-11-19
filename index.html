@@ -320,6 +320,30 @@ textarea.in{min-height:96px;resize:vertical}
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) { color-scheme: light; }
 }
+
+.inpage-builder{margin-top:22px;display:flex;flex-direction:column;gap:12px}
+.inpage-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;border:1px dashed var(--cyan);border-radius:18px;background:color-mix(in srgb,var(--primary) 28%,white)}
+.inpage-top>span{display:flex;flex-direction:column}.inpage-top small{font-size:.75rem;color:var(--muted)}
+.inpage-add{position:relative;display:flex;gap:6px;min-width:min(100%,280px)}
+.inpage-add input{min-width:0;width:230px;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:inherit;background:white;color:var(--ink)}
+.slash-menu{position:absolute;z-index:50;right:0;top:calc(100% + 6px);width:min(320px,90vw);max-height:300px;overflow:auto;background:white;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column}
+.slash-menu button{display:flex;justify-content:space-between;gap:12px;border:0;background:transparent;padding:9px 11px;border-radius:10px;text-align:left;cursor:pointer;color:var(--ink)}
+.slash-menu button:hover{background:var(--powder)}.slash-menu small{color:var(--muted)}
+.inpage-blocks{display:flex;flex-direction:column;gap:10px}
+.inpage-block{position:relative;border:1px solid transparent;border-radius:18px;padding:12px;min-width:0;transition:border-color .15s,background .15s}
+.inpage-builder.is-editing .inpage-block{cursor:grab}
+.inpage-builder.is-editing .inpage-block:hover{border-color:color-mix(in srgb,var(--cyan) 55%,transparent);background:color-mix(in srgb,var(--powder) 40%,transparent)}
+.inpage-block.selected{border:1px solid var(--cyan)!important;background:color-mix(in srgb,var(--primary) 24%,white)!important}
+.context-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:.75rem;color:var(--muted)}
+.context-toolbar span{margin-right:auto;font-weight:800}.context-toolbar button{border:1px solid var(--line);background:white;border-radius:999px;padding:5px 10px;font:inherit;cursor:pointer}
+.inline-edit-heading{display:block;width:100%;border:1px solid var(--cyan);border-radius:10px;padding:8px;font:600 1.7rem var(--font-display);color:var(--ink);background:white}
+.inline-edit-text{display:block;width:100%;min-height:90px;border:1px solid var(--cyan);border-radius:10px;padding:10px;font:inherit;color:var(--ink);background:white;resize:vertical}
+.block-properties{display:flex;flex-direction:column;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.block-properties .field{max-width:100%}.block-style-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.block-style-controls label{display:flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;color:var(--muted)}
+.block-style-controls input,.block-style-controls select{max-width:105px;border:1px solid var(--line);border-radius:8px;padding:4px;background:white;color:var(--ink)}
+.inpage-empty{border:1px dashed var(--line);border-radius:14px;background:transparent;color:var(--muted);padding:14px;cursor:pointer;text-align:left}
+@media(max-width:700px){.inpage-top{align-items:stretch}.inpage-add{width:100%}.inpage-add input{flex:1;width:100%}.block-style-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.inpage-block{padding:8px}}
 </style>
 
 <div id="root"></div>
@@ -1265,7 +1289,6 @@ const CreatorCtx = createContext(null);
 const useCreator = () => useContext(CreatorCtx);
 const TABS = [
   { id: "overview", label: "Overview", icon: "grid" },
-  { id: "builder", label: "Website Builder", icon: "layout" },
   { id: "orders", label: "Client Orders", icon: "mail" },
   { id: "reviews", label: "Client Reviews", icon: "star" },
   { id: "offers", label: "Service details", icon: "sparkles" },
@@ -1282,26 +1305,19 @@ const TABS = [
 ];
 
 function CreatorBar({ go }) {
-  const { dirty, saving, save, discard, exit, msg } = useCreator();
-  const [confirm, setConfirm] = useState(false);
-  return (
-    <div>
-      <div className="cbar" role="region" aria-label="Creator mode">
-        <b><Icon name="lock" /> CREATOR MODE ACTIVE {dirty && <span className="unsaved">Unsaved changes</span>}</b>
-        <div className="btns">
-          <Btn kind="ghost" size="sm" onClick={() => go("creator")}>Dashboard</Btn>
-          {dirty && <Btn kind="ghost" size="sm" onClick={discard}>Discard</Btn>}
-          <Btn kind="cyan" size="sm" icon="save" disabled={!dirty || saving} onClick={save}>{saving ? "Saving..." : "Save changes"}</Btn>
-          {confirm
-            ? <><Btn kind="danger" size="sm" onClick={exit}>{dirty ? "Exit and discard" : "Confirm exit"}</Btn><Btn kind="ghost" size="sm" onClick={() => setConfirm(false)}>Stay</Btn></>
-            : <Btn kind="ghost" size="sm" icon="logout" onClick={() => (dirty ? setConfirm(true) : exit())}>Logout</Btn>}
-        </div>
-      </div>
-      {msg && <div className={"note " + (msg.err ? "bad" : "ok")} style={{ marginBottom: 14 }} role="status">{msg.err || msg.ok}</div>}
+  const { dirty, saving, save, discard, exit, msg, editing, setEditing } = useCreator();
+  const [confirm,setConfirm]=useState(false);
+  return <div><div className="cbar" role="region" aria-label="Creator mode">
+    <b><Icon name="lock"/> CREATOR MODE {editing?<span className="tag">EDITING</span>:<span className="tag">PREVIEW</span>}{dirty&&<span className="unsaved">Draft changes</span>}</b>
+    <div className="btns">
+      <Btn kind={editing?"cyan":"ghost"} size="sm" onClick={()=>setEditing(!editing)}>{editing?"Preview mode":"Edit this page"}</Btn>
+      <Btn kind="ghost" size="sm" onClick={()=>go("creator")}>Manage orders</Btn>
+      {dirty&&<Btn kind="ghost" size="sm" onClick={discard}>Discard</Btn>}
+      <Btn kind="cyan" size="sm" icon="save" disabled={!dirty||saving} onClick={save}>{saving?"Publishing…":"Publish changes"}</Btn>
+      {confirm?<><Btn kind="danger" size="sm" onClick={exit}>Confirm logout</Btn><Btn kind="ghost" size="sm" onClick={()=>setConfirm(false)}>Stay</Btn></>:<Btn kind="ghost" size="sm" icon="logout" onClick={()=>dirty?setConfirm(true):exit()}>Logout</Btn>}
     </div>
-  );
+  </div>{msg&&<div className={"note "+(msg.err?"bad":"ok")} style={{marginBottom:14}} role="status">{msg.err||msg.ok}</div>}</div>;
 }
-
 function Field({ label, hint, className = "", children }) {
   return <div className={"field " + className}><span>{label}</span>{children}{hint && <small>{hint}</small>}</div>;
 }
@@ -1999,7 +2015,6 @@ function CreatorPage() {
         <button className="chip" role="tab" aria-pressed={tab === "supabase"} onClick={() => pick("supabase")}><Icon name="globe" />Supabase</button>
       </div>
       {tab === "overview" && <Overview setTab={pick} />}
-      {tab === "builder" && <WebsiteBuilder />}
       {tab === "profile" && <ProfilePanel />}
       {tab === "orders" && <OrdersPanel />}
       {tab === "reviews" && <ReviewsPanel />}
@@ -2019,130 +2034,128 @@ function CreatorPage() {
 }
 
 
-/* ============================================================ visual website builder */
+/* ============================================================ IN-PAGE NOTION-STYLE BLOCK EDITOR */
 const BUILDER_PAGES = [
-  ["home","Home"],["gallery","Portfolio"],["commission","Commission"],
-  ["about","About"],["contact","Contact"],["services","Services"],
-  ["terms","Terms"],["workflow","Workflow"]
+  ["home","Home"],["about","About Me"],["gallery","Portfolio"],["commission","Commission Services"],
+  ["services","Services"],["track","Track Order"],["board","Commission Board"],["workflow","How to Order"],
+  ["terms","Terms of Service"],["contact","Contact"]
 ];
 const BLOCK_TYPES = [
-  ["heading","Heading"],["text","Text"],["note","Little note"],["image","Image"],
-  ["link","Link"],["date","Date"],["clock","Live clock"],["weather","Weather"],
-  ["audio","Music player"],["spacer","Spacer"]
+  ["heading1","Heading 1"],["heading2","Heading 2"],["heading3","Heading 3"],["paragraph","Paragraph"],
+  ["bulleted","Bulleted list"],["numbered","Numbered list"],["checklist","Checklist"],["quote","Quote"],
+  ["callout","Callout"],["divider","Divider"],["image","Image"],["gallery","Image gallery"],
+  ["video","Video embed"],["audio","Audio embed"],["link","External link"],["button","Button"],
+  ["columns2","Two columns"],["columns3","Three columns"],["image-text","Image + text"],
+  ["cards","Cards"],["grid","Grid"],["container","Custom container"],["spacer","Spacer"],
+  ["artwork","Artwork showcase"],["projects","Project cards"],["commission-status","Commission status"],
+  ["pricing","Pricing table"],["testimonial","Testimonials"],["social","Social links"],
+  ["date","Date"],["clock","Live clock"],["weather","Weather"],["note","Little note"]
 ];
 const newBuilderBlock = (type) => ({
-  id: uid("blk_"), type, title: type === "heading" ? "Your heading" : type === "note" ? "Little note" : "",
-  content: type === "text" ? "Write something here..." : type === "note" ? "A little thought for visitors." : "",
-  url: "", image: "", city: "Banjarmasin", timezone: "Asia/Jakarta",
-  fontSize: type === "heading" ? 32 : 16, fontFamily: "inherit", color: "#454B55",
-  background: type === "note" ? "#FFF0B8" : "transparent", align: "left",
-  width: "100%", padding: 18, radius: 16, bold: type === "heading"
+  id: uid("blk_"), type, title: type.startsWith("heading") ? "Your heading" : type === "note" ? "Little note" : "",
+  content: ["paragraph","quote","callout","note","image-text","container"].includes(type) ? "Write something here..." : "",
+  url:"", image:"", images:[], items:["First item","Second item"], columns:["First column","Second column","Third column"],
+  city:"Samarinda", timezone:"Asia/Makassar", fontSize:type==="heading1"?34:type==="heading2"?27:type==="heading3"?21:16,
+  fontFamily:"inherit", color:"#3F4D61", background:type==="note"||type==="callout"?"#FFF0B8":"transparent",
+  align:"left", width:"100%", padding:18, radius:16, bold:type.startsWith("heading")
 });
-function BuilderBlock({ block, preview = false }) {
-  const [now, setNow] = useState(new Date());
-  const [weather, setWeather] = useState(null);
-  const [weatherError, setWeatherError] = useState("");
-  useEffect(() => {
-    if (block.type !== "clock" && block.type !== "date") return;
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, [block.type]);
-  useEffect(() => {
-    if (block.type !== "weather") return;
-    let active = true;
-    (async () => {
-      try {
-        const city = encodeURIComponent(block.city || "Banjarmasin");
-        const g = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + city + "&count=1&language=en&format=json");
-        const gd = await g.json(); const place = gd.results && gd.results[0];
-        if (!place) throw new Error("Location not found");
-        const w = await fetch("https://api.open-meteo.com/v1/forecast?latitude=" + place.latitude + "&longitude=" + place.longitude + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto");
-        const wd = await w.json();
-        if (active) setWeather({ place: place.name, current: wd.current });
-      } catch (e) { if (active) setWeatherError("Weather is temporarily unavailable."); }
-    })();
-    return () => { active = false; };
-  }, [block.type, block.city]);
-  const style = {
-    fontSize: Number(block.fontSize) || 16, fontFamily: block.fontFamily || "inherit",
-    color: block.color || "inherit", background: block.background || "transparent",
-    textAlign: block.align || "left", width: block.width || "100%",
-    padding: Number(block.padding) || 0, borderRadius: Number(block.radius) || 0,
-    fontWeight: block.bold ? 800 : 400, boxSizing: "border-box", maxWidth: "100%"
+const blockLabel = (type) => (BLOCK_TYPES.find(x=>x[0]===type)||[type,type])[1];
+function BuilderBlockView({ block, editing, selected, change }) {
+  const [now,setNow] = useState(new Date());
+  const [weather,setWeather] = useState(null);
+  const [weatherError,setWeatherError] = useState("");
+  useEffect(()=>{if(block.type!=="clock"&&block.type!=="date")return;const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t);},[block.type]);
+  useEffect(()=>{
+    if(block.type!=="weather")return;
+    let active=true;
+    (async()=>{try{
+      const g=await fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(block.city||"Samarinda")+"&count=1&language=en&format=json");
+      const gd=await g.json(),place=gd.results&&gd.results[0];if(!place)throw new Error("Location not found");
+      const w=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+place.latitude+"&longitude="+place.longitude+"&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto");
+      const wd=await w.json();if(active)setWeather({place:place.name,current:wd.current});
+    }catch(e){if(active)setWeatherError("Weather is temporarily unavailable.");}})();
+    return()=>{active=false;};
+  },[block.type,block.city]);
+  const style={
+    fontSize:Number(block.fontSize)||16,fontFamily:block.fontFamily||"inherit",color:block.color||"inherit",
+    background:block.background||"transparent",textAlign:block.align||"left",width:block.width||"100%",
+    padding:Number(block.padding)||0,borderRadius:Number(block.radius)||0,fontWeight:block.bold?800:400,
+    boxSizing:"border-box",maxWidth:"100%",margin:"0"
   };
-  const safeAudio = safeUrl(block.url);
-  if (block.type === "spacer") return <div style={{ height: Math.max(8, Number(block.padding) || 32) }} />;
-  if (block.type === "image") return block.image ? <div style={{ ...style, padding: 0 }}><img src={safeImg(block.image)} alt={block.title || "Website image"} style={{ display:"block", width:"100%", maxHeight:700, objectFit:"cover", borderRadius:style.borderRadius }} /></div> : null;
-  if (block.type === "link") return <div style={style}><a href={safeUrl(block.url) || "#"} target="_blank" rel="noopener noreferrer" style={{ color:"inherit", fontWeight:700 }}>{block.title || block.content || "Open link"} ↗</a></div>;
-  if (block.type === "date") return <div style={style}><b>{now.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</b></div>;
-  if (block.type === "clock") return <div style={style}><b>{now.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:block.timezone || undefined})}</b><div style={{fontSize:".75em",opacity:.7}}>{block.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}</div></div>;
-  if (block.type === "weather") return <div style={{...style,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:"2em"}}>☀️</span><div><b>{weather ? weather.current.temperature_2m + "°C · " + weather.place : weatherError || "Loading weather…"}</b><div style={{fontSize:".78em",opacity:.7}}>{weather ? "Humidity " + weather.current.relative_humidity_2m + "% · Wind " + weather.current.wind_speed_10m + " km/h" : "Live weather via Open-Meteo"}</div></div></div>;
-  if (block.type === "audio") return safeAudio ? <div style={{...style}}><div style={{fontWeight:700,marginBottom:8}}>{block.title || "Background music"}</div><audio controls preload="none" src={safeAudio} style={{width:"100%"}} /></div> : null;
-  if (block.type === "note") return <aside style={{...style,border:"1px solid rgba(0,0,0,.08)"}}><b>{block.title || "Little note"}</b><div style={{whiteSpace:"pre-wrap",marginTop:6}}>{block.content}</div></aside>;
-  if (block.type === "heading") return <h2 style={{...style,margin:"12px 0",lineHeight:1.15}}>{block.title || block.content}</h2>;
-  return <p style={{...style,whiteSpace:"pre-wrap",lineHeight:1.75,margin:"8px 0"}}>{block.content}</p>;
+  const text=block.content||"";
+  const items=Array.isArray(block.items)?block.items:[];
+  const safeAudio=safeUrl(block.url);
+  const image=(src,alt)=>safeImg(src)?<img src={safeImg(src)} alt={alt||""} style={{display:"block",width:"100%",height:"auto",maxHeight:720,objectFit:"cover",borderRadius:style.borderRadius}}/>:null;
+  if(block.type==="divider")return <hr style={{border:0,borderTop:"1px solid var(--line)",margin:"12px 0"}}/>;
+  if(block.type==="spacer")return <div style={{height:Math.max(8,Number(block.padding)||32)}}/>;
+  if(block.type==="image")return <div style={style}>{image(block.image,block.title)}</div>;
+  if(block.type==="gallery")return <div style={{...style,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>{(block.images||[]).filter(Boolean).map((src,i)=><div key={i}>{image(src,"Gallery image")}</div>)}</div>;
+  if(block.type==="video"){
+    const u=safeUrl(block.url);let embed="";
+    try{const x=new URL(u);if(x.hostname==="youtu.be")embed="https://www.youtube-nocookie.com/embed/"+x.pathname.slice(1);else if(x.hostname.endsWith("youtube.com"))embed="https://www.youtube-nocookie.com/embed/"+(x.searchParams.get("v")||x.pathname.split("/").pop());else if(x.hostname.endsWith("vimeo.com"))embed="https://player.vimeo.com/video/"+x.pathname.split("/").filter(Boolean).pop();}catch(e){}
+    return embed?<div style={style}><div style={{position:"relative",aspectRatio:"16/9"}}><iframe src={embed} title={block.title||"Embedded video"} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{position:"absolute",inset:0,width:"100%",height:"100%",border:0,borderRadius:style.borderRadius}}/></div></div>:<p className="muted">Add a YouTube or Vimeo link to show a video.</p>;
+  }
+  if(block.type==="audio")return safeAudio?<div style={style}><b>{block.title||"Audio"}</b><audio controls preload="none" src={safeAudio} style={{display:"block",width:"100%",marginTop:8}}/></div>:null;
+  if(block.type==="link")return <div style={style}><a href={safeUrl(block.url)||"#"} target="_blank" rel="noopener noreferrer" style={{fontWeight:800}}>{block.title||"Open link"} ↗</a></div>;
+  if(block.type==="button")return <div style={{...style}}><a className="btn cyan" href={safeUrl(block.url)||"#"} target={safeUrl(block.url)?"_blank":undefined} rel="noopener noreferrer">{block.title||"Learn more"}</a></div>;
+  if(block.type==="date")return <div style={style}><b>{now.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</b></div>;
+  if(block.type==="clock")return <div style={style}><b>{now.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:block.timezone||undefined})}</b><small style={{display:"block",opacity:.7}}>{block.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone}</small></div>;
+  if(block.type==="weather")return <div style={{...style,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:"2em"}}>🌤️</span><div><b>{weather?weather.current.temperature_2m+"°C · "+weather.place:weatherError||"Loading weather…"}</b><small style={{display:"block",opacity:.7}}>{weather?"Humidity "+weather.current.relative_humidity_2m+"% · Wind "+weather.current.wind_speed_10m+" km/h":"Live weather via Open-Meteo"}</small></div></div>;
+  if(block.type==="commission-status")return <div style={style}><span className={"pill "+(CONFIG.commissionStatus==="OPEN"?"open":CONFIG.commissionStatus==="CLOSED"?"closed":"limited")}>{CONFIG.commissionStatus||"Status not set"}</span></div>;
+  if(block.type==="pricing")return <div style={style}>{(CONFIG.pricing||[]).map(g=><section key={g.id} style={{marginBottom:14}}><h3>{g.title}</h3><div className="svc-grid">{(g.items||[]).map(it=><article className="card" key={it.id}><b>{it.name}</b><p className="muted">{it.desc}</p><strong>{typeof it.idr==="number"?"IDR "+it.idr.toLocaleString("id-ID"):it.idr||"Ask for quote"}</strong></article>)}</div></section>)}</div>;
+  if(block.type==="artwork"||block.type==="projects")return <div style={{...style,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12}}>{(CONFIG.artworks||[]).filter(a=>a.image).slice(0,block.type==="artwork"?8:6).map(a=><article key={a.id} className="card" style={{padding:10}}>{image(a.image,a.title)}<b style={{display:"block",marginTop:8}}>{a.title}</b></article>)}</div>;
+  if(block.type==="social")return <div style={{...style,display:"flex",gap:8,flexWrap:"wrap"}}>{(CONFIG.socials||[]).filter(x=>safeUrl(x.url)).map(x=><a key={x.id} className="btn ghost" href={safeUrl(x.url)} target="_blank" rel="noopener noreferrer">{x.label}</a>)}</div>;
+  if(block.type==="testimonial")return <blockquote style={{...style,borderLeft:"4px solid var(--cyan)",paddingLeft:16}}>{text||"Add a client testimonial in the block settings."}{block.title&&<b style={{display:"block",marginTop:8}}>— {block.title}</b>}</blockquote>;
+  if(block.type==="quote")return <blockquote style={{...style,borderLeft:"4px solid var(--cyan)",paddingLeft:16,fontStyle:"italic"}}>{text}</blockquote>;
+  if(block.type==="callout"||block.type==="note")return <aside style={{...style,border:"1px solid var(--line)"}}><b>{block.title||"A little note"}</b><div style={{whiteSpace:"pre-wrap",marginTop:6}}>{text}</div></aside>;
+  if(block.type==="bulleted"||block.type==="numbered"||block.type==="checklist"){
+    const Tag=block.type==="numbered"?"ol":"ul";
+    return <Tag style={{...style,paddingLeft:28}}>{items.map((v,i)=><li key={i} style={{padding:"3px 0"}}>{block.type==="checklist"?"☐ ":""}{v}</li>)}</Tag>;
+  }
+  if(block.type==="columns2"||block.type==="columns3")return <div style={{...style,display:"grid",gridTemplateColumns:"repeat("+ (block.type==="columns2"?2:3)+",minmax(0,1fr))",gap:12}}>{(block.columns||[]).slice(0,block.type==="columns2"?2:3).map((v,i)=><div key={i} className="card" style={{padding:14,background:block.background==="transparent"?"var(--powder)":block.background}}>{v}</div>)}</div>;
+  if(block.type==="cards"||block.type==="grid")return <div style={{...style,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12}}>{items.map((v,i)=><article className="card" key={i} style={{padding:16}}><b>{typeof v==="string"?v:v.title}</b>{typeof v!=="string"&&<p className="muted" style={{marginTop:6}}>{v.body}</p>}</article>)}</div>;
+  if(block.type==="image-text")return <div style={{...style,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:18,alignItems:"center"}}>{image(block.image,block.title)}<div><h3>{block.title}</h3><p style={{whiteSpace:"pre-wrap"}}>{text}</p></div></div>;
+  if(block.type==="container")return <section className="card" style={style}><h3>{block.title}</h3><p style={{whiteSpace:"pre-wrap"}}>{text}</p></section>;
+  if(block.type.startsWith("heading")){const Tag=block.type==="heading1"?"h1":block.type==="heading3"?"h3":"h2";return <Tag style={{...style,lineHeight:1.2}}>{block.title||text}</Tag>;}
+  return <p style={{...style,whiteSpace:"pre-wrap",lineHeight:1.75}}>{text}</p>;
 }
 function PageBuilderBlocks({ page }) {
-  const blocks = CONFIG.builder?.pages?.[page] || [];
-  if (!blocks.length) return null;
-  return <div className="page" style={{display:"flex",flexDirection:"column",gap:14}}>{blocks.map(b=><BuilderBlock key={b.id} block={b} />)}</div>;
-}
-function WebsiteBuilder() {
-  const { site, upd, save } = useCreator();
-  const [page,setPage] = useState("home");
-  const [draftBusy,setDraftBusy] = useState(false);
-  const [draftMessage,setDraftMessage] = useState("");
-  useEffect(() => { let active=true; Store.api("get_draft_site",{},true).then(r=>{if(active && r.site?.builder) upd(n=>{n.builder=r.site.builder;});}).catch(()=>{}); return ()=>{active=false;}; }, []);
-  const saveDraft = async () => { setDraftBusy(true);setDraftMessage("");try{await Store.api("save_draft_site",{site:plain(site)},true);setDraftMessage("Draft saved privately. It is not public yet.");}catch(e){setDraftMessage(e.message||"Could not save draft.");}setDraftBusy(false); };
-  const [selected,setSelected] = useState(null);
-  const [notice,setNotice] = useState("");
-  const all = site.builder?.pages || {};
-  const blocks = all[page] || [];
-  const active = blocks.find(b=>b.id===selected) || null;
-  const change = (id,key,value) => upd(n=>{n.builder=n.builder||{pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];const b=n.builder.pages[page].find(x=>x.id===id);if(b)b[key]=value;});
-  const add = (type) => {const b=newBuilderBlock(type);upd(n=>{n.builder=n.builder||{pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];n.builder.pages[page].push(b);});setSelected(b.id);};
-  const moveBlock=(id,dir)=>upd(n=>{const a=n.builder?.pages?.[page]||[];const i=a.findIndex(x=>x.id===id);if(i<0)return;n.builder.pages[page]=move(a,i,dir);});
-  const remove=(id)=>{upd(n=>{n.builder.pages[page]=(n.builder.pages[page]||[]).filter(x=>x.id!==id);});setSelected(null);};
-  return <div className="panel" style={{display:"grid",gridTemplateColumns:"minmax(180px,220px) minmax(0,1fr) minmax(230px,290px)",gap:14,alignItems:"start"}}>
-    <section className="card" style={{padding:12,position:"sticky",top:12}}>
-      <h3>Pages</h3><p className="muted" style={{fontSize:".75rem",margin:"4px 0 12px"}}>Choose a page to customize</p>
-      {BUILDER_PAGES.map(([id,label])=><button key={id} className="chip" aria-pressed={page===id} onClick={()=>{setPage(id);setSelected(null);}} style={{width:"100%",justifyContent:"flex-start",marginBottom:5}}>{label}</button>)}
-      <div className="note info" style={{marginTop:12,fontSize:".72rem"}}>Core ordering, payment, login and tracking functions remain protected.</div>
-    </section>
-    <section className="card" style={{minWidth:0}}>
-      <div className="card-head"><div><h3>{BUILDER_PAGES.find(x=>x[0]===page)?.[1]} canvas</h3><p className="muted" style={{fontSize:".75rem"}}>Select a block to edit it. Drafts stay private until published.</p></div><span className="tag">{blocks.length} blocks</span></div><div className="btns" style={{marginBottom:12}}><Btn kind="ghost" size="sm" disabled={draftBusy} onClick={saveDraft}>{draftBusy?"Saving draft…":"Save draft"}</Btn><Btn kind="cyan" size="sm" onClick={save}>Publish website</Btn></div>{draftMessage&&<div className="note info">{draftMessage}</div>}
-      <div style={{display:"grid",gap:10,minHeight:220}}>
-        {blocks.map((b,i)=><div key={b.id} onClick={()=>setSelected(b.id)} style={{border:selected===b.id?"2px solid var(--cyan)":"1px solid var(--line)",borderRadius:14,padding:10,cursor:"pointer",background:selected===b.id?"var(--tint)":"transparent"}}>
-          <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"center",marginBottom:8}}><small className="muted">{BLOCK_TYPES.find(x=>x[0]===b.type)?.[1]} · {i+1}</small><span className="btns"><button className="ib" disabled={i===0} onClick={e=>{e.stopPropagation();moveBlock(b.id,-1);}}>↑</button><button className="ib" disabled={i===blocks.length-1} onClick={e=>{e.stopPropagation();moveBlock(b.id,1);}}>↓</button><button className="ib bad" onClick={e=>{e.stopPropagation();remove(b.id);}}>×</button></span></div>
-          <BuilderBlock block={b}/>
-        </div>)}
-        {!blocks.length&&<div className="empty"><Icon name="layout"/><p>Add your first block to this page.</p></div>}
-      </div>
-      <div style={{marginTop:14,borderTop:"1px solid var(--line)",paddingTop:14}}><b>Add content block</b><div className="btns" style={{marginTop:10,flexWrap:"wrap"}}>{BLOCK_TYPES.map(([id,label])=><Btn key={id} kind="ghost" size="sm" onClick={()=>add(id)}>+ {label}</Btn>)}</div></div>
-    </section>
-    <section className="card" style={{padding:14,position:"sticky",top:12,maxHeight:"80vh",overflowY:"auto"}}>
-      <h3>Block settings</h3>
-      {!active?<p className="muted" style={{fontSize:".82rem",marginTop:8}}>Select a block on the canvas to customize its content and appearance.</p>:<div className="form" style={{marginTop:12}}>
-        {["heading","note","link","audio"].includes(active.type)&&<TextIn label="Title / label" value={active.title} onChange={v=>change(active.id,"title",v)}/>}
-        {["text","note","heading"].includes(active.type)&&<TextIn label="Text content" value={active.content} onChange={v=>change(active.id,"content",v)} multiline/>}
-        {active.type==="image"&&<><ImagePicker label="Upload image" value={active.image} onChange={v=>change(active.id,"image",v)}/><TextIn label="Alternative text" value={active.title} onChange={v=>change(active.id,"title",v)}/></>}
-        {["link","audio"].includes(active.type)&&<TextIn label={active.type==="audio"?"Audio file URL":"Destination URL"} value={active.url} onChange={v=>change(active.id,"url",v)} hint="Use a public HTTPS URL. Audio must be a direct audio file URL."/>}
-        {active.type==="weather"&&<TextIn label="City / location" value={active.city} onChange={v=>change(active.id,"city",v)} hint="Weather is fetched live from Open-Meteo."/>}
-        {active.type==="clock"&&<TextIn label="Timezone" value={active.timezone} onChange={v=>change(active.id,"timezone",v)} hint="Example: Asia/Jakarta, Asia/Makassar, Europe/London."/>}
-        <Field label="Font size (px)"><input className="in" type="number" min="10" max="120" value={active.fontSize} onChange={e=>change(active.id,"fontSize",e.target.value)}/></Field>
-        <Field label="Font family"><select className="in" value={active.fontFamily||"inherit"} onChange={e=>change(active.id,"fontFamily",e.target.value)}><option value="inherit">Site default</option><option value="Georgia,serif">Georgia</option><option value="Arial,sans-serif">Arial</option><option value="Verdana,sans-serif">Verdana</option><option value="'Courier New',monospace">Courier New</option><option value="cursive">Cursive</option></select></Field>
-        <Field label="Text color"><input className="in" type="color" value={/^#[0-9a-f]{6}$/i.test(active.color)?active.color:"#454B55"} onChange={e=>change(active.id,"color",e.target.value)}/></Field>
-        <Field label="Background color"><input className="in" type="color" value={/^#[0-9a-f]{6}$/i.test(active.background)?active.background:"#FFFFFF"} onChange={e=>change(active.id,"background",e.target.value)}/></Field>
-        <Field label="Alignment"><select className="in" value={active.align||"left"} onChange={e=>change(active.id,"align",e.target.value)}><option>left</option><option>center</option><option>right</option></select></Field>
-        <Field label="Width"><select className="in" value={active.width||"100%"} onChange={e=>change(active.id,"width",e.target.value)}><option value="100%">Full width</option><option value="75%">75%</option><option value="50%">Half width</option><option value="fit-content">Fit content</option></select></Field>
-        <Field label="Padding (px)"><input className="in" type="number" min="0" max="100" value={active.padding??16} onChange={e=>change(active.id,"padding",e.target.value)}/></Field>
-        <Field label="Corner radius (px)"><input className="in" type="number" min="0" max="80" value={active.radius??12} onChange={e=>change(active.id,"radius",e.target.value)}/></Field>
-        <label className="switch"><span>Bold text</span><input type="checkbox" checked={!!active.bold} onChange={e=>change(active.id,"bold",e.target.checked)}/></label>
-        <Btn kind="danger" size="sm" onClick={()=>remove(active.id)}>Delete block</Btn>
-      </div>}
-    </section>
-    <style>{'@media(max-width:900px){.panel[style*="grid-template-columns"]{grid-template-columns:1fr!important}.panel[style*="grid-template-columns"] .card{position:static!important;max-height:none!important}}'}</style>
-  </div>;
+  const {site,upd,editing}=useCreator();
+  const blocks=site.builder?.pages?.[page]||[];
+  const [selected,setSelected]=useState(null),[slash,setSlash]=useState(""),[dragId,setDragId]=useState(null);
+  const active=blocks.find(b=>b.id===selected)||null;
+  const mutate=(fn)=>upd(n=>{n.builder=n.builder||{version:2,pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];fn(n.builder.pages[page]);});
+  const change=(id,key,value)=>mutate(a=>{const b=a.find(x=>x.id===id);if(b)b[key]=value;});
+  const add=(type)=>{const b=newBuilderBlock(type);mutate(a=>a.push(b));setSelected(b.id);setSlash("");};
+  const duplicate=(id)=>mutate(a=>{const i=a.findIndex(x=>x.id===id);if(i>=0){const b=clone(a[i]);b.id=uid("blk_");a.splice(i+1,0,b);setSelected(b.id);}});
+  const remove=(id)=>{mutate(a=>{const i=a.findIndex(x=>x.id===id);if(i>=0)a.splice(i,1);});setSelected(null);};
+  const moveTo=(id,targetId)=>mutate(a=>{const from=a.findIndex(x=>x.id===id),to=a.findIndex(x=>x.id===targetId);if(from<0||to<0||from===to)return;const [b]=a.splice(from,1);a.splice(to,0,b);});
+  const filtered=BLOCK_TYPES.filter(([id,label])=>(id+" "+label).toLowerCase().includes(slash.replace(/^\\//,"").toLowerCase()));
+  const updateLines=(key,value)=>change(active.id,key,value.split("\\n").filter(x=>x.trim()));
+  return <section className={"inpage-builder "+(editing?"is-editing":"")} aria-label="Page content blocks">
+    {editing&&<div className="inpage-top"><span><b>Page editor</b><small>Editing {BUILDER_PAGES.find(x=>x[0]===page)?.[1]||page} · {blocks.length} blocks</small></span><div className="inpage-add"><input value={slash} onChange={e=>setSlash(e.target.value.startsWith("/")?e.target.value:"/"+e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&filtered[0])add(filtered[0][0]);if(e.key==="Escape")setSlash("");}} placeholder="Type / to add a block…" aria-label="Slash command block search"/><button className="btn cyan sm" onClick={()=>setSlash(slash||"/")}>/ Add</button>{slash.startsWith("/")&&<div className="slash-menu">{filtered.slice(0,12).map(([id,label])=><button key={id} onClick={()=>add(id)}><span>{label}</span><small>/{id}</small></button>)}{!filtered.length&&<small className="muted">No matching block</small>}</div>}</div></div>}
+    <div className="inpage-blocks">
+      {blocks.map((b,i)=><article key={b.id} className={"inpage-block "+(editing&&selected===b.id?"selected":"")} onClick={()=>editing&&setSelected(b.id)} draggable={editing} onDragStart={()=>setDragId(b.id)} onDragOver={e=>editing&&e.preventDefault()} onDrop={e=>{e.preventDefault();if(dragId)moveTo(dragId,b.id);setDragId(null);}}>
+        {editing&&selected===b.id&&<div className="context-toolbar"><span>{blockLabel(b.type)}</span><button onClick={e=>{e.stopPropagation();duplicate(b.id);}}>Duplicate</button><button onClick={e=>{e.stopPropagation();remove(b.id);}}>Delete</button></div>}
+        {editing&&selected===b.id&&["heading1","heading2","heading3"].includes(b.type)
+          ? <input className="inline-edit-heading" value={b.title||b.content||""} onClick={e=>e.stopPropagation()} onChange={e=>change(b.id,"title",e.target.value)} aria-label="Edit heading"/>
+          : editing&&selected===b.id&&["paragraph","quote","callout","note","testimonial","container"].includes(b.type)
+          ? <textarea className="inline-edit-text" value={b.content||""} onClick={e=>e.stopPropagation()} onChange={e=>change(b.id,"content",e.target.value)} aria-label="Edit block text"/>
+          : <BuilderBlockView block={b} editing={editing} selected={selected===b.id}/>}
+        {editing&&selected===b.id&&<div className="block-properties" onClick={e=>e.stopPropagation()}>
+          {["heading1","heading2","heading3","note","callout","link","button","audio","video","image-text","testimonial","container"].includes(b.type)&&<TextIn label="Title / label" value={b.title} onChange={v=>change(b.id,"title",v)}/>}
+          {["image","image-text"].includes(b.type)&&<ImagePicker label="Image" value={b.image} onChange={v=>change(b.id,"image",v)}/>}
+          {["link","button","audio","video"].includes(b.type)&&<TextIn label="URL" value={b.url} onChange={v=>change(b.id,"url",v)} hint={b.type==="audio"?"Use a public direct audio URL.":b.type==="video"?"YouTube or Vimeo URL.":"Use an HTTPS destination."}/>}
+          {b.type==="gallery"&&<TextIn label="Image URLs (one per line)" value={(b.images||[]).join("\\n")} onChange={v=>updateLines("images",v)} multiline/>}
+          {["bulleted","numbered","checklist","cards","grid","columns2","columns3"].includes(b.type)&&<TextIn label={b.type.startsWith("columns")?"Column content (one per line)":"Items (one per line)"} value={(b.type.startsWith("columns")?b.columns:b.items||[]).join("\\n")} onChange={v=>updateLines(b.type.startsWith("columns")?"columns":"items",v)} multiline/>}
+          {b.type==="weather"&&<TextIn label="City / location" value={b.city} onChange={v=>change(b.id,"city",v)}/>}
+          {b.type==="clock"&&<TextIn label="Timezone" value={b.timezone} onChange={v=>change(b.id,"timezone",v)}/>}
+          <div className="block-style-controls"><label>Text <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.color)?b.color:"#3F4D61"} onChange={e=>change(b.id,"color",e.target.value)}/></label><label>Background <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.background)?b.background:"#FFFFFF"} onChange={e=>change(b.id,"background",e.target.value)}/></label><label>Width <select value={b.width||"100%"} onChange={e=>change(b.id,"width",e.target.value)}><option>100%</option><option>75%</option><option>50%</option><option>fit-content</option></select></label><label>Padding <input type="number" min="0" max="100" value={b.padding??16} onChange={e=>change(b.id,"padding",e.target.value)}/></label><label>Radius <input type="number" min="0" max="80" value={b.radius??12} onChange={e=>change(b.id,"radius",e.target.value)}/></label></div>
+        </div>}
+      </article>)}
+      {editing&&<button className="inpage-empty" onClick={()=>setSlash("/")}>＋ Add a block anywhere below · type / to search</button>}
+    </div>
+  </section>;
 }
 
 /* ============================================================ ORDER SYSTEM */
@@ -2879,12 +2892,14 @@ function App() {
   const loggingOut = useRef(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
     let on = true, sub = null;
     (async () => {
-      const r = await Auth.restore(); if (on) setAuth({ loading: false, owner: r.owner });
+      const r = await Auth.restore(); if (on) { setAuth({ loading: false, owner: r.owner }); setEditing(!!r.owner); }
       const sb = await loadSupabaseClient(); if (!sb || !on) return;
       const { data } = sb.auth.onAuthStateChange((ev) => {
         if (ev === "SIGNED_OUT") { if (authRef.current.owner && !loggingOut.current) setToast("Your session has ended. Please sign in again."); setAuth({ loading: false, owner: false }); }
@@ -2896,6 +2911,17 @@ function App() {
   const [, setDbv] = useState(0);
   useEffect(() => { let on = true; (async () => { const d = await cap("db"); if (on && d) { DB = d; setDbv(1); } })(); return () => { on = false; }; }, []);
   const creatorOn = auth.owner;
+  useEffect(() => {
+    let active=true;
+    if (!creatorOn) { setDraftLoaded(false); return; }
+    Store.api("get_draft_site",{},true).then(r=>{ if(!active)return; if(r.site?.builder) setSite(p=>mergeDeep(p,{builder:r.site.builder})); setDraftLoaded(true); }).catch(()=>{ if(active)setDraftLoaded(true); });
+    return ()=>{active=false;};
+  },[creatorOn]);
+  useEffect(() => {
+    if(!creatorOn||!draftLoaded||!dirty)return;
+    const timer=setTimeout(()=>{ Store.api("save_draft_site",{site:plain(site)},true).catch(e=>setMsg({err:"Draft autosave failed: "+(e.message||"Please retry.")})); },1100);
+    return ()=>clearTimeout(timer);
+  },[creatorOn,draftLoaded,site,dirty]);
   useEffect(() => {
     if (route === "creator" && !auth.loading && !creatorOn) { go("home"); setToast("That area is restricted. Please sign in."); }
   }, [route, auth.loading, creatorOn]);
@@ -2934,18 +2960,18 @@ function App() {
   const openGate = () => { if (creatorOn) { go("creator"); return; } setGate(true); };
   const onGateOk = async (email, pw) => {
     try { await Auth.signIn(email, pw); } catch (e) { return (e && e.message) || "Sign-in failed."; }
-    setAuth({ loading: false, owner: true }); setGate(false); go("creator"); return "";
+    setAuth({ loading: false, owner: true }); setEditing(true); setGate(false); return "";
   };
 
   const view = route === "creator" && !creatorOn ? "home" : route;
   return (
-    <CreatorCtx.Provider value={{ site, upd, saved, dirty, saving, save, savePart, discard, exit, msg }}>
+    <CreatorCtx.Provider value={{ site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing, setEditing }}>
       <div className="shell">
         <Sidebar route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <main className="main">
           <TopBar route={view} go={go} query={query} setQuery={(v) => { setQuery(v); if (v) setCat("all"); }} />
-          {creatorOn && <div style={{ padding: "10px 24px 0" }}><CreatorBar go={go} /></div>}
+          {creatorOn && view!=="creator" && <div style={{ padding: "10px 24px 0" }}><CreatorBar go={go} /></div>}
           <div className="main-inner" key={view}>
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
@@ -2960,7 +2986,9 @@ function App() {
             {view.startsWith("service-") && <ServiceDetail id={view.slice(8)} go={go} />}
             {view.startsWith("order-") && <OrderFlow id={view.slice(6)} go={go} />}
             {view === "creator" && creatorOn && <CreatorPage />}
-            {["home","gallery","commission","about","contact","services","terms","workflow"].includes(view) && <PageBuilderBlocks page={view} />}
+            {view==="track"&&null}
+            {view==="board"&&null}
+            {BUILDER_PAGES.some(([id])=>id===view) && <PageBuilderBlocks page={view} />}
           </div>
         </main>
         {openId && <Lightbox id={openId} close={close} step={step} />}
