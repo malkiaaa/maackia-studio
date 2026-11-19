@@ -1,4 +1,5 @@
 # Supabase Edge Function configuration
-# Supabase API Gateway validates the public anon JWT before the function runs.
+# The function performs its own owner checks for Creator-only actions.
+# Public visitor actions use the publishable key; owner actions require a valid user session.
 [functions.commission-api]
-verify_jwt = true
+verify_jwt = false
