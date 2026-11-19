@@ -189,6 +189,11 @@ grant select, insert, update, delete on public.commission_management to authenti
 grant select, insert, update, delete on public.app_settings to authenticated;
 grant select on public.notifications to authenticated;
 
+-- Edge Functions use the service role only on the server.
+grant all on public.admins, public.commission_requests, public.order_tracks,
+  public.commission_management, public.app_settings, public.email_notification_log,
+  public.notifications, public.track_attempts to service_role;
+
 -- Private references bucket. Upload/download authorization is issued by commission-api.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
