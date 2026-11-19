@@ -345,7 +345,8 @@ Deno.serve(async (req) => {
       if (!track || track.emailHash !== suppliedHash) {
         return json({ error: "No order matches that Request ID and email." }, 404);
       }
-      return json({ track });
+      const { emailHash: _privateHash, ...publicTrack } = track;
+      return json({ track: publicTrack });
     }
 
     if (action === "respond") {
@@ -379,7 +380,8 @@ Deno.serve(async (req) => {
         return json({ error: "Could not save your response." }, 500);
       }
       await db.from("commission_requests").update({ status }).eq("id", id);
-      return json({ track: updated });
+      const { emailHash: _privateHash, ...publicTrack } = updated;
+      return json({ track: publicTrack });
     }
 
     if (action === "upload") {
