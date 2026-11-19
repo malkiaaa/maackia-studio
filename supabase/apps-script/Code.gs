@@ -13,6 +13,19 @@ const SECRET_PROPERTY = "GAS_WEBHOOK_SECRET";
 const SENT_PREFIX = "MALKIAA_SENT_";
 const DEDUP_RETENTION_MS = 180 * 24 * 60 * 60 * 1000;
 
+/**
+ * Safe browser health check for the deployed Web App. This does not send email
+ * and does not expose the webhook secret or recipient information.
+ */
+function doGet() {
+  return jsonResponse({
+    ok: true,
+    service: "Malkiaa Studio Gmail webhook",
+    method: "GET",
+    message: "Web App is reachable. Email notifications are handled by POST."
+  });
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   let locked = false;
