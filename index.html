@@ -2122,6 +2122,7 @@ function BuilderBlockView({ block, editing, selected, change }) {
 function PageBuilderBlocks({ page }) {
   const {site,upd,editing}=useCreator();
   const blocks=site.builder?.pages?.[page]||[];
+  if(!editing&&!blocks.length)return null;
   const [selected,setSelected]=useState(null),[slash,setSlash]=useState(""),[dragId,setDragId]=useState(null);
   const active=blocks.find(b=>b.id===selected)||null;
   const mutate=(fn)=>upd(n=>{n.builder=n.builder||{version:2,pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];fn(n.builder.pages[page]);});
@@ -2130,8 +2131,8 @@ function PageBuilderBlocks({ page }) {
   const duplicate=(id)=>mutate(a=>{const i=a.findIndex(x=>x.id===id);if(i>=0){const b=clone(a[i]);b.id=uid("blk_");a.splice(i+1,0,b);setSelected(b.id);}});
   const remove=(id)=>{mutate(a=>{const i=a.findIndex(x=>x.id===id);if(i>=0)a.splice(i,1);});setSelected(null);};
   const moveTo=(id,targetId)=>mutate(a=>{const from=a.findIndex(x=>x.id===id),to=a.findIndex(x=>x.id===targetId);if(from<0||to<0||from===to)return;const [b]=a.splice(from,1);a.splice(to,0,b);});
-  const filtered=BLOCK_TYPES.filter(([id,label])=>(id+" "+label).toLowerCase().includes(slash.replace(/^\\//,"").toLowerCase()));
-  const updateLines=(key,value)=>change(active.id,key,value.split("\\n").filter(x=>x.trim()));
+  const filtered=BLOCK_TYPES.filter(([id,label])=>(id+" "+label).toLowerCase().includes((slash.startsWith("/")?slash.slice(1):slash).toLowerCase()));
+  const updateLines=(key,value)=>change(active.id,key,value.split("\n").filter(x=>x.trim()));
   return <section className={"inpage-builder "+(editing?"is-editing":"")} aria-label="Page content blocks">
     {editing&&<div className="inpage-top"><span><b>Page editor</b><small>Editing {BUILDER_PAGES.find(x=>x[0]===page)?.[1]||page} · {blocks.length} blocks</small></span><div className="inpage-add"><input value={slash} onChange={e=>setSlash(e.target.value.startsWith("/")?e.target.value:"/"+e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&filtered[0])add(filtered[0][0]);if(e.key==="Escape")setSlash("");}} placeholder="Type / to add a block…" aria-label="Slash command block search"/><button className="btn cyan sm" onClick={()=>setSlash(slash||"/")}>/ Add</button>{slash.startsWith("/")&&<div className="slash-menu">{filtered.slice(0,12).map(([id,label])=><button key={id} onClick={()=>add(id)}><span>{label}</span><small>/{id}</small></button>)}{!filtered.length&&<small className="muted">No matching block</small>}</div>}</div></div>}
     <div className="inpage-blocks">
@@ -2965,7 +2966,7 @@ function App() {
 
   const view = route === "creator" && !creatorOn ? "home" : route;
   return (
-    <CreatorCtx.Provider value={{ site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing, setEditing }}>
+    <CreatorCtx.Provider value={{ site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing: creatorOn && editing, setEditing }}>
       <div className="shell">
         <Sidebar route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
