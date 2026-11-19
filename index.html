@@ -2005,7 +2005,7 @@ function SupabasePanel() {
 }
 
 function CreatorPage() {
-  const [tab, setTab] = useState(() => ss.get("mk-tab") || "overview");
+  const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t; });
   const pick = (t) => { setTab(t); ss.set("mk-tab", t); window.scrollTo({ top: 0 }); };
   return (
     <div className="page">
@@ -2150,7 +2150,7 @@ function PageBuilderBlocks({ page }) {
           {["bulleted","numbered","checklist","cards","grid","columns2","columns3"].includes(b.type)&&<TextIn label={b.type.startsWith("columns")?"Column content (one per line)":"Items (one per line)"} value={(b.type.startsWith("columns")?b.columns:b.items||[]).join("\\n")} onChange={v=>updateLines(b.type.startsWith("columns")?"columns":"items",v)} multiline/>}
           {b.type==="weather"&&<TextIn label="City / location" value={b.city} onChange={v=>change(b.id,"city",v)}/>}
           {b.type==="clock"&&<TextIn label="Timezone" value={b.timezone} onChange={v=>change(b.id,"timezone",v)}/>}
-          <div className="block-style-controls"><label>Text <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.color)?b.color:"#3F4D61"} onChange={e=>change(b.id,"color",e.target.value)}/></label><label>Background <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.background)?b.background:"#FFFFFF"} onChange={e=>change(b.id,"background",e.target.value)}/></label><label>Width <select value={b.width||"100%"} onChange={e=>change(b.id,"width",e.target.value)}><option>100%</option><option>75%</option><option>50%</option><option>fit-content</option></select></label><label>Padding <input type="number" min="0" max="100" value={b.padding??16} onChange={e=>change(b.id,"padding",e.target.value)}/></label><label>Radius <input type="number" min="0" max="80" value={b.radius??12} onChange={e=>change(b.id,"radius",e.target.value)}/></label></div>
+          <div className="block-style-controls"><label>Font size <input type="number" min="10" max="120" value={b.fontSize||16} onChange={e=>change(b.id,"fontSize",e.target.value)}/></label><label>Font <select value={b.fontFamily||"inherit"} onChange={e=>change(b.id,"fontFamily",e.target.value)}><option value="inherit">Default</option><option value="Georgia,serif">Georgia</option><option value="Arial,sans-serif">Arial</option><option value="Verdana,sans-serif">Verdana</option><option value="cursive">Cursive</option></select></label><label>Align <select value={b.align||"left"} onChange={e=>change(b.id,"align",e.target.value)}><option>left</option><option>center</option><option>right</option></select></label><label>Text <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.color)?b.color:"#3F4D61"} onChange={e=>change(b.id,"color",e.target.value)}/></label><label>Background <input type="color" value={/^#[0-9a-f]{6}$/i.test(b.background)?b.background:"#FFFFFF"} onChange={e=>change(b.id,"background",e.target.value)}/></label><label>Width <select value={b.width||"100%"} onChange={e=>change(b.id,"width",e.target.value)}><option>100%</option><option>75%</option><option>50%</option><option>fit-content</option></select></label><label>Padding <input type="number" min="0" max="100" value={b.padding??16} onChange={e=>change(b.id,"padding",e.target.value)}/></label><label>Radius <input type="number" min="0" max="80" value={b.radius??12} onChange={e=>change(b.id,"radius",e.target.value)}/></label></div>
         </div>}
       </article>)}
       {editing&&<button className="inpage-empty" onClick={()=>setSlash("/")}>＋ Add a block anywhere below · type / to search</button>}
@@ -2918,11 +2918,6 @@ function App() {
     return ()=>{active=false;};
   },[creatorOn]);
   useEffect(() => {
-    if(!creatorOn||!draftLoaded||!dirty)return;
-    const timer=setTimeout(()=>{ Store.api("save_draft_site",{site:plain(site)},true).catch(e=>setMsg({err:"Draft autosave failed: "+(e.message||"Please retry.")})); },1100);
-    return ()=>clearTimeout(timer);
-  },[creatorOn,draftLoaded,site,dirty]);
-  useEffect(() => {
     if (route === "creator" && !auth.loading && !creatorOn) { go("home"); setToast("That area is restricted. Please sign in."); }
   }, [route, auth.loading, creatorOn]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(""), 2600); return () => clearTimeout(t); }, [toast]);
@@ -2941,6 +2936,11 @@ function App() {
 
   const upd = useCallback((mut) => setSite((p) => { const n = clone(p); mut(n); return n; }), []);
   const dirty = useMemo(() => JSON.stringify(site) !== JSON.stringify(saved), [site, saved]);
+  useEffect(() => {
+    if(!creatorOn||!draftLoaded||!dirty)return;
+    const timer=setTimeout(()=>{ Store.api("save_draft_site",{site:plain(site)},true).catch(e=>setMsg({err:"Draft autosave failed: "+(e.message||"Please retry.")})); },1100);
+    return ()=>clearTimeout(timer);
+  },[creatorOn,draftLoaded,site,dirty]);
   const doPublish = async (data) => {
     setSaving(true); setMsg(null);
     try {
@@ -2954,7 +2954,7 @@ function App() {
   };
   const save = () => doPublish(site);
   const savePart = (path) => { const base = clone(saved); setPath(base, path, clone(getPath(site, path))); return doPublish(base); };
-  const discard = () => { setSite(saved); setMsg(null); };
+  const discard = () => { setSite(saved); setMsg(null); Store.api("save_draft_site",{site:plain(saved)},true).catch(()=>{}); };
   const exit = async () => { loggingOut.current = true; await Auth.signOut(); ss.del("mk-tab"); setAuth({ loading: false, owner: false }); setSite(saved); setMsg(null); go("home"); setToast("You have been signed out."); loggingOut.current = false; };
 
   const openGate = () => { if (creatorOn) { go("creator"); return; } setGate(true); };
@@ -2986,8 +2986,6 @@ function App() {
             {view.startsWith("service-") && <ServiceDetail id={view.slice(8)} go={go} />}
             {view.startsWith("order-") && <OrderFlow id={view.slice(6)} go={go} />}
             {view === "creator" && creatorOn && <CreatorPage />}
-            {view==="track"&&null}
-            {view==="board"&&null}
             {BUILDER_PAGES.some(([id])=>id===view) && <PageBuilderBlocks page={view} />}
           </div>
         </main>
