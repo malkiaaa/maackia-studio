@@ -555,6 +555,23 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "delete_commission") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const id = clean(body?.id, 40).toUpperCase();
+      if (!/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id)) return json({ error: "Invalid commission ID." }, 400);
+      const { data: existing, error: lookupError } = await db.from("commission_requests").select("id").eq("id", id).maybeSingle();
+      if (lookupError) return json({ error: "Could not verify this commission." }, 500);
+      if (!existing) return json({ error: "Commission request was not found." }, 404);
+      const { error: trackError } = await db.from("order_tracks").delete().eq("id", id);
+      if (trackError) return json({ error: "Could not delete the commission tracking record." }, 500);
+      const { error: managementError } = await db.from("commission_management").delete().eq("id", id);
+      if (managementError) return json({ error: "Could not delete commission management data." }, 500);
+      const { error: orderError } = await db.from("commission_requests").delete().eq("id", id);
+      if (orderError) return json({ error: "Could not delete the commission request." }, 500);
+      return json({ ok: true, id });
+    }
+
     if (action === "respond") {
       const id = clean(body?.id, 40).toUpperCase();
       const email = clean(body?.email, 254).toLowerCase();
