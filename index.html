@@ -1817,7 +1817,7 @@ function getEmailCfg() { try { return JSON.parse(localStorage.getItem(EMAIL_CFG_
 function setEmailCfgLocal(cfg) { try { localStorage.setItem(EMAIL_CFG_KEY, JSON.stringify(cfg)); } catch (e) {} }
 
 function EmailPanel() {
-  const defaultCfg = { artistEmail: "", fromName: "Malkiaa Studio", fromEmail: "noreply@yourdomain.com", sendArtist: true, sendClient: true, testResult: "" };
+  const defaultCfg = { artistEmail: "mmaackia@gmail.com", fromName: "Malkiaa Studio", sendArtist: true, sendClient: true, testResult: "" };
   const [cfg, setCfg] = useState(() => ({ ...defaultCfg, ...(getEmailCfg() || {}) }));
   const [msg, setMsg] = useState({ text: "", ok: false });
   const [saving, setSaving] = useState(false);
@@ -1846,7 +1846,6 @@ function EmailPanel() {
   }, []);
 
   const save = async () => {
-    if (!cfg.artistEmail) { setMsg({ text: "Please enter the artist notification email.", ok: false }); return; }
     setSaving(true);
     setMsg({ text: "", ok: false });
     try {
@@ -1857,7 +1856,6 @@ function EmailPanel() {
         value: {
           artistEmail: cfg.artistEmail.trim(),
           fromName: cfg.fromName.trim() || "Malkiaa Studio",
-          fromEmail: cfg.fromEmail.trim(),
           sendArtist: cfg.sendArtist,
           sendClient: cfg.sendClient,
         },
@@ -1876,7 +1874,7 @@ function EmailPanel() {
     try {
       const r = await Store.api("test", {}, true);
       setMsg(r.status === "sent"
-        ? { text: "Resend accepted the test email for the configured artist address. Check your inbox to confirm it arrived.", ok: true }
+        ? { text: "Google Apps Script accepted the test email for the configured studio address. Check your inbox to confirm it arrived.", ok: true }
         : { text: "Attempts: " + (r.attempts || 1) + " · " + (r.message || "Email delivery failed."), ok: false });
     } catch (e) { setMsg({ text: authErr(e), ok: false }); }
     setTesting(false);
@@ -1885,12 +1883,11 @@ function EmailPanel() {
   return (
     <div className="panel">
       <section className="card">
-        <div className="card-head"><h2>Email Notification Settings</h2><span style={{ fontSize: ".8rem", fontWeight: 800, color: "var(--muted)" }}>Resend · commission-api</span></div>
-        <p className="muted" style={{ marginBottom: 16 }}>Email notifications are sent by commission-api after a request is saved. Your Resend API key must be stored as a Supabase Edge Function secret and is never exposed in the browser.</p>
+        <div className="card-head"><h2>Email Notification Settings</h2><span style={{ fontSize: ".8rem", fontWeight: 800, color: "var(--muted)" }}>Gmail · Google Apps Script</span></div>
+        <p className="muted" style={{ marginBottom: 16 }}>Email notifications are sent by commission-api through Google Apps Script after a request is saved. The webhook URL and shared secret stay in Supabase Edge Function secrets and are never exposed in this browser.</p>
         <div className="form">
-          <div className="field full"><span>Artist Notification Email *</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="artist@yourdomain.com" /><small className="muted">New commission alerts go here. This address is saved securely in the Supabase app_settings table.</small></div>
+          <div className="field full"><span>Studio Notification Email</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="mmaackia@gmail.com" /><small className="muted">New commission alerts go here. If left blank, the system uses mmaackia@gmail.com.</small></div>
           <div className="field"><span>From Name</span><input className="in" value={cfg.fromName} onChange={(e) => set("fromName")(e.target.value)} placeholder="Malkiaa Studio" /></div>
-          <div className="field"><span>From Email</span><input className="in" value={cfg.fromEmail} onChange={(e) => set("fromEmail")(e.target.value)} placeholder="noreply@yourdomain.com" /><small className="muted">Must be a verified domain in Resend.</small></div>
           <label className="switch full"><span>Send artist notification on new request</span><input type="checkbox" checked={cfg.sendArtist} onChange={(e) => set("sendArtist")(e.target.checked)} /></label>
           <label className="switch full"><span>Send confirmation email to client after submission</span><input type="checkbox" checked={cfg.sendClient} onChange={(e) => set("sendClient")(e.target.checked)} /></label>
         </div>
@@ -1904,7 +1901,7 @@ function EmailPanel() {
       <section className="card">
         <h2 style={{ marginBottom: 6 }}>How It Works</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, margin: "12px 0" }}>
-          {[["1. Visitor submits", "Commission is saved to Supabase before email delivery is attempted."],["2. API sends notifications", "The commission-api function reads email preferences from Supabase."],["3. Resend API called", "The function reads RESEND_API_KEY from Supabase secrets; the key never reaches the browser."],["4. Delivery is logged", "Artist and optional client emails are recorded in Creator Dashboard notifications."]].map(([t,d]) => (
+          {[["1. Visitor submits", "Commission is saved to Supabase before email delivery is attempted."],["2. API sends notifications", "The commission-api function reads email preferences from Supabase."],["3. Gmail sends email", "The function calls a protected Google Apps Script Web App. Its URL and shared secret remain server-side."],["4. Delivery is logged", "Studio and optional client email attempts are recorded in Creator Dashboard notifications."]].map(([t,d]) => (
             <div key={t} style={{ background: "var(--powder)", borderRadius: 16, padding: 14 }}>
               <b style={{ display: "block", fontSize: ".85rem", marginBottom: 4 }}>{t}</b>
               <small style={{ color: "var(--muted)" }}>{d}</small>
@@ -1917,14 +1914,14 @@ function EmailPanel() {
       </section>
 
       <section className="card">
-        <h2 style={{ marginBottom: 8 }}>One-time Resend Setup</h2>
+        <h2 style={{ marginBottom: 8 }}>Google Apps Script Setup</h2>
         <ol style={{ paddingLeft: 20, lineHeight: 1.8 }}>
-          <li>Create or sign in to <a href="https://resend.com" target="_blank" rel="noopener noreferrer">Resend</a> and verify the domain used in the From Email field.</li>
-          <li>Copy your Resend API key.</li>
-          <li>In Supabase, open <b>Edge Functions → Secrets</b> and add <code>RESEND_API_KEY</code> with that key as its value.</li>
-          <li>Do not paste the key into GitHub, this website, or this chat.</li>
+          <li>Follow <code>docs/google-apps-script-email-setup.md</code> to deploy the Apps Script Web App as the studio Gmail account.</li>
+          <li>Store <code>GAS_WEBHOOK_SECRET</code> in Apps Script Project Settings → Script Properties.</li>
+          <li>In Supabase, open <b>Edge Functions → Secrets</b> and add <code>GAS_WEBHOOK_URL</code> and <code>GAS_WEBHOOK_SECRET</code>.</li>
+          <li>Never place the webhook URL or shared secret in this website, GitHub source, or browser storage.</li>
         </ol>
-        <p className="muted" style={{ marginTop: 10 }}>The commission-api function handles new-order emails, test emails, and retries. No separate notify-commission function or extra SQL is required.</p>
+        <p className="muted" style={{ marginTop: 10 }}>The commission-api function handles new-order emails, test emails, and safe retries. No database migration or extra SQL is required for this integration.</p>
       </section>
     </div>
   );
@@ -2519,13 +2516,13 @@ function NotifPanel() {
     setBusy("retry"); setMsg(null); let bad = 0;
     try {
       for (const id of ids) { const r = await Store.api("retry", { id }, true); bad += (r.notifications || []).filter((n) => n.status !== "sent").length; }
-      setMsg(bad ? { err: bad + " notification(s) still failed. See the error details below." } : { ok: "Resend accepted every retried email. This confirms sending, not inbox delivery." });
+      setMsg(bad ? { err: bad + " notification(s) still failed. See the error details below." } : { ok: "Google Apps Script accepted every retried email. This confirms sending, not inbox delivery." });
     } catch (e) { setMsg({ err: authErr(e) }); }
     setBusy(""); load();
   };
   const test = async () => {
     setBusy("test"); setMsg(null);
-    try { const r = await Store.api("test", {}, true); setMsg(r.status === "sent" ? { ok: "Resend accepted the test email. Check your inbox to confirm it arrived." } : { err: "The test email failed. See the history below." }); }
+    try { const r = await Store.api("test", {}, true); setMsg(r.status === "sent" ? { ok: "Google Apps Script accepted the test email. Check your inbox to confirm it arrived." } : { err: "The test email failed. See the history below." }); }
     catch (e) { setMsg({ err: authErr(e) }); }
     setBusy(""); load();
   };
@@ -2536,7 +2533,7 @@ function NotifPanel() {
           <Btn kind="cyan" size="sm" disabled={!!busy || !failedIds.length} onClick={() => retry(failedIds)}>{busy === "retry" ? "Retrying..." : "Retry failed (" + failedIds.length + ")"}</Btn></div></div>
       {msg && <div className={"note " + (msg.err ? "bad" : "ok")} role="status" style={{ marginBottom: 10 }}>{msg.err || msg.ok}</div>}
       {rows === null ? <p className="muted">Loading...</p> : rows.length === 0 ? <p className="muted">No notifications recorded yet.</p> :
-        <div className="list">{rows.map((r) => <div key={r.id} className="rowi"><div className="grow"><b>{r.order_id}</b> <span className="tag">{r.kind}</span> <span className="tag" style={{ color: r.status === "sent" ? "var(--ok)" : r.status === "failed" ? "var(--bad)" : "var(--warn)" }}>{r.status === "sent" ? "accepted by Resend" : r.status}</span>
+        <div className="list">{rows.map((r) => <div key={r.id} className="rowi"><div className="grow"><b>{r.order_id}</b> <span className="tag">{r.kind}</span> <span className="tag" style={{ color: r.status === "sent" ? "var(--ok)" : r.status === "failed" ? "var(--bad)" : "var(--warn)" }}>{r.status === "sent" ? "accepted by Gmail" : r.status}</span>
           <small className="muted" style={{ display: "block" }}>Attempts: {r.attempts}{r.sent_at ? " · " + new Date(r.sent_at).toLocaleString() : ""}{r.message ? " · " + r.message : ""}</small></div>
           {r.status === "failed" && r.kind !== "test" && <Btn kind="ghost" size="sm" disabled={!!busy} onClick={() => retry([r.order_id])}>Retry</Btn>}</div>)}</div>}
     </section>
