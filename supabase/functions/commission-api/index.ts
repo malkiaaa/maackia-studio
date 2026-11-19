@@ -1,5 +1,6 @@
 // Malkiaa Studio commission API — staging
-// Public actions: submit, public_board, track, respond, upload, submit_review, public_reviews.
+// Public actions: submit, public_board, track, respond, upload, submit_review, public_reviews, get_site.
+// Owner-only actions: save_site, get_draft_site, save_draft_site, test, retry, reviews_admin_list, reviews_admin_update, reviews_admin_delete.
 // Owner-only actions: test, retry, reviews_admin_list, reviews_admin_update, reviews_admin_delete.
 // Owner access is verified against public.admins.
 // Required Supabase secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
@@ -304,6 +305,31 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const action = clean(body?.action, 40);
+
+    if (action === "get_draft_site") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const { data, error } = await db.from("app_settings")
+        .select("value").eq("key", "site_draft").maybeSingle();
+      if (error) return json({ error: "Could not load the website draft." }, 500);
+      return json({ site: data?.value || null });
+    }
+
+    if (action === "save_draft_site") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const site = body?.site;
+      if (!site || typeof site !== "object" || Array.isArray(site)) return json({ error: "Website draft is invalid." }, 400);
+      if (JSON.stringify(site).length > 4_000_000) return json({ error: "Website draft is too large." }, 413);
+      const { error } = await db.from("app_settings").upsert({
+        key: "site_draft", value: site, updated_at: new Date().toISOString(),
+      }, { onConflict: "key" });
+      if (error) {
+        console.error("website draft save failed", error);
+        return json({ error: "Could not save website draft." }, 500);
+      }
+      return json({ ok: true });
+    }
 
     if (action === "get_site") {
       const { data, error } = await db.from("app_settings")
