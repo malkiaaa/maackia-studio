@@ -157,8 +157,21 @@ async function deliverEmail(
         }),
       });
       const raw = await response.text();
+      const contentType = response.headers.get("content-type") || "";
+      let finalHost = "unknown";
+      try { finalHost = new URL(response.url).host; } catch { /* keep sanitized default */ }
       let result: any = {};
       try { result = JSON.parse(raw); } catch { /* handled as provider response error below */ }
+
+      if (!result || typeof result !== "object" || Array.isArray(result) || !contentType.toLowerCase().includes("application/json")) {
+        console.error("Google Apps Script returned a non-JSON response", {
+          status: response.status,
+          redirected: response.redirected,
+          finalHost,
+          contentType,
+          preview: clean(raw.replace(/\\s+/g, " "), 180),
+        });
+      }
 
       if (response.ok && result?.ok === true &&
           (result?.status === "sent" || result?.duplicate === true)) {
@@ -169,7 +182,11 @@ async function deliverEmail(
       } else {
         message = "Google Apps Script error" +
           (response.status ? " " + response.status : "") + ": " +
-          clean(result?.message || result?.error || raw || "Webhook returned an invalid response.", 500);
+          clean(result?.message || result?.error ||
+            (!contentType.toLowerCase().includes("application/json")
+              ? "Google returned HTML instead of the expected JSON response. Check commission-api logs for redirect and response details."
+              : raw) ||
+            "Webhook returned an invalid response.", 500);
       }
     } catch (error) {
       message = "Google Apps Script request failed: " + clean((error as Error)?.message, 500);
