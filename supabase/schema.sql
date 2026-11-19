@@ -132,8 +132,10 @@ alter table public.track_attempts enable row level security;
 drop policy if exists admins_read_self on public.admins;
 drop policy if exists creator_read_requests on public.commission_requests;
 drop policy if exists creator_update_requests on public.commission_requests;
+drop policy if exists creator_insert_requests on public.commission_requests;
 drop policy if exists creator_read_tracks on public.order_tracks;
 drop policy if exists creator_update_tracks on public.order_tracks;
+drop policy if exists creator_insert_tracks on public.order_tracks;
 drop policy if exists creator_manage_commissions on public.commission_management;
 drop policy if exists creator_manage_settings on public.app_settings;
 drop policy if exists creator_read_notifications on public.notifications;
@@ -146,6 +148,8 @@ create policy admins_read_self on public.admins
 -- All operational access is owner-only. Visitors use the Edge Function.
 create policy creator_read_requests on public.commission_requests
   for select to authenticated using ((select public.is_owner()));
+create policy creator_insert_requests on public.commission_requests
+  for insert to authenticated with check ((select public.is_owner()));
 create policy creator_update_requests on public.commission_requests
   for update to authenticated
   using ((select public.is_owner()))
@@ -153,6 +157,8 @@ create policy creator_update_requests on public.commission_requests
 
 create policy creator_read_tracks on public.order_tracks
   for select to authenticated using ((select public.is_owner()));
+create policy creator_insert_tracks on public.order_tracks
+  for insert to authenticated with check ((select public.is_owner()));
 create policy creator_update_tracks on public.order_tracks
   for update to authenticated
   using ((select public.is_owner()))
@@ -177,8 +183,8 @@ revoke all on public.admins, public.commission_requests, public.order_tracks,
   public.notifications, public.track_attempts from anon, authenticated;
 
 grant select on public.admins to authenticated;
-grant select, update on public.commission_requests to authenticated;
-grant select, update on public.order_tracks to authenticated;
+grant select, insert, update on public.commission_requests to authenticated;
+grant select, insert, update on public.order_tracks to authenticated;
 grant select, insert, update, delete on public.commission_management to authenticated;
 grant select, insert, update, delete on public.app_settings to authenticated;
 grant select on public.notifications to authenticated;
