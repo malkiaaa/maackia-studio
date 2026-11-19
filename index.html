@@ -490,9 +490,9 @@ function buildDoc(site) {
     S + ' type="text/babel" data-presets="react" id="app-src">' + src + E + SKEL_POST;
 }
 async function publishSite(site) {
-  const art = await cap("artifact");
-  if (!art) throw { code: "not_granted" };
-  return art.publish(buildDoc(site));
+  // Vercel-hosted site content is stored centrally in Supabase, not through
+  // the Claude Artifact publishing API.
+  return Store.api("save_site", { site }, true);
 }
 function explain(e) {
   const c = e && e.code;
@@ -2570,8 +2570,28 @@ function OrdersPanel() {
 /* ============================================================ app */
 function App() {
   const [route, go] = useHashRoute();
-  const [saved] = useState(loadSaved);
+  const [saved, setSaved] = useState(loadSaved);
   const [site, setSite] = useState(saved);
+  // Load the published site content from Supabase for every visitor.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const sb = await loadSupabaseClient();
+        if (!sb) return;
+        const result = await Store.api("get_site", {});
+        if (active && result.site && typeof result.site === "object") {
+          const remote = mergeDeep(DEFAULT_SITE, result.site);
+          setSaved(remote);
+          setSite(remote);
+        }
+      } catch (error) {
+        console.warn("Could not load published site content:", error);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   // Auto-connect to Supabase and sync email config from cloud on mount
   useEffect(() => {
     if (!getSbCfg()) return;
@@ -2634,8 +2654,13 @@ function App() {
   const dirty = useMemo(() => JSON.stringify(site) !== JSON.stringify(saved), [site, saved]);
   const doPublish = async (data) => {
     setSaving(true); setMsg(null);
-    try { await publishSite(data); setMsg({ ok: "Saved. Visitors will see the update." }); }
-    catch (e) { setMsg({ err: explain(e) }); }
+    try {
+      await publishSite(data);
+      const next = clone(data);
+      setSaved(next);
+      setSite(next);
+      setMsg({ ok: "Saved. Visitors will see the update." });
+    } catch (e) { setMsg({ err: authErr(e) || explain(e) }); }
     setSaving(false);
   };
   const save = () => doPublish(site);
