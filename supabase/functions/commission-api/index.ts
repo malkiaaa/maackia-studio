@@ -27,10 +27,12 @@ const sha256 = async (value: string) => {
 const clean = (v: unknown, max = 500) =>
   typeof v === "string" ? v.trim().slice(0, max) : "";
 
-const escapeHtml = (value: unknown) =>
-  clean(value, 2000).replace(/[&<>"']/g, (ch) => ({
+const escapeHtml = (value: unknown) => {
+  const entities: Record<string, string> = {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[ch] || ch));
+  };
+  return clean(value, 2000).replace(/[&<>"']/g, (ch) => entities[ch] || ch);
+};
 
 const allowedTypes = new Set([
   "image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf",
@@ -193,7 +195,10 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
   return results;
 }
 
-async function requireOwner(req: Request, db: any) {
+async function requireOwner(
+  req: Request,
+  db: any,
+): Promise<{ ok: true; user: any } | { ok: false; status: number; error: string }> {
   const authorization = req.headers.get("Authorization") || "";
   const token = authorization.replace(/^Bearer\s+/i, "").trim();
   if (!token) return { ok: false, status: 401, error: "Sign in as the Creator before using this action." };
