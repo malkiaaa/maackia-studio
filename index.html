@@ -387,6 +387,129 @@ textarea.in{min-height:96px;resize:vertical}
   .card{padding:13px;border-radius:18px}
 }
 
+
+/* ============================================================
+   RESPONSIVE SYSTEM — shared layout rules for every route
+   ============================================================ */
+:root{padding-top:0!important;padding-bottom:0!important;scroll-padding-top:12px}
+html,body,#root{width:100%;max-width:100%;min-width:0}
+html{overflow-x:clip}
+body{overflow-x:clip;min-height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.shell,.main,.main-inner,.page,.panel,.grid,.card,.form,.rowi,.olay,.modal-box{min-width:0;max-width:100%}
+.main{width:calc(100% - 220px)}
+.main-inner{width:100%;min-width:0}
+.grid>*{min-width:0;max-width:100%}
+img,video,iframe,svg,canvas{max-width:100%}
+img,video{height:auto}
+p,li,small,b,strong,a,button,label,span{overflow-wrap:anywhere}
+input,select,textarea{max-width:100%;min-width:0}
+button,.btn{white-space:normal}
+.top{min-width:0;flex-wrap:wrap}
+.search{flex:0 1 220px;min-width:0}
+.quick{min-width:0;max-width:100%;flex-wrap:wrap}
+.quick-tab{white-space:nowrap}
+.creator-bar-wrap{padding:10px 24px 0;min-width:0;max-width:100%}
+.page>*,.panel>*{min-width:0;max-width:100%}
+.page h1,.page h2,.page h3{overflow-wrap:anywhere}
+.price-grid,.svc-grid,.gal,.latest-grid{min-width:0}
+.price-grid>* ,.svc-grid>* ,.gal>*{min-width:0;max-width:100%}
+.art{max-width:100%}
+.modal{overflow-y:auto;overscroll-behavior:contain}
+.modal-box{min-width:0}
+.modal-info{min-width:0;overflow-wrap:anywhere}
+.olay>*{min-width:0;max-width:100%}
+.osum,.srow{min-width:0}
+.field,.field>*{min-width:0;max-width:100%}
+.field .in{width:100%}
+.steps,.ctabs,.filters,.chips,.meta,.btns{min-width:0;max-width:100%}
+.steps,.ctabs,.filters{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
+.bnav{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+@media (min-width:768px) and (max-width:1199px){
+  .top{gap:10px;padding:12px 16px}
+  .search{flex:1 1 220px;width:auto}
+  .quick{flex:1 1 100%;margin-left:0;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding:2px 0 5px;scrollbar-width:thin}
+  .quick-tab{flex:none}
+  .main-inner{padding:18px 18px 48px}
+  .creator-bar-wrap{padding:10px 18px 0}
+  .cbar{border-radius:22px}
+  .olay{grid-template-columns:minmax(0,1fr)}
+  .olay aside{position:static;order:-1}
+}
+@media (max-width:767px){
+  .shell{display:block;width:100%;max-width:100%;padding:0}
+  .main{display:flex;width:100%;max-width:100%;min-width:0;margin:0}
+  .mbar{position:sticky;top:0;padding-top:calc(10px + env(safe-area-inset-top,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-left:max(14px,env(safe-area-inset-left,0px))}
+  .top{display:flex;flex-direction:column;align-items:stretch;gap:8px;width:100%;padding:8px 14px;border-bottom:0;background:transparent;backdrop-filter:none}
+  .top-left{display:none!important}
+  .search{order:0;width:100%;flex:0 0 auto;height:42px}
+  .quick{display:none!important}
+  .main-inner{width:100%;padding:12px max(12px,env(safe-area-inset-right,0px)) calc(104px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+  .creator-bar-wrap{width:100%;padding:8px max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px))}
+  .cbar{position:relative;top:auto;width:100%;max-width:100%;margin:0 0 8px;border-radius:18px;padding:10px;align-items:flex-start}
+  .cbar>b{width:100%;flex-wrap:wrap}
+  .cbar .btns{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .cbar .btns>*{min-width:0;justify-content:center;text-align:center}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .grid>[class*="span-"]{grid-column:1/-1!important}
+  .span-7,.span-5,.span-8,.span-4,.span-6,.span-12{grid-column:1/-1}
+  .card{width:100%;padding:16px;border-radius:20px}
+  .card-head{align-items:flex-start;flex-wrap:wrap}
+  .card-head>*{min-width:0}
+  .svc-grid,.price-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .svc{width:100%;min-width:0}
+  .gal{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .gal-item{min-width:0}
+  .btns{display:flex;flex-wrap:wrap;gap:8px}
+  .btns>.btn,.btns>a{max-width:100%;min-width:0}
+  .form{grid-template-columns:minmax(0,1fr);gap:12px}
+  .form .full{grid-column:1}
+  .rowi{width:100%;align-items:flex-start;flex-wrap:wrap}
+  .rowi .grow{min-width:0;flex:1 1 160px}
+  .rowi .acts{display:flex;flex-wrap:wrap;max-width:100%;width:100%;justify-content:flex-start}
+  .kv-row>div{min-width:0;overflow-wrap:anywhere}
+  .stages{width:100%;max-width:100%}
+  .stage{min-width:0;flex:1 1 100%}
+  .olay{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+  .olay aside{position:static;order:-1}
+  .modal{place-items:start center;padding:8px;overflow-y:auto}
+  .modal-box{display:grid;grid-template-columns:minmax(0,1fr);width:100%;max-width:100%;max-height:calc(100dvh - 16px);overflow-y:auto;border-radius:20px}
+  .modal-box .art{width:100%;height:auto;min-height:180px;max-height:42dvh;aspect-ratio:4/3}
+  .modal-info{padding:18px}
+  .xbtn{position:sticky;float:right;top:8px;margin-left:auto}
+  .bnav{min-height:58px;padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom,0px))}
+  .bnav button{min-width:0;min-height:48px;padding:5px 1px;font-size:clamp(.56rem,2.2vw,.68rem);line-height:1.2;overflow-wrap:anywhere}
+  .bnav button svg{width:20px;height:20px}
+  .drawer{width:min(88vw,340px);max-width:calc(100vw - 24px);padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+  .cbar .btns .btn{min-height:40px;padding:8px 6px;font-size:.76rem}
+  .page>div[style*="display: flex"]{min-width:0}
+  .price-group{min-width:0}
+  .price-group>h2{font-size:1.25rem}
+  .terms{min-width:0}
+  .inpage-builder,.inpage-blocks,.inpage-block{width:100%;min-width:0;max-width:100%}
+}
+@media (max-width:430px){
+  .main-inner{padding-left:12px;padding-right:12px}
+  .card{padding:14px;border-radius:18px}
+  .gal{grid-template-columns:minmax(0,1fr)}
+  .latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .card-head{gap:8px}
+  .card-head .btn{padding:7px 10px;font-size:.76rem}
+  .bnav button{font-size:.58rem}
+  .cbar .btns{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:380px){
+  .main-inner{padding-left:10px;padding-right:10px}
+  .creator-bar-wrap{padding-left:10px;padding-right:10px}
+  .cbar .btns{grid-template-columns:minmax(0,1fr)}
+  .latest-grid{grid-template-columns:minmax(0,1fr)}
+  .gal{grid-template-columns:minmax(0,1fr)}
+  .bnav button{font-size:.55rem}
+  .card{padding:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  html:focus-within{scroll-behavior:auto}
+}
+
 </style>
 
 <div id="root"></div>
@@ -922,10 +1045,6 @@ function TopBar({ route, go, query, setQuery }) {
   const tabs = [["gallery", "Gallery"], ["commission", "Prices"], ["terms", "Terms"], ["workflow", "Workflow"], ["contact", "Contact"]];
   return (
     <div className="top">
-      <div className="top-left">
-        <div className="crumb">Dashboard / {cur.label.toUpperCase()}</div>
-        <div className="greet">{route === "home" ? CONFIG.profile.greeting : cur.label}</div>
-      </div>
       <label className="search">
         <Icon name="search" />
         <input id="site-search" type="search" value={query} onChange={(e) => onChange(e.target.value)} placeholder="Search…" aria-label="Search artwork or category" />
@@ -3019,7 +3138,7 @@ function App() {
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <main className="main">
           <TopBar route={view} go={go} query={query} setQuery={(v) => { setQuery(v); if (v) setCat("all"); }} />
-          {creatorOn && view!=="creator" && <div style={{ padding: "10px 24px 0" }}><CreatorBar go={go} /></div>}
+          {creatorOn && view!=="creator" && <div className="creator-bar-wrap"><CreatorBar go={go} /></div>}
           <div className="main-inner" key={view}>
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
