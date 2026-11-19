@@ -19,7 +19,7 @@ returns text
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   current_year integer := extract(year from now())::integer;
   next_number integer;
@@ -31,7 +31,7 @@ begin
   returning last_number into next_number;
   return 'COMMISSION-' || current_year::text || '-' || lpad(next_number::text, 4, '0');
 end;
-$;
+$$;
 revoke all on function public.next_commission_id() from public, anon, authenticated;
 grant execute on function public.next_commission_id() to service_role;
 
