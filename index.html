@@ -1780,68 +1780,6 @@ function SupabaseDbPanel() {
     clearSbCfg(); _sbClient = null; Store._sb = null; _sbStatus = "unconfigured"; refreshStatus();
     setCfg({ url: "", anonKey: "" }); setMsg("Disconnected. Requests will be saved locally only.");
   };
-  const SQL_TABLES = `-- 1. Commission requests (submitted by visitors)
-create table if not exists commission_requests (
-  id text primary key,
-  created_at timestamptz default now(),
-  "createdAt" text,
-  status text default 'Pending Review',
-  payment text default 'Unpaid',
-  "serviceId" text, "serviceTitle" text, "tierName" text,
-  form jsonb, estimate jsonb,
-  notes text default '', "finalPrice" numeric, "extraLines" text default ''
-);
--- 2. Order tracking (client-visible via Request ID + email hash)
-create table if not exists order_tracks (
-  id text primary key,
-  created_at timestamptz default now(),
-  "createdAt" text, "serviceTitle" text,
-  status text, payment text, estimate numeric, custom boolean,
-  "emailHash" text, proposal jsonb,
-  updates jsonb default '[]', "finalFiles" jsonb default '[]'
-);
--- 3. Creator management data (artist-only)
-create table if not exists commission_management (
-  id text primary key, status text, payment text,
-  notes text, "finalPrice" numeric, "extraLines" text
-);
--- 4. App settings (email config stored here, artist-only)
-create table if not exists app_settings (
-  key text primary key,
-  value jsonb
-);
-alter table app_settings enable row level security;
-create policy "artist_all_settings" on app_settings
-  for all to authenticated using (true) with check (true);
-
--- 5. Email notification log (prevents duplicates)
-create table if not exists email_notification_log (
-  id text primary key,
-  sent_at timestamptz default now(),
-  type text,
-  recipient text
-);
--- 6. Row Level Security
-alter table commission_requests enable row level security;
-alter table order_tracks enable row level security;
-alter table commission_management enable row level security;
-alter table email_notification_log enable row level security;
-
-create policy "visitors_insert_requests"   on commission_requests   for insert to anon            with check (true);
-create policy "artist_read_requests"       on commission_requests   for select to authenticated   using (true);
-create policy "artist_update_requests"     on commission_requests   for update to authenticated   using (true);
-create policy "visitors_insert_tracks"     on order_tracks          for insert to anon            with check (true);
-create policy "anyone_read_tracks"         on order_tracks          for select                    using (true);
-create policy "artist_update_tracks"       on order_tracks          for update to authenticated   using (true);
-create policy "artist_all_management"      on commission_management for all    to authenticated   using (true) with check (true);
-create policy "fn_insert_email_log"        on email_notification_log for insert with check (true);
-create policy "artist_read_email_log"      on email_notification_log for select to authenticated using (true);`;
-  const SQL_STORAGE = `-- Run in Supabase SQL Editor to set storage policies
-insert into storage.policies (name, bucket_id, operation, definition) values
-  ('visitors_upload_refs', 'references', 'INSERT', 'true'),
-  ('public_read_refs',     'references', 'SELECT', 'true'),
-  ('artist_delete_refs',   'references', 'DELETE', '(auth.role() = ''authenticated'')')
-on conflict do nothing;`;
   return (
     <div className="panel">
       <section className="card">
@@ -1860,14 +1798,9 @@ on conflict do nothing;`;
         </div>
         {msg && <div className={"note " + (_sbStatus === "connected" ? "ok" : "bad")} style={{ marginTop: 12 }}>{msg}</div>}
       </section>
-      <section className="card"><h2 style={{ marginBottom: 10 }}>Required Database Tables</h2><p className="muted" style={{ marginBottom: 12 }}>Supabase Dashboard → SQL Editor → New Query → paste and run:</p><CopyBlock code={SQL_TABLES} /></section>
       <section className="card">
-        <h2 style={{ marginBottom: 10 }}>Storage Bucket</h2>
-        <ol style={{ paddingLeft: 20, lineHeight: 2, marginBottom: 12 }}>
-          <li>Supabase Dashboard → Storage → <b>New bucket</b> → name it <code>references</code> → Public ✓</li>
-          <li>Then run this SQL to set policies:</li>
-        </ol>
-        <CopyBlock code={SQL_STORAGE} />
+        <h2 style={{ marginBottom: 8 }}>Database & Storage Setup</h2>
+        <p className="muted">The staging database schema and private <code>references</code> storage bucket are created by <code>supabase/schema.sql</code>. Do not run the legacy SQL snippets or make the storage bucket public. Visitor access is handled by the commission API; Creator data is protected by owner-only policies.</p>
       </section>
     </div>
   );
@@ -1909,177 +1842,13 @@ function EmailPanel() {
     setTesting(false);
   };
 
-  const EDGE_FN_CODE = `// supabase/functions/notify-commission/index.ts
-// Deploy: supabase functions deploy notify-commission
-// Set secrets: supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxx
-//              supabase secrets set ARTIST_EMAIL=your@email.com
-//              supabase secrets set FROM_EMAIL=noreply@yourdomain.com
-//              supabase secrets set FROM_NAME="Malkiaa Studio"
-//              supabase secrets set SEND_CLIENT_EMAIL=true
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-
-  try {
-    const body = await req.json();
-    const { orderId, clientName, clientEmail, serviceTitle, tierName,
-            estimatedTotal, estimateCustom, createdAt, dashboardUrl, _test } = body;
-
-    const RESEND_KEY   = Deno.env.get("RESEND_API_KEY")!;
-    const ARTIST_EMAIL = Deno.env.get("ARTIST_EMAIL")!;
-    const FROM_EMAIL   = Deno.env.get("FROM_EMAIL") || "noreply@yourdomain.com";
-    const FROM_NAME    = Deno.env.get("FROM_NAME")  || "Malkiaa Studio";
-    const SEND_CLIENT  = Deno.env.get("SEND_CLIENT_EMAIL") !== "false";
-
-    if (!RESEND_KEY)   throw new Error("RESEND_API_KEY secret not set.");
-    if (!ARTIST_EMAIL) throw new Error("ARTIST_EMAIL secret not set.");
-
-    // ---- Duplicate prevention (skip for test) ----
-    if (!_test) {
-      const sb = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      );
-      const { data: existing } = await sb
-        .from("email_notification_log")
-        .select("id").eq("id", orderId + "_artist").single();
-      if (existing) {
-        return new Response(JSON.stringify({ skipped: true, reason: "duplicate" }),
-          { headers: { ...CORS, "Content-Type": "application/json" } });
-      }
-    }
-
-    const idr = (n) => "IDR " + Math.round(n || 0).toLocaleString("id-ID");
-    const fmt = (d) => new Date(d).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
-    const price = estimateCustom ? idr(estimatedTotal) + " + custom quote" : idr(estimatedTotal);
-
-    // ---- Artist notification email ----
-    const artistHtml = \`<!DOCTYPE html>
-<html><body style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;color:#454B55">
-<div style="background:linear-gradient(135deg,#A8E4F5,#DDF4FC);border-radius:20px;padding:28px;margin-bottom:24px">
-  <h1 style="margin:0;font-size:1.6rem">🎨 New Commission Request</h1>
-  <p style="margin:6px 0 0;opacity:.8">Malkiaa Studio</p>
-</div>
-<table style="width:100%;border-collapse:collapse">
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Request ID</td><td style="padding:10px 0;border-bottom:1px dashed #eee;font-weight:800">\${orderId}</td></tr>
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Client</td><td style="padding:10px 0;border-bottom:1px dashed #eee">\${clientName}</td></tr>
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Client Email</td><td style="padding:10px 0;border-bottom:1px dashed #eee">\${clientEmail}</td></tr>
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Service</td><td style="padding:10px 0;border-bottom:1px dashed #eee">\${serviceTitle} — \${tierName}</td></tr>
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Estimated Price</td><td style="padding:10px 0;border-bottom:1px dashed #eee;font-weight:800">\${price}</td></tr>
-  <tr><td style="padding:10px 0;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Submitted</td><td style="padding:10px 0">\${fmt(createdAt)}</td></tr>
-</table>
-<div style="margin-top:24px">
-  <a href="\${dashboardUrl}" style="display:inline-block;background:#57CBE5;color:#1E3640;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:800">Open in Creator Dashboard →</a>
-</div>
-<p style="margin-top:24px;font-size:.8rem;color:#66707C">This notification was sent automatically by Malkiaa Studio.</p>
-</body></html>\`;
-
-    // ---- Client confirmation email ----
-    const clientHtml = \`<!DOCTYPE html>
-<html><body style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;color:#454B55">
-<div style="background:linear-gradient(135deg,#A8E4F5,#DDF4FC);border-radius:20px;padding:28px;margin-bottom:24px">
-  <h1 style="margin:0;font-size:1.5rem">✨ Commission Request Received!</h1>
-  <p style="margin:6px 0 0;opacity:.8">Malkiaa Studio — Thank you, \${clientName}!</p>
-</div>
-<p>Your commission request has been received and is now waiting for review. The artist will get back to you soon.</p>
-<table style="width:100%;border-collapse:collapse;margin:16px 0">
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Request ID</td><td style="padding:10px 0;border-bottom:1px dashed #eee;font-weight:800;font-size:1.1rem">\${orderId}</td></tr>
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Service</td><td style="padding:10px 0;border-bottom:1px dashed #eee">\${serviceTitle} — \${tierName}</td></tr>
-  <tr><td style="padding:10px 0;border-bottom:1px dashed #eee;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Estimated Price</td><td style="padding:10px 0;border-bottom:1px dashed #eee">\${price}</td></tr>
-  <tr><td style="padding:10px 0;color:#66707C;font-size:.8rem;font-weight:700;text-transform:uppercase">Submitted</td><td style="padding:10px 0">\${fmt(createdAt)}</td></tr>
-</table>
-<div style="background:#F2FAFD;border-radius:14px;padding:16px;margin:16px 0">
-  <p style="margin:0;font-weight:700">💡 Keep this email!</p>
-  <p style="margin:6px 0 0">Use your <b>Request ID (\${orderId})</b> and this email address to track your order on the website.</p>
-</div>
-<p style="font-size:.85rem;color:#66707C;margin-top:24px">No payment has been taken. You will receive a custom proposal before any payment is requested.</p>
-</body></html>\`;
-
-    const send = async (to, subject, html) => {
-      const r = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: FROM_NAME + " <" + FROM_EMAIL + ">", to, subject, html }),
-      });
-      if (!r.ok) throw new Error("Resend error " + r.status + ": " + await r.text());
-      return r.json();
-    };
-
-    const errors = [];
-    // Always send artist notification
-    await send(ARTIST_EMAIL, "[ Malkiaa Studio ] New Commission Request Received!", artistHtml)
-      .catch((e) => errors.push("Artist email: " + e.message));
-
-    // Optionally send client confirmation
-    if (SEND_CLIENT && clientEmail && !_test) {
-      await send(clientEmail, "[ Malkiaa Studio ] Commission Request Received — " + orderId, clientHtml)
-        .catch((e) => errors.push("Client email: " + e.message));
-    }
-
-    // ---- Log to prevent duplicate notifications (skip for test) ----
-    if (!_test) {
-      const sb = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      );
-      await sb.from("email_notification_log").insert([
-        { id: orderId + "_artist", type: "artist_notification", recipient: ARTIST_EMAIL },
-        ...(SEND_CLIENT && clientEmail ? [{ id: orderId + "_client", type: "client_confirmation", recipient: clientEmail }] : []),
-      ]).catch(() => {});
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, errors: errors.length ? errors : undefined }),
-      { headers: { ...CORS, "Content-Type": "application/json" } }
-    );
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ error: e.message }),
-      { status: 500, headers: { ...CORS, "Content-Type": "application/json" } }
-    );
-  }
-});`;
-
-  const DEPLOY_STEPS = `# 1. Install Supabase CLI (if not already)
-npm install -g supabase
-
-# 2. Login and link your project
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-
-# 3. Create the edge function file
-mkdir -p supabase/functions/notify-commission
-# Paste the edge function code into:
-# supabase/functions/notify-commission/index.ts
-
-# 4. Set secrets (NEVER commit these to git)
-supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
-supabase secrets set ARTIST_EMAIL=your@email.com
-supabase secrets set FROM_EMAIL=noreply@yourdomain.com
-supabase secrets set FROM_NAME="Malkiaa Studio"
-supabase secrets set SEND_CLIENT_EMAIL=true
-
-# 5. Deploy the function
-supabase functions deploy notify-commission --no-verify-jwt
-
-# 6. Test it
-supabase functions serve notify-commission  # local test`;
-
   return (
     <div className="panel">
       <section className="card">
         <div className="card-head"><h2>Email Notification Settings</h2><span style={{ fontSize: ".8rem", fontWeight: 800, color: "var(--muted)" }}>Resend + Edge Function</span></div>
-        <p className="muted" style={{ marginBottom: 16 }}>Email notifications are sent server-side via a Supabase Edge Function. Your Resend API key is stored only as a Supabase secret — it is never exposed in the browser.</p>
+        <p className="muted" style={{ marginBottom: 16 }}>Email notifications are sent by commission-api after a request is saved. Your Resend API key must be stored as a Supabase Edge Function secret and is never exposed in the browser.</p>
         <div className="form">
-          <div className="field full"><span>Artist Notification Email *</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="artist@yourdomain.com" /><small className="muted">New commission alerts go here. Must match the ARTIST_EMAIL secret in your Edge Function.</small></div>
+          <div className="field full"><span>Artist Notification Email *</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="artist@yourdomain.com" /><small className="muted">New commission alerts go here. This address is saved securely in the Supabase app_settings table.</small></div>
           <div className="field"><span>From Name</span><input className="in" value={cfg.fromName} onChange={(e) => set("fromName")(e.target.value)} placeholder="Malkiaa Studio" /></div>
           <div className="field"><span>From Email</span><input className="in" value={cfg.fromEmail} onChange={(e) => set("fromEmail")(e.target.value)} placeholder="noreply@yourdomain.com" /><small className="muted">Must be a verified domain in Resend.</small></div>
           <label className="switch full"><span>Send artist notification on new request</span><input type="checkbox" checked={cfg.sendArtist} onChange={(e) => set("sendArtist")(e.target.checked)} /></label>
@@ -2095,7 +1864,7 @@ supabase functions serve notify-commission  # local test`;
       <section className="card">
         <h2 style={{ marginBottom: 6 }}>How It Works</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, margin: "12px 0" }}>
-          {[["1. Visitor submits", "Commission saved to Supabase DB first. Request is never lost."],["2. Edge Function called", "Frontend POSTs to your Edge Function with order metadata only."],["3. Resend API called", "Edge Function reads RESEND_API_KEY from secrets. Never exposed to browser."],["4. Emails sent", "Artist notification + optional client confirmation. Logged to prevent duplicates."]].map(([t,d]) => (
+          {[["1. Visitor submits", "Commission is saved to Supabase before email delivery is attempted."],["2. API sends notifications", "The commission-api function reads email preferences from Supabase."],["3. Resend API called", "The function reads RESEND_API_KEY from Supabase secrets; the key never reaches the browser."],["4. Delivery is logged", "Artist and optional client emails are recorded in Creator Dashboard notifications."]].map(([t,d]) => (
             <div key={t} style={{ background: "var(--powder)", borderRadius: 16, padding: 14 }}>
               <b style={{ display: "block", fontSize: ".85rem", marginBottom: 4 }}>{t}</b>
               <small style={{ color: "var(--muted)" }}>{d}</small>
@@ -2108,31 +1877,14 @@ supabase functions serve notify-commission  # local test`;
       </section>
 
       <section className="card">
-        <h2 style={{ marginBottom: 10 }}>Edge Function Code</h2>
-        <p className="muted" style={{ marginBottom: 12 }}>Create this file at <code>supabase/functions/notify-commission/index.ts</code>:</p>
-        <CopyBlock code={EDGE_FN_CODE} />
-      </section>
-
-      <section className="card">
-        <h2 style={{ marginBottom: 10 }}>Deployment Steps</h2>
-        <CopyBlock code={DEPLOY_STEPS} />
-        <div style={{ marginTop: 14 }}>
-          <p className="muted" style={{ marginBottom: 8, fontSize: ".85rem" }}>Get your free Resend API key at <a href="https://resend.com" target="_blank" rel="noopener noreferrer">resend.com</a>. The free tier allows 3,000 emails/month. Your sending domain must be verified in Resend.</p>
-        </div>
-      </section>
-
-      <section className="card">
-        <h2 style={{ marginBottom: 10 }}>Required SQL for Duplicate Prevention</h2>
-        <p className="muted" style={{ marginBottom: 10 }}>The <code>email_notification_log</code> table is included in the main SQL migration in the Supabase tab. If you ran the original migration, add this table separately:</p>
-        <CopyBlock code={`create table if not exists email_notification_log (
-  id text primary key,
-  sent_at timestamptz default now(),
-  type text,
-  recipient text
-);
-alter table email_notification_log enable row level security;
-create policy "fn_insert_email_log"   on email_notification_log for insert with check (true);
-create policy "artist_read_email_log" on email_notification_log for select to authenticated using (true);`} />
+        <h2 style={{ marginBottom: 8 }}>One-time Resend Setup</h2>
+        <ol style={{ paddingLeft: 20, lineHeight: 1.8 }}>
+          <li>Create or sign in to <a href="https://resend.com" target="_blank" rel="noopener noreferrer">Resend</a> and verify the domain used in the From Email field.</li>
+          <li>Copy your Resend API key.</li>
+          <li>In Supabase, open <b>Edge Functions → Secrets</b> and add <code>RESEND_API_KEY</code> with that key as its value.</li>
+          <li>Do not paste the key into GitHub, this website, or this chat.</li>
+        </ol>
+        <p className="muted" style={{ marginTop: 10 }}>The commission-api function handles new-order emails, test emails, and retries. No separate notify-commission function or extra SQL is required.</p>
       </section>
     </div>
   );
@@ -2776,7 +2528,7 @@ function NotifPanel() {
       {msg && <div className={"note " + (msg.err ? "bad" : "ok")} role="status" style={{ marginBottom: 10 }}>{msg.err || msg.ok}</div>}
       {rows === null ? <p className="muted">Loading...</p> : rows.length === 0 ? <p className="muted">No notifications recorded yet.</p> :
         <div className="list">{rows.map((r) => <div key={r.id} className="rowi"><div className="grow"><b>{r.order_id}</b> <span className="tag">{r.kind}</span> <span className="tag" style={{ color: r.status === "sent" ? "var(--ok)" : r.status === "failed" ? "var(--bad)" : "var(--warn)" }}>{r.status === "sent" ? "accepted by Resend" : r.status}</span>
-          <small className="muted" style={{ display: "block" }}>Attempts: {r.attempts}{r.sent_at ? " · " + new Date(r.sent_at).toLocaleString() : ""}{r.error ? " · " + r.error : ""}</small></div>
+          <small className="muted" style={{ display: "block" }}>Attempts: {r.attempts}{r.sent_at ? " · " + new Date(r.sent_at).toLocaleString() : ""}{r.message ? " · " + r.message : ""}</small></div>
           {r.status === "failed" && r.kind !== "test" && <Btn kind="ghost" size="sm" disabled={!!busy} onClick={() => retry([r.order_id])}>Retry</Btn>}</div>)}</div>}
     </section>
   );
