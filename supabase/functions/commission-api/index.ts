@@ -358,9 +358,13 @@ Deno.serve(async (req) => {
       }
       const { error: trackError } = await db.from("order_tracks").insert(safeTrack);
       if (trackError) {
-        await db.from("commission_requests").delete().eq("id", id);
-        console.error("tracking insert failed", trackError);
-        return json({ error: "Could not initialize order tracking." }, 500);
+        // Preserve the saved commission. Never delete a valid request as rollback
+        // for a secondary tracking-row failure; log it for owner-side recovery.
+        console.error("tracking insert failed; commission request was preserved", { id, error: trackError });
+        return json({
+          error: "The commission was saved, but order tracking could not be initialized. Please contact the studio and do not submit the form again.",
+          commissionId: id,
+        }, 503);
       }
 
       // Email failure never rolls back a saved commission.
