@@ -219,9 +219,18 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
 
   const url = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  // Support both legacy service_role JWT and the current named secret API key.
+  let serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!serviceKey) {
+    try {
+      const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}");
+      serviceKey = secretKeys.default || "";
+    } catch {
+      serviceKey = "";
+    }
+  }
   if (!url || !serviceKey) {
-    return json({ error: "Server database secrets are not configured." }, 503);
+    return json({ error: "Supabase server secret key is not available to this function." }, 503);
   }
 
   const db = createClient(url, serviceKey, {
