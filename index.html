@@ -1,29 +1,28 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 /* Creator visual editing + shared About image */
-.about-profile-card{position:relative;isolation:isolate;overflow:hidden;min-height:380px;padding:0!important;border:1px solid rgba(255,255,255,.8)!important;background:linear-gradient(135deg,#DDF7FC 0%,#FFFFFF 54%,#FFF2C7 100%);box-shadow:0 16px 36px -22px rgba(91,157,177,.42)}
-.about-profile-card__image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0}
-.about-profile-card__veil{position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(255,255,255,1) 0%,rgba(255,255,255,.96) 30%,rgba(255,255,255,.70) 57%,rgba(255,255,255,.12) 100%)}
-.about-profile-card__content{position:relative;z-index:2;margin-top:auto;padding:76px 22px 22px;display:flex;flex-direction:column;align-items:flex-start}
+.about-profile-card{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;min-height:0;padding:0!important;border:1px solid rgba(255,255,255,.88)!important;background:linear-gradient(145deg,#FFFFFF 0%,#F3FCFE 68%,#FFF9E7 100%);box-shadow:0 16px 36px -22px rgba(91,157,177,.42)}
+.about-profile-card__image{position:relative;width:100%;height:auto;aspect-ratio:4/5;max-height:460px;object-fit:cover;object-position:center 28%;display:block;z-index:0;mask-image:linear-gradient(to bottom,#000 76%,transparent 100%)}
+.about-profile-card__image-placeholder{width:100%;aspect-ratio:4/5;max-height:300px;background:linear-gradient(145deg,#DDF7FC 0%,#FFFFFF 54%,#FFF2C7 100%)}
+.about-profile-card__content{position:relative;z-index:2;margin-top:-22px;padding:0 22px 22px;display:flex;flex-direction:column;align-items:flex-start}
 .about-image-actions{position:absolute;z-index:3;top:14px;right:14px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 28px)}
 .about-image-error{position:absolute;z-index:4;left:14px;right:14px;top:58px;padding:8px 10px;border-radius:12px;background:#fff;color:var(--bad);font-size:.8rem;font-weight:800}
-.home-intro-text{max-width:none}
-.home-intro-card:has(.home-about-image) .home-intro-text{max-width:calc(100% - 164px)}
-.home-about-image{position:absolute;right:22px;top:50%;transform:translateY(-50%);width:clamp(100px,18%,158px);aspect-ratio:3/4;object-fit:cover;border:5px solid rgba(255,255,255,.86);border-radius:22px;box-shadow:0 12px 28px -14px rgba(47,79,94,.42)}
+.home-intro-text{max-width:760px;position:relative;z-index:1}
+.home-intro-card{position:relative;isolation:isolate;min-height:300px;background-size:cover!important;background-position:center!important}
+.home-intro-card:has(.home-intro-text){overflow:hidden}
+.home-intro-card:has(.home-intro-text)::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.88) 48%,rgba(255,255,255,.34) 100%);z-index:0;pointer-events:none}
 .text-edit-dock{position:fixed;left:50%;bottom:calc(78px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:125;width:min(680px,calc(100vw - 28px));padding:14px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 55px -22px rgba(30,54,64,.35);display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(16px)}
 .text-edit-dock textarea{width:100%;min-height:84px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;color:var(--ink);background:#fff}
 .text-edit-dock .btns{display:flex;gap:8px;flex-wrap:wrap}
 [data-ed]{cursor:text}
 @media(max-width:767px){
- .about-profile-card{min-height:330px}
- .about-profile-card__content{padding:70px 16px 18px}
+ .about-profile-card__image,.about-profile-card__image-placeholder{aspect-ratio:4/5;max-height:390px}
+ .about-profile-card__content{padding:0 16px 18px}
  .about-image-actions{top:10px;right:10px}
- .home-intro-card:has(.home-about-image) .home-intro-text{max-width:calc(100% - 104px)}
- .home-about-image{right:12px;width:92px;border-width:3px;border-radius:16px}
+ .home-intro-card{min-height:260px}
  .text-edit-dock{bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:12px;border-radius:16px}
 }
 @media(max-width:380px){
  .home-intro-text{max-width:100%;padding-right:0}
- .home-about-image{position:relative;top:auto;right:auto;transform:none;width:100%;max-width:120px;margin:14px 0 0 auto}
 }
 
 </style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ctext x=%2232%22 y=%2249%22 font-size=%2252%22 text-anchor=%22middle%22%3E%E2%98%81%EF%B8%8F%3C/text%3E%3C/svg%3E">
@@ -793,6 +792,8 @@ function loadSaved() {
     const el = document.getElementById("site-data");
     const o = JSON.parse((el && el.textContent) || "{}");
     const s = mergeDeep(DEFAULT_SITE, o);
+    if (!s.profile.about.cardImage && s.appearance.banner) s.profile.about.cardImage = s.appearance.banner;
+    s.appearance.banner = s.profile.about.cardImage || "";
     s.pricing.forEach((g) => g.items.forEach((it) => { if (!it.id) it.id = uid("p"); if (it.image === undefined) it.image = ""; if (it.exampleId === undefined) it.exampleId = ""; }));
     return s;
   } catch (e) { return clone(DEFAULT_SITE); }
@@ -1192,8 +1193,9 @@ function Home({ go, open }) {
   const latest = CONFIG.artworks.slice(0, 8);
   const st = CONFIG.commissionStatus;
   const stMsg = { OPEN: T("st_OPEN"), LIMITED: T("st_LIMITED"), CLOSED: T("st_CLOSED") }[st];
-  const banner = safeImg(CONFIG.appearance.banner);
-  const introStyle = banner ? { overflow: "visible", backgroundImage: `linear-gradient(100deg,color-mix(in srgb,var(--primary) 92%,transparent),color-mix(in srgb,var(--powder) 70%,transparent)),url("${banner}")`, backgroundSize: "cover", backgroundPosition: "center" } : { overflow: "visible" };
+  // One canonical image: the About profile card is also the Home dashboard banner.
+  const banner = safeImg(CONFIG.profile.about.cardImage);
+  const introStyle = banner ? { overflow: "hidden", backgroundImage: `url("${banner}")`, backgroundSize: "cover", backgroundPosition: "center" } : { overflow: "visible" };
   return (
     <div className="grid page">
       {w.intro && <section className="card tint span-7 home-intro-card" style={introStyle}>
@@ -1206,7 +1208,6 @@ function Home({ go, open }) {
             <Btn kind="ghost" onClick={() => go("services")}>{T("btn_commission")}</Btn>
           </div>
         </div>
-        {safeImg(CONFIG.profile.about.cardImage) && <img className="home-about-image" src={safeImg(CONFIG.profile.about.cardImage)} alt={CONFIG.profile.name + " profile"} />}
       </section>}
 
       {w.featured && feat && <section className="card span-5 row-2 lift featured-section">
@@ -1310,8 +1311,7 @@ function AboutProfileCard({ p, a }) {
   const removePhoto = () => cc && cc.upd((n) => { n.profile.about = n.profile.about || {}; n.profile.about.cardImage = ""; });
   return (
     <section className="card about-profile-card span-5">
-      {src && <img className="about-profile-card__image" src={src} alt={p.name + " profile card"} />}
-      {src && <div className="about-profile-card__veil" />}
+      {src ? <img className="about-profile-card__image" src={src} alt={p.name + " profile card"} /> : <div className="about-profile-card__image-placeholder" aria-hidden="true" />}
       {canEdit && <div className="about-image-actions" data-no-edit="true">
         <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pickPhoto} />
         <button type="button" className="btn cyan sm" disabled={busy} onClick={() => fileRef.current && fileRef.current.click()}>{busy ? "Uploading…" : src ? "Change image" : "Add image"}</button>
@@ -3224,6 +3224,8 @@ function App() {
         const result = await Store.api("get_site", {});
         if (active && result.site && typeof result.site === "object") {
           const remote = mergeDeep(DEFAULT_SITE, result.site);
+          if (!remote.profile.about.cardImage && remote.appearance.banner) remote.profile.about.cardImage = remote.appearance.banner;
+          remote.appearance.banner = remote.profile.about.cardImage || "";
           setSaved(remote);
           setSite(remote);
         }
