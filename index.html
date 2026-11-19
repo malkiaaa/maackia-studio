@@ -1265,6 +1265,7 @@ const CreatorCtx = createContext(null);
 const useCreator = () => useContext(CreatorCtx);
 const TABS = [
   { id: "overview", label: "Overview", icon: "grid" },
+  { id: "builder", label: "Website Builder", icon: "layout" },
   { id: "orders", label: "Client Orders", icon: "mail" },
   { id: "reviews", label: "Client Reviews", icon: "star" },
   { id: "offers", label: "Service details", icon: "sparkles" },
@@ -1998,6 +1999,7 @@ function CreatorPage() {
         <button className="chip" role="tab" aria-pressed={tab === "supabase"} onClick={() => pick("supabase")}><Icon name="globe" />Supabase</button>
       </div>
       {tab === "overview" && <Overview setTab={pick} />}
+      {tab === "builder" && <WebsiteBuilder />}
       {tab === "profile" && <ProfilePanel />}
       {tab === "orders" && <OrdersPanel />}
       {tab === "reviews" && <ReviewsPanel />}
@@ -2014,6 +2016,129 @@ function CreatorPage() {
       {tab === "supabase" && <SupabasePanel />}
     </div>
   );
+}
+
+
+/* ============================================================ visual website builder */
+const BUILDER_PAGES = [
+  ["home","Home"],["gallery","Portfolio"],["commission","Commission"],
+  ["about","About"],["contact","Contact"],["services","Services"],
+  ["terms","Terms"],["workflow","Workflow"]
+];
+const BLOCK_TYPES = [
+  ["heading","Heading"],["text","Text"],["note","Little note"],["image","Image"],
+  ["link","Link"],["date","Date"],["clock","Live clock"],["weather","Weather"],
+  ["audio","Music player"],["spacer","Spacer"]
+];
+const newBuilderBlock = (type) => ({
+  id: uid("blk_"), type, title: type === "heading" ? "Your heading" : type === "note" ? "Little note" : "",
+  content: type === "text" ? "Write something here..." : type === "note" ? "A little thought for visitors." : "",
+  url: "", image: "", city: "Banjarmasin", timezone: "Asia/Jakarta",
+  fontSize: type === "heading" ? 32 : 16, fontFamily: "inherit", color: "#454B55",
+  background: type === "note" ? "#FFF0B8" : "transparent", align: "left",
+  width: "100%", padding: 18, radius: 16, bold: type === "heading"
+});
+function BuilderBlock({ block, preview = false }) {
+  const [now, setNow] = useState(new Date());
+  const [weather, setWeather] = useState(null);
+  const [weatherError, setWeatherError] = useState("");
+  useEffect(() => {
+    if (block.type !== "clock" && block.type !== "date") return;
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, [block.type]);
+  useEffect(() => {
+    if (block.type !== "weather") return;
+    let active = true;
+    (async () => {
+      try {
+        const city = encodeURIComponent(block.city || "Banjarmasin");
+        const g = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + city + "&count=1&language=en&format=json");
+        const gd = await g.json(); const place = gd.results && gd.results[0];
+        if (!place) throw new Error("Location not found");
+        const w = await fetch("https://api.open-meteo.com/v1/forecast?latitude=" + place.latitude + "&longitude=" + place.longitude + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto");
+        const wd = await w.json();
+        if (active) setWeather({ place: place.name, current: wd.current });
+      } catch (e) { if (active) setWeatherError("Weather is temporarily unavailable."); }
+    })();
+    return () => { active = false; };
+  }, [block.type, block.city]);
+  const style = {
+    fontSize: Number(block.fontSize) || 16, fontFamily: block.fontFamily || "inherit",
+    color: block.color || "inherit", background: block.background || "transparent",
+    textAlign: block.align || "left", width: block.width || "100%",
+    padding: Number(block.padding) || 0, borderRadius: Number(block.radius) || 0,
+    fontWeight: block.bold ? 800 : 400, boxSizing: "border-box", maxWidth: "100%"
+  };
+  const safeAudio = safeUrl(block.url);
+  if (block.type === "spacer") return <div style={{ height: Math.max(8, Number(block.padding) || 32) }} />;
+  if (block.type === "image") return block.image ? <div style={{ ...style, padding: 0 }}><img src={safeImg(block.image)} alt={block.title || "Website image"} style={{ display:"block", width:"100%", maxHeight:700, objectFit:"cover", borderRadius:style.borderRadius }} /></div> : null;
+  if (block.type === "link") return <div style={style}><a href={safeUrl(block.url) || "#"} target="_blank" rel="noopener noreferrer" style={{ color:"inherit", fontWeight:700 }}>{block.title || block.content || "Open link"} ↗</a></div>;
+  if (block.type === "date") return <div style={style}><b>{now.toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</b></div>;
+  if (block.type === "clock") return <div style={style}><b>{now.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:block.timezone || undefined})}</b><div style={{fontSize:".75em",opacity:.7}}>{block.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}</div></div>;
+  if (block.type === "weather") return <div style={{...style,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:"2em"}}>☀️</span><div><b>{weather ? weather.current.temperature_2m + "°C · " + weather.place : weatherError || "Loading weather…"}</b><div style={{fontSize:".78em",opacity:.7}}>{weather ? "Humidity " + weather.current.relative_humidity_2m + "% · Wind " + weather.current.wind_speed_10m + " km/h" : "Live weather via Open-Meteo"}</div></div></div>;
+  if (block.type === "audio") return safeAudio ? <div style={{...style}}><div style={{fontWeight:700,marginBottom:8}}>{block.title || "Background music"}</div><audio controls preload="none" src={safeAudio} style={{width:"100%"}} /></div> : null;
+  if (block.type === "note") return <aside style={{...style,border:"1px solid rgba(0,0,0,.08)"}}><b>{block.title || "Little note"}</b><div style={{whiteSpace:"pre-wrap",marginTop:6}}>{block.content}</div></aside>;
+  if (block.type === "heading") return <h2 style={{...style,margin:"12px 0",lineHeight:1.15}}>{block.title || block.content}</h2>;
+  return <p style={{...style,whiteSpace:"pre-wrap",lineHeight:1.75,margin:"8px 0"}}>{block.content}</p>;
+}
+function PageBuilderBlocks({ page }) {
+  const blocks = CONFIG.builder?.pages?.[page] || [];
+  if (!blocks.length) return null;
+  return <div className="page" style={{display:"flex",flexDirection:"column",gap:14}}>{blocks.map(b=><BuilderBlock key={b.id} block={b} />)}</div>;
+}
+function WebsiteBuilder() {
+  const { site, upd } = useCreator();
+  const [page,setPage] = useState("home");
+  const [selected,setSelected] = useState(null);
+  const [notice,setNotice] = useState("");
+  const all = site.builder?.pages || {};
+  const blocks = all[page] || [];
+  const active = blocks.find(b=>b.id===selected) || null;
+  const change = (id,key,value) => upd(n=>{n.builder=n.builder||{pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];const b=n.builder.pages[page].find(x=>x.id===id);if(b)b[key]=value;});
+  const add = (type) => {const b=newBuilderBlock(type);upd(n=>{n.builder=n.builder||{pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];n.builder.pages[page].push(b);});setSelected(b.id);};
+  const moveBlock=(id,dir)=>upd(n=>{const a=n.builder?.pages?.[page]||[];const i=a.findIndex(x=>x.id===id);if(i<0)return;n.builder.pages[page]=move(a,i,dir);});
+  const remove=(id)=>{upd(n=>{n.builder.pages[page]=(n.builder.pages[page]||[]).filter(x=>x.id!==id);});setSelected(null);};
+  return <div className="panel" style={{display:"grid",gridTemplateColumns:"minmax(180px,220px) minmax(0,1fr) minmax(230px,290px)",gap:14,alignItems:"start"}}>
+    <section className="card" style={{padding:12,position:"sticky",top:12}}>
+      <h3>Pages</h3><p className="muted" style={{fontSize:".75rem",margin:"4px 0 12px"}}>Choose a page to customize</p>
+      {BUILDER_PAGES.map(([id,label])=><button key={id} className="chip" aria-pressed={page===id} onClick={()=>{setPage(id);setSelected(null);}} style={{width:"100%",justifyContent:"flex-start",marginBottom:5}}>{label}</button>)}
+      <div className="note info" style={{marginTop:12,fontSize:".72rem"}}>Core ordering, payment, login and tracking functions remain protected.</div>
+    </section>
+    <section className="card" style={{minWidth:0}}>
+      <div className="card-head"><div><h3>{BUILDER_PAGES.find(x=>x[0]===page)?.[1]} canvas</h3><p className="muted" style={{fontSize:".75rem"}}>Select a block to edit it. Visitors see published blocks.</p></div><span className="tag">{blocks.length} blocks</span></div>
+      <div style={{display:"grid",gap:10,minHeight:220}}>
+        {blocks.map((b,i)=><div key={b.id} onClick={()=>setSelected(b.id)} style={{border:selected===b.id?"2px solid var(--cyan)":"1px solid var(--line)",borderRadius:14,padding:10,cursor:"pointer",background:selected===b.id?"var(--tint)":"transparent"}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"center",marginBottom:8}}><small className="muted">{BLOCK_TYPES.find(x=>x[0]===b.type)?.[1]} · {i+1}</small><span className="btns"><button className="ib" disabled={i===0} onClick={e=>{e.stopPropagation();moveBlock(b.id,-1);}}>↑</button><button className="ib" disabled={i===blocks.length-1} onClick={e=>{e.stopPropagation();moveBlock(b.id,1);}}>↓</button><button className="ib bad" onClick={e=>{e.stopPropagation();remove(b.id);}}>×</button></span></div>
+          <BuilderBlock block={b}/>
+        </div>)}
+        {!blocks.length&&<div className="empty"><Icon name="layout"/><p>Add your first block to this page.</p></div>}
+      </div>
+      <div style={{marginTop:14,borderTop:"1px solid var(--line)",paddingTop:14}}><b>Add content block</b><div className="btns" style={{marginTop:10,flexWrap:"wrap"}}>{BLOCK_TYPES.map(([id,label])=><Btn key={id} kind="ghost" size="sm" onClick={()=>add(id)}>+ {label}</Btn>)}</div></div>
+    </section>
+    <section className="card" style={{padding:14,position:"sticky",top:12,maxHeight:"80vh",overflowY:"auto"}}>
+      <h3>Block settings</h3>
+      {!active?<p className="muted" style={{fontSize:".82rem",marginTop:8}}>Select a block on the canvas to customize its content and appearance.</p>:<div className="form" style={{marginTop:12}}>
+        {["heading","note","link","audio"].includes(active.type)&&<TextIn label="Title / label" value={active.title} onChange={v=>change(active.id,"title",v)}/>}
+        {["text","note","heading"].includes(active.type)&&<TextIn label="Text content" value={active.content} onChange={v=>change(active.id,"content",v)} multiline/>}
+        {active.type==="image"&&<><ImagePicker label="Upload image" value={active.image} onChange={v=>change(active.id,"image",v)}/><TextIn label="Alternative text" value={active.title} onChange={v=>change(active.id,"title",v)}/></>}
+        {["link","audio"].includes(active.type)&&<TextIn label={active.type==="audio"?"Audio file URL":"Destination URL"} value={active.url} onChange={v=>change(active.id,"url",v)} hint="Use a public HTTPS URL. Audio must be a direct audio file URL."/>}
+        {active.type==="weather"&&<TextIn label="City / location" value={active.city} onChange={v=>change(active.id,"city",v)} hint="Weather is fetched live from Open-Meteo."/>}
+        {active.type==="clock"&&<TextIn label="Timezone" value={active.timezone} onChange={v=>change(active.id,"timezone",v)} hint="Example: Asia/Jakarta, Asia/Makassar, Europe/London."/>}
+        <Field label="Font size (px)"><input className="in" type="number" min="10" max="120" value={active.fontSize} onChange={e=>change(active.id,"fontSize",e.target.value)}/></Field>
+        <Field label="Font family"><select className="in" value={active.fontFamily||"inherit"} onChange={e=>change(active.id,"fontFamily",e.target.value)}><option value="inherit">Site default</option><option value="Georgia,serif">Georgia</option><option value="Arial,sans-serif">Arial</option><option value="Verdana,sans-serif">Verdana</option><option value="'Courier New',monospace">Courier New</option><option value="cursive">Cursive</option></select></Field>
+        <Field label="Text color"><input className="in" type="color" value={/^#[0-9a-f]{6}$/i.test(active.color)?active.color:"#454B55"} onChange={e=>change(active.id,"color",e.target.value)}/></Field>
+        <Field label="Background color"><input className="in" type="color" value={/^#[0-9a-f]{6}$/i.test(active.background)?active.background:"#FFFFFF"} onChange={e=>change(active.id,"background",e.target.value)}/></Field>
+        <Field label="Alignment"><select className="in" value={active.align||"left"} onChange={e=>change(active.id,"align",e.target.value)}><option>left</option><option>center</option><option>right</option></select></Field>
+        <Field label="Width"><select className="in" value={active.width||"100%"} onChange={e=>change(active.id,"width",e.target.value)}><option value="100%">Full width</option><option value="75%">75%</option><option value="50%">Half width</option><option value="fit-content">Fit content</option></select></Field>
+        <Field label="Padding (px)"><input className="in" type="number" min="0" max="100" value={active.padding??16} onChange={e=>change(active.id,"padding",e.target.value)}/></Field>
+        <Field label="Corner radius (px)"><input className="in" type="number" min="0" max="80" value={active.radius??12} onChange={e=>change(active.id,"radius",e.target.value)}/></Field>
+        <label className="switch"><span>Bold text</span><input type="checkbox" checked={!!active.bold} onChange={e=>change(active.id,"bold",e.target.checked)}/></label>
+        <Btn kind="danger" size="sm" onClick={()=>remove(active.id)}>Delete block</Btn>
+      </div>}
+    </section>
+    <style>{'@media(max-width:900px){.panel[style*="grid-template-columns"]{grid-template-columns:1fr!important}.panel[style*="grid-template-columns"] .card{position:static!important;max-height:none!important}}'}</style>
+  </div>;
 }
 
 /* ============================================================ ORDER SYSTEM */
@@ -2831,6 +2956,7 @@ function App() {
             {view.startsWith("service-") && <ServiceDetail id={view.slice(8)} go={go} />}
             {view.startsWith("order-") && <OrderFlow id={view.slice(6)} go={go} />}
             {view === "creator" && creatorOn && <CreatorPage />}
+            {["home","gallery","commission","about","contact","services","terms","workflow"].includes(view) && <PageBuilderBlocks page={view} />}
           </div>
         </main>
         {openId && <Lightbox id={openId} close={close} step={step} />}
