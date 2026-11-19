@@ -1924,11 +1924,14 @@ function MediaPanel() {
       ))}
       <section className="card">
         <div className="card-head"><h2>Portfolio images ({site.artworks.length})</h2><Btn size="sm" icon="plus" onClick={addArtwork}>Add image</Btn></div>
-        <p className="muted" style={{marginBottom:12}}>Add creates a new portfolio item. Set its image here, then edit its title and details in Creator Dashboard → Gallery.</p>
+        <p className="muted" style={{marginBottom:12}}>Add creates a new portfolio item. You can edit each image title and upload, replace, or remove its image directly here. Edit additional artwork details in Creator Dashboard → Gallery.</p>
         <div className="list">
           {site.artworks.map((a,i) => <div className="rowi" key={a.id}>
             <div className="thumb">{safeImg(a.image) ? <img src={safeImg(a.image)} alt="" /> : <Icon name="image" />}</div>
-            <div className="grow"><b>{a.title || "Untitled artwork"}</b><small className="muted">Portfolio image {i+1}</small></div>
+            <div className="grow" style={{minWidth:180,flex:"1 1 220px"}}>
+              <TextIn label="Image title" value={a.title||""} onChange={sets(["artworks",i,"title"])} placeholder="Enter artwork title" />
+              <small className="muted">Portfolio image {i+1}</small>
+            </div>
             <div style={{minWidth:180,flex:"1 1 220px"}}><ImagePicker label="Image" value={a.image||""} onChange={sets(["artworks",i,"image"])} maxDim={1800}/></div>
             <ConfirmDelete onYes={() => removeArtwork(a.id)} label="Delete image" />
           </div>)}
