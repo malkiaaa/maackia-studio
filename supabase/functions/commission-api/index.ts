@@ -38,15 +38,15 @@ Deno.serve(async (req) => {
       const order = body?.order;
       const form = order?.form;
       const email = clean(form?.email, 254).toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "A valid client email is required." }, 400);
+      if (!order?.serviceTitle || !form || typeof form !== "object") return json({ error: "Incomplete commission request." }, 400);
       const { data: generatedId, error: idError } = await db.rpc("next_commission_id");
       if (idError || !generatedId) {
         console.error("commission ID generation failed", idError);
         return json({ error: "Could not generate a commission number. Please try again." }, 500);
       }
       const id = clean(generatedId, 40);
-      if (!id || !/^[A-Z0-9-]{8,40}$/.test(id)) return json({ error: "Invalid request ID." }, 400);
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "A valid client email is required." }, 400);
-      if (!order?.serviceTitle || !form || typeof form !== "object") return json({ error: "Incomplete commission request." }, 400);
+      if (!id || !/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id)) return json({ error: "Invalid generated commission number." }, 500);
 
       const emailHash = await sha256(email + "|" + id);
       const safeOrder = {
