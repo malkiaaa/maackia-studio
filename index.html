@@ -1875,7 +1875,9 @@ function EmailPanel() {
     setTesting(true); setMsg({ text: "", ok: false });
     try {
       const r = await Store.api("test", {}, true);
-      setMsg(r.status === "sent" ? { text: "Resend accepted the test email for the configured artist address. Check your inbox to confirm it arrived.", ok: true } : { text: "The test email failed. See Client Orders > Email notifications for the error.", ok: false });
+      setMsg(r.status === "sent"
+        ? { text: "Resend accepted the test email for the configured artist address. Check your inbox to confirm it arrived.", ok: true }
+        : { text: "Attempts: " + (r.attempts || 1) + " · " + (r.message || "Email delivery failed."), ok: false });
     } catch (e) { setMsg({ text: authErr(e), ok: false }); }
     setTesting(false);
   };
