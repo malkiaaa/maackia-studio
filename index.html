@@ -117,11 +117,15 @@ button.art:hover img{transform:scale(1.05)}
 .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}
 .strip>*{scroll-snap-align:start}
-.latest-section{grid-column:1/-1}
-.latest-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:18px}
-.latest-grid .art{width:100%;aspect-ratio:1/1;min-height:220px}
-@media(min-width:1100px){.latest-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}}
-@media(max-width:700px){.latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.latest-grid .art{min-height:150px}}
+.latest-section{grid-column:span 7;grid-row:span 2;min-width:0}
+.latest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.latest-grid .art{width:100%;aspect-ratio:1/1;min-height:0}
+.featured-section{grid-column:span 5;grid-row:span 2;min-width:0}
+.featured-section .feat{min-height:100%}
+.featured-section .feat>.art{min-height:0;flex:1;aspect-ratio:auto}
+@media(min-width:1100px){.latest-grid{gap:14px}.latest-grid .art{max-height:220px}}
+@media(max-width:1023px){.featured-section,.latest-section{grid-column:span 6;grid-row:auto}.featured-section .feat>.art{aspect-ratio:4/5;min-height:180px}.latest-grid .art{max-height:none}}
+@media(max-width:767px){.featured-section,.latest-section{grid-column:span 12}.latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.latest-grid .art{aspect-ratio:1/1;min-height:0}.featured-section .feat>.art{aspect-ratio:4/5;min-height:220px}}
 
 .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .svc{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--powder);border:0;border-radius:22px;padding:16px;cursor:pointer;transition:transform .2s,background .2s}
@@ -344,6 +348,45 @@ textarea.in{min-height:96px;resize:vertical}
 .block-style-controls input,.block-style-controls select{max-width:105px;border:1px solid var(--line);border-radius:8px;padding:4px;background:white;color:var(--ink)}
 .inpage-empty{border:1px dashed var(--line);border-radius:14px;background:transparent;color:var(--muted);padding:14px;cursor:pointer;text-align:left}
 @media(max-width:700px){.inpage-top{align-items:stretch}.inpage-add{width:100%}.inpage-add input{flex:1;width:100%}.block-style-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.inpage-block{padding:8px}}
+
+/* Mobile editor and dashboard hardening */
+@media(max-width:767px){
+  html,body,#root{width:100%;max-width:100%;overflow-x:hidden}
+  .shell,.main,.main-inner,.page,.grid,.card{min-width:0;max-width:100%}
+  .main-inner{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .cbar{position:relative;top:auto;display:flex;align-items:flex-start;flex-direction:column;gap:10px;width:100%;max-width:100%;border-radius:18px;margin:0 0 12px;padding:12px}
+  .cbar>b{flex-wrap:wrap;line-height:1.4}
+  .cbar .btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:7px}
+  .cbar .btns .btn{justify-content:center;white-space:normal;min-width:0;padding:9px 8px;font-size:.78rem}
+  .inpage-builder,.inpage-blocks,.inpage-block,.block-properties{width:100%;max-width:100%;min-width:0}
+  .inpage-top{display:flex;flex-direction:column;align-items:stretch;width:100%;padding:10px;border-radius:14px}
+  .inpage-add{display:flex;width:100%;min-width:0;gap:6px}
+  .inpage-add input{width:100%;min-width:0;flex:1}
+  .inpage-add>.btn{flex:none;white-space:nowrap}
+  .slash-menu{left:0;right:auto;width:min(100%,calc(100vw - 36px));max-width:100%;max-height:45dvh}
+  .context-toolbar{display:flex;flex-wrap:wrap;gap:7px}
+  .context-toolbar span{flex:1 0 100%}
+  .context-toolbar button{min-height:36px}
+  .block-properties .field,.block-properties .in,.block-properties textarea{width:100%;max-width:100%;min-width:0}
+  .block-style-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .block-style-controls label{display:flex;flex-wrap:wrap;min-width:0}
+  .block-style-controls input,.block-style-controls select{width:100%;max-width:100%;min-width:0;min-height:38px}
+  .inline-edit-heading,.inline-edit-text{width:100%;max-width:100%;min-width:0}
+  .inpage-empty{width:100%;min-height:44px}
+  .btn,.chip,.ib,.iconbtn,.nbtn,.xbtn,.bnav button{touch-action:manipulation}
+  .btn{min-height:40px}
+  .form,.form>*{min-width:0}
+  .rowi .acts{width:100%;justify-content:flex-start}
+  .modal{padding:8px}
+  .modal-box{max-height:calc(100dvh - 16px);border-radius:20px}
+}
+@media(max-width:380px){
+  .cbar .btns{grid-template-columns:minmax(0,1fr)}
+  .block-style-controls{grid-template-columns:minmax(0,1fr)}
+  .latest-grid{gap:8px}
+  .card{padding:13px;border-radius:18px}
+}
+
 </style>
 
 <div id="root"></div>
@@ -919,7 +962,7 @@ function Home({ go, open }) {
         </div>
       </section>}
 
-      {w.featured && feat && <section className="card span-5 row-2 lift">
+      {w.featured && feat && <section className="card span-5 row-2 lift featured-section">
         <div className="feat">
           <div className="card-head" style={{ marginBottom: 0 }}><h2>{T("sec_featured")}</h2><Icon name="star" /></div>
           <Art art={feat} i={0} onOpen={open} />
@@ -931,7 +974,7 @@ function Home({ go, open }) {
         </div>
       </section>}
 
-      {w.latest && <section className="card span-12 latest-section">
+      {w.latest && <section className="card span-7 row-2 latest-section">
         <div className="card-head"><h2>{T("sec_latest")}</h2><Btn kind="ghost" size="sm" onClick={() => go("gallery")}>See all</Btn></div>
         {latest.length ? <div className="latest-grid">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
       </section>}
