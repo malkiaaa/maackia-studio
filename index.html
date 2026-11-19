@@ -1893,7 +1893,7 @@ function EmailPanel() {
         </div>
         <div className="btns" style={{ marginTop: 14 }}>
           <Btn disabled={saving} onClick={save}>{saving ? "Saving…" : "Save Email Settings"}</Btn>
-          <Btn kind="ghost" size="sm" disabled={testing || !cfg.artistEmail} onClick={sendTest}>{testing ? "Sending…" : "Send Test Email"}</Btn>
+          <Btn kind="ghost" size="sm" disabled={testing} onClick={sendTest}>{testing ? "Sending…" : "Send Test Email"}</Btn>
         </div>
         {msg.text && <div className={"note " + (msg.ok ? "ok" : "bad")} style={{ marginTop: 12 }}>{msg.text}</div>}
       </section>
