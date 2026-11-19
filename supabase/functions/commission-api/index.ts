@@ -1,6 +1,7 @@
 // Malkiaa Studio commission API — staging
-// Public actions: submit, public_board, track, respond, upload.
-// Owner-only actions: test, retry. Owner access is verified against public.admins.
+// Public actions: submit, public_board, track, respond, upload, submit_review, public_reviews.
+// Owner-only actions: test, retry, reviews_admin_list, reviews_admin_update, reviews_admin_delete.
+// Owner access is verified against public.admins.
 // Required Supabase secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
 // Required email secrets: GAS_WEBHOOK_URL and GAS_WEBHOOK_SECRET (server-side only).
 
