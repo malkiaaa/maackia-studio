@@ -959,7 +959,7 @@ function ReviewsCarousel() {
       <div className="card-head"><div><h2>Kind Words from Clients</h2><p className="muted">A few words from people I've worked with.</p></div><Icon name="heart" /></div>
       {message ? <p className="muted">{message}</p> : <div className="review-window" aria-label="Client reviews, slowly scrolling">
         <div className="review-track">
-          {[...reviews, ...reviews].map((r, i) => <article className="review-card" key={r.id + "-" + i}>
+          {[...reviews, ...reviews].map((r, i) => <article className="review-card" key={r.id + "-" + i} aria-hidden={i >= reviews.length}>
             <div className="review-stars" aria-label={r.rating + " out of 5 stars"}>{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>
             <p>“{r.message}”</p><b>{r.display_name || "Anonymous"}</b>
             <small className="muted">{fmtDate(r.created_at)}</small>
