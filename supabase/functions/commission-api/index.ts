@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
       const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
       const suppliedHash = await sha256(email + "|" + id);
       if (!track || track.emailHash !== suppliedHash || !email) return json({ error: "No order matches that Request ID and email." }, 404);
+      if (!track.proposal) return json({ error: "A proposal is not available for this order yet." }, 409);
       const proposal = { ...(track.proposal || {}), response };
       const updates = Array.isArray(track.updates) ? track.updates : [];
       updates.push({ at: new Date().toISOString(), from: "client", text: note || "Client: " + response });
