@@ -1070,7 +1070,7 @@ function Commission({ go, cur, setCur }) {
                   <h3>{it.name}</h3>
                   {p ? <div className="amt">{p}</div> : <div className="amt na">Not available in {cur}</div>}
                   <p className="muted" style={{ fontSize: ".88rem", flex: 1 }}>{it.desc}</p>
-                  {url ? <Btn size="sm" href={url} icon="ext">Order</Btn> : <Btn size="sm" onClick={() => go("contact")}>Order</Btn>}
+                  <Btn size="sm" onClick={() => go("services")}>Request Commission</Btn>
                 </article>
               );
             })}
@@ -1138,7 +1138,7 @@ function Workflow({ go }) {
         {w.revisionNote && <p style={{ marginTop: 14, whiteSpace: "pre-line" }}>{w.revisionNote}</p>}
         {w.notes && <p className="muted" style={{ marginTop: 10, whiteSpace: "pre-line" }}>{w.notes}</p>}
       </section>
-      <div style={{ marginTop: 22 }} className="btns"><Btn onClick={() => go("terms")} kind="ghost">Read the terms</Btn><Btn onClick={() => go("contact")}>Start a request</Btn></div>
+      <div style={{ marginTop: 22 }} className="btns"><Btn onClick={() => go("terms")} kind="ghost">Read the terms</Btn><Btn onClick={() => go("services")}>Start a request</Btn></div>
     </div>
   );
 }
