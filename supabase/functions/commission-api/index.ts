@@ -1,6 +1,9 @@
 // Malkiaa Studio commission API — staging
-// Deploy: supabase functions deploy commission-api
-// Required secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Public actions: submit, public_board, track, respond, upload.
+// Owner-only actions: test, retry. Owner access is verified against public.admins.
+// Required Supabase secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+// Required email secret: RESEND_API_KEY (email features remain disabled until configured).
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
@@ -8,18 +11,203 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+
 const sha256 = async (value: string) => {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 };
-const clean = (v: unknown, max = 500) => typeof v === "string" ? v.trim().slice(0, max) : "";
-const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"]);
+
+const clean = (v: unknown, max = 500) =>
+  typeof v === "string" ? v.trim().slice(0, max) : "";
+
+const escapeHtml = (value: unknown) =>
+  clean(value, 2000).replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[ch] || ch));
+
+const allowedTypes = new Set([
+  "image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf",
+]);
+
+type EmailConfig = {
+  artistEmail?: string;
+  fromName?: string;
+  fromEmail?: string;
+  sendArtist?: boolean;
+  sendClient?: boolean;
+};
+
+async function getEmailConfig(db: any): Promise<EmailConfig> {
+  const { data } = await db.from("app_settings")
+    .select("value").eq("key", "email_config").maybeSingle();
+  return (data?.value || {}) as EmailConfig;
+}
+
+async function recordNotification(
+  db: any,
+  values: {
+    order_id: string | null;
+    kind: string;
+    recipient: string;
+    status: string;
+    message: string;
+    attempts: number;
+    sent_at: string | null;
+  },
+  existingId?: string,
+) {
+  if (existingId) {
+    const { error } = await db.from("notifications")
+      .update(values).eq("id", existingId);
+    if (error) console.error("notification log update failed", error);
+    return existingId;
+  }
+  const { data, error } = await db.from("notifications")
+    .insert(values).select("id").single();
+  if (error) {
+    console.error("notification log insert failed", error);
+    return null;
+  }
+  return data?.id || null;
+}
+
+async function deliverEmail(
+  db: any,
+  config: EmailConfig,
+  input: {
+    to: string;
+    subject: string;
+    html: string;
+    orderId: string | null;
+    kind: string;
+    existingId?: string;
+    previousAttempts?: number;
+  },
+) {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const fromName = clean(config.fromName, 100) || "Malkiaa Studio";
+  const fromEmail = clean(config.fromEmail, 200);
+  const attempts = (input.previousAttempts || 0) + 1;
+  let status = "failed";
+  let message = "";
+
+  if (!apiKey) {
+    message = "RESEND_API_KEY is not configured in Supabase Edge Function secrets.";
+  } else if (!fromEmail || !fromEmail.includes("@")) {
+    message = "A valid verified From Email must be saved in Email Notification Settings.";
+  } else {
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromName + " <" + fromEmail + ">",
+          to: [input.to],
+          subject: input.subject,
+          html: input.html,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        message = "Resend error " + response.status + ": " +
+          clean(result?.message || result?.error || "Email provider rejected the request.", 500);
+      } else {
+        status = "sent";
+        message = "Accepted by Resend. Inbox delivery is not guaranteed.";
+      }
+    } catch (error) {
+      message = "Email request failed: " + clean((error as Error)?.message, 500);
+    }
+  }
+
+  const id = await recordNotification(db, {
+    order_id: input.orderId,
+    kind: input.kind,
+    recipient: input.to,
+    status,
+    message,
+    attempts,
+    sent_at: status === "sent" ? new Date().toISOString() : null,
+  }, input.existingId);
+
+  return { id, status, message, recipient: input.to, kind: input.kind };
+}
+
+function commissionEmailHtml(order: any, clientName: string, isClient: boolean) {
+  const id = escapeHtml(order.id);
+  const name = escapeHtml(clientName || "Client");
+  const service = escapeHtml(order.serviceTitle || "Commission");
+  const tier = escapeHtml(order.tierName || "");
+  const estimate = Number(order?.estimate?.total) || 0;
+  const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
+    (order?.estimate?.custom ? " + custom quote" : "");
+  const greeting = isClient
+    ? "Thank you, " + name + ". Your commission request has been received and is waiting for review."
+    : "A new commission request has been submitted.";
+  const extra = isClient
+    ? "<p>Keep this email. Use your Request ID and email address to track your order on the website. No payment has been taken; you will receive a proposal before payment is requested.</p>"
+    : "<p>Open the Creator Dashboard to review the request and prepare a proposal.</p>";
+  return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'>" +
+    "<h2>Malkiaa Studio</h2><p>" + greeting + "</p>" +
+    "<table style='border-collapse:collapse;width:100%'>" +
+    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Request ID</td><td style='padding:8px;border-bottom:1px solid #ddd'><b>" + id + "</b></td></tr>" +
+    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Service</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + service + " " + tier + "</td></tr>" +
+    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Estimate</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + price + "</td></tr>" +
+    "</table>" + extra + "</body></html>";
+}
+
+async function sendCommissionEmails(db: any, order: any, form: any) {
+  const config = await getEmailConfig(db);
+  const results: any[] = [];
+  const clientName = clean(form?.name, 120) || "Client";
+  const clientEmail = clean(form?.email, 254).toLowerCase();
+
+  if (config.sendArtist !== false && clean(config.artistEmail, 254)) {
+    results.push(await deliverEmail(db, config, {
+      to: clean(config.artistEmail, 254),
+      subject: "[Malkiaa Studio] New Commission Request " + order.id,
+      html: commissionEmailHtml(order, clientName, false),
+      orderId: order.id,
+      kind: "artist",
+    }));
+  }
+  if (config.sendClient !== false && clientEmail) {
+    results.push(await deliverEmail(db, config, {
+      to: clientEmail,
+      subject: "[Malkiaa Studio] Commission Request Received — " + order.id,
+      html: commissionEmailHtml(order, clientName, true),
+      orderId: order.id,
+      kind: "client",
+    }));
+  }
+  return results;
+}
+
+async function requireOwner(req: Request, db: any) {
+  const authorization = req.headers.get("Authorization") || "";
+  const token = authorization.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return { ok: false, status: 401, error: "Sign in as the Creator before using this action." };
+  const { data, error } = await db.auth.getUser(token);
+  if (error || !data?.user) {
+    return { ok: false, status: 401, error: "Your Creator session is invalid or expired. Please sign in again." };
+  }
+  const { data: admin, error: adminError } = await db.from("admins")
+    .select("user_id").eq("user_id", data.user.id).maybeSingle();
+  if (adminError || !admin) {
+    return { ok: false, status: 403, error: "This account is not authorized as the Malkiaa Studio Creator." };
+  }
+  return { ok: true, user: data.user };
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -27,9 +215,14 @@ Deno.serve(async (req) => {
 
   const url = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !serviceKey) return json({ error: "Server database secrets are not configured." }, 503);
+  if (!url || !serviceKey) {
+    return json({ error: "Server database secrets are not configured." }, 503);
+  }
 
-  const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const db = createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
   try {
     const body = await req.json();
     const action = clean(body?.action, 40);
@@ -38,46 +231,53 @@ Deno.serve(async (req) => {
       const order = body?.order;
       const form = order?.form;
       const email = clean(form?.email, 254).toLowerCase();
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "A valid client email is required." }, 400);
-      if (!order?.serviceTitle || !form || typeof form !== "object") return json({ error: "Incomplete commission request." }, 400);
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json({ error: "A valid client email is required." }, 400);
+      }
+      if (!order?.serviceTitle || !form || typeof form !== "object") {
+        return json({ error: "Incomplete commission request." }, 400);
+      }
+
       const { data: generatedId, error: idError } = await db.rpc("next_commission_id");
       if (idError || !generatedId) {
         console.error("commission ID generation failed", idError);
         return json({ error: "Could not generate a commission number. Please try again." }, 500);
       }
       const id = clean(generatedId, 40);
-      if (!id || !/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id)) return json({ error: "Invalid generated commission number." }, 500);
+      if (!/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id)) {
+        return json({ error: "Invalid generated commission number." }, 500);
+      }
 
       const emailHash = await sha256(email + "|" + id);
       const safeOrder = {
         id,
         created_at: new Date().toISOString(),
-        "createdAt": clean(order.createdAt, 50) || new Date().toISOString(),
+        createdAt: clean(order.createdAt, 50) || new Date().toISOString(),
         status: "Pending Review",
         payment: "Unpaid",
-        "serviceId": clean(order.serviceId, 100),
-        "serviceTitle": clean(order.serviceTitle, 180),
-        "tierName": clean(order.tierName, 120),
+        serviceId: clean(order.serviceId, 100),
+        serviceTitle: clean(order.serviceTitle, 180),
+        tierName: clean(order.tierName, 120),
         form,
         estimate: order.estimate && typeof order.estimate === "object" ? order.estimate : {},
         notes: "",
-        "finalPrice": null,
-        "extraLines": "",
+        finalPrice: null,
+        extraLines: "",
       };
       const safeTrack = {
         id,
         created_at: new Date().toISOString(),
-        "createdAt": clean(order.createdAt, 50) || new Date().toISOString(),
-        "serviceTitle": safeOrder["serviceTitle"],
+        createdAt: clean(order.createdAt, 50) || new Date().toISOString(),
+        serviceTitle: safeOrder.serviceTitle,
         status: "Pending Review",
         payment: "Unpaid",
         estimate: Number(order?.estimate?.total) || 0,
         custom: Boolean(order?.estimate?.custom),
-        "emailHash": emailHash,
+        emailHash,
         client_name: clean(form?.name, 120) || "Client",
         proposal: null,
         updates: [],
-        "finalFiles": [],
+        finalFiles: [],
       };
 
       const { error: orderError } = await db.from("commission_requests").insert(safeOrder);
@@ -92,7 +292,14 @@ Deno.serve(async (req) => {
         console.error("tracking insert failed", trackError);
         return json({ error: "Could not initialize order tracking." }, 500);
       }
-      return json({ track: safeTrack }, 201);
+
+      // Email failure never rolls back a saved commission.
+      const notifications = await sendCommissionEmails(db, safeOrder, form)
+        .catch((error) => {
+          console.error("commission notification failed", error);
+          return [];
+        });
+      return json({ track: safeTrack, notifications }, 201);
     }
 
     if (action === "public_board") {
@@ -104,7 +311,7 @@ Deno.serve(async (req) => {
         console.error("public commission board query failed", error);
         return json({ error: "Could not load the public commission board." }, 500);
       }
-      const items = (data || []).map((item) => ({
+      const items = (data || []).map((item: any) => ({
         id: item.id,
         createdAt: item.created_at,
         clientName: item.client_name,
@@ -118,9 +325,12 @@ Deno.serve(async (req) => {
       const id = clean(body?.id, 40).toUpperCase();
       const email = clean(body?.email, 254).toLowerCase();
       if (!id || !email) return json({ error: "No order matches that Request ID and email." }, 404);
-      const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
+      const { data: track } = await db.from("order_tracks")
+        .select("*").eq("id", id).maybeSingle();
       const suppliedHash = await sha256(email + "|" + id);
-      if (!track || track.emailHash !== suppliedHash) return json({ error: "No order matches that Request ID and email." }, 404);
+      if (!track || track.emailHash !== suppliedHash) {
+        return json({ error: "No order matches that Request ID and email." }, 404);
+      }
       return json({ track });
     }
 
@@ -129,14 +339,24 @@ Deno.serve(async (req) => {
       const email = clean(body?.email, 254).toLowerCase();
       const response = clean(body?.response, 20);
       const note = clean(body?.text, 1000);
-      if (!["Accepted", "Declined"].includes(response)) return json({ error: "Invalid proposal response." }, 400);
-      const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
+      if (!id || !email || !["Accepted", "Declined"].includes(response)) {
+        return json({ error: "Invalid proposal response." }, 400);
+      }
+      const { data: track } = await db.from("order_tracks")
+        .select("*").eq("id", id).maybeSingle();
       const suppliedHash = await sha256(email + "|" + id);
-      if (!track || track.emailHash !== suppliedHash || !email) return json({ error: "No order matches that Request ID and email." }, 404);
+      if (!track || track.emailHash !== suppliedHash) {
+        return json({ error: "No order matches that Request ID and email." }, 404);
+      }
       if (!track.proposal) return json({ error: "A proposal is not available for this order yet." }, 409);
+
       const proposal = { ...(track.proposal || {}), response };
       const updates = Array.isArray(track.updates) ? track.updates : [];
-      updates.push({ at: new Date().toISOString(), from: "client", text: note || "Client: " + response });
+      updates.push({
+        at: new Date().toISOString(),
+        from: "client",
+        text: note || "Client: " + response,
+      });
       const status = response === "Accepted" ? "Awaiting Payment" : "Cancelled";
       const { data: updated, error } = await db.from("order_tracks")
         .update({ proposal, updates, status }).eq("id", id).select("*").single();
@@ -152,7 +372,9 @@ Deno.serve(async (req) => {
       const type = clean(body?.type, 100);
       const size = Number(body?.size);
       if (!allowedTypes.has(type)) return json({ error: "Unsupported reference file type." }, 400);
-      if (!Number.isFinite(size) || size <= 0 || size > 10 * 1024 * 1024) return json({ error: "Reference files must be 10 MB or smaller." }, 400);
+      if (!Number.isFinite(size) || size <= 0 || size > 10 * 1024 * 1024) {
+        return json({ error: "Reference files must be 10 MB or smaller." }, 400);
+      }
       const path = "incoming/" + crypto.randomUUID();
       const { data, error } = await db.storage.from("references").createSignedUploadUrl(path);
       if (error || !data) {
@@ -160,6 +382,56 @@ Deno.serve(async (req) => {
         return json({ error: "Could not prepare reference upload." }, 500);
       }
       return json({ path, token: data.token });
+    }
+
+    if (action === "test") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const config = await getEmailConfig(db);
+      const recipient = clean(config.artistEmail, 254);
+      if (!recipient) return json({ error: "Save the Artist Notification Email in Creator Dashboard → Email Notifications first." }, 400);
+      const result = await deliverEmail(db, config, {
+        to: recipient,
+        subject: "[Malkiaa Studio] Test notification",
+        html: "<p>This is a test email from Malkiaa Studio. If you received it, the Resend connection is working.</p>",
+        orderId: "TEST",
+        kind: "test",
+      });
+      return json({ status: result.status, message: result.message });
+    }
+
+    if (action === "retry") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const id = clean(body?.id, 80);
+      if (!id) return json({ error: "A commission ID is required." }, 400);
+      const { data: failed, error: failedError } = await db.from("notifications")
+        .select("*").eq("order_id", id).eq("status", "failed");
+      if (failedError) {
+        console.error("failed notification lookup failed", failedError);
+        return json({ error: "Could not load failed notifications." }, 500);
+      }
+      const { data: order, error: orderError } = await db.from("commission_requests")
+        .select("*").eq("id", id).maybeSingle();
+      if (orderError || !order) return json({ error: "Commission request was not found." }, 404);
+      const results = [];
+      const config = await getEmailConfig(db);
+      for (const item of failed || []) {
+        const isClient = item.kind === "client";
+        const html = commissionEmailHtml(order, clean(order.form?.name, 120), isClient);
+        results.push(await deliverEmail(db, config, {
+          to: clean(item.recipient, 254),
+          subject: isClient
+            ? "[Malkiaa Studio] Commission Request Received — " + id
+            : "[Malkiaa Studio] New Commission Request " + id,
+          html,
+          orderId: id,
+          kind: item.kind,
+          existingId: item.id,
+          previousAttempts: Number(item.attempts) || 0,
+        }));
+      }
+      return json({ notifications: results });
     }
 
     return json({ error: "Unknown API action." }, 400);
