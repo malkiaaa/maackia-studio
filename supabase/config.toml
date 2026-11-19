@@ -1,0 +1,4 @@
+# Supabase Edge Function configuration
+# Supabase API Gateway validates the public anon JWT before the function runs.
+[functions.commission-api]
+verify_jwt = true
