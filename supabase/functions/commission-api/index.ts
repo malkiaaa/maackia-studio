@@ -241,6 +241,16 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = clean(body?.action, 40);
 
+    if (action === "get_site") {
+      const { data, error } = await db.from("app_settings")
+        .select("value").eq("key", "site_content").maybeSingle();
+      if (error) {
+        console.error("published site content lookup failed", error);
+        return json({ error: "Could not load the published website content." }, 500);
+      }
+      return json({ site: data?.value || null });
+    }
+
     if (action === "submit") {
       const order = body?.order;
       const form = order?.form;
@@ -398,6 +408,29 @@ Deno.serve(async (req) => {
         return json({ error: "Could not prepare reference upload." }, 500);
       }
       return json({ path, token: data.token });
+    }
+
+    if (action === "save_site") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const site = body?.site;
+      if (!site || typeof site !== "object" || Array.isArray(site)) {
+        return json({ error: "Website content is invalid." }, 400);
+      }
+      const serialized = JSON.stringify(site);
+      if (serialized.length > 4_000_000) {
+        return json({ error: "Website content is too large to save. Please reduce or replace large embedded images." }, 413);
+      }
+      const { error } = await db.from("app_settings").upsert({
+        key: "site_content",
+        value: site,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "key" });
+      if (error) {
+        console.error("published site content save failed", error);
+        return json({ error: "Could not save website content." }, 500);
+      }
+      return json({ ok: true });
     }
 
     if (action === "test") {
