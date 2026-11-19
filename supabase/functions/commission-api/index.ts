@@ -142,7 +142,7 @@ async function deliverEmail(
     sent_at: status === "sent" ? new Date().toISOString() : null,
   }, input.existingId);
 
-  return { id, status, message, recipient: input.to, kind: input.kind };
+  return { id, status, message, attempts, recipient: input.to, kind: input.kind };
 }
 
 function commissionEmailHtml(order: any, clientName: string, isClient: boolean) {
@@ -446,7 +446,7 @@ Deno.serve(async (req) => {
         orderId: "TEST",
         kind: "test",
       });
-      return json({ status: result.status, message: result.message });
+      return json({ status: result.status, message: result.message, attempts: result.attempts });
     }
 
     if (action === "retry") {
