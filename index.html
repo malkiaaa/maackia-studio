@@ -613,7 +613,7 @@ const Icon = ({ name, className = "" }) => (
 const SERVICE_ICONS = ["smile", "mic", "gamepad", "shapes", "sparkles", "star", "pen", "image", "palette"];
 
 const catLabel = (id) => (CONFIG.categories.find((c) => c.id === id) || {}).label || id;
-const PH_COLORS = [["#A8E4F5", "#DDF4FC", "#FFB66F"], ["#DDF4FC", "#57CBE5", "#FFFFFF"], ["#FFD9B0", "#A8E4F5", "#57CBE5"], ["#57CBE5", "#DDF4FC", "#FFB66F"]];
+const PH_COLORS = [["#A8E4F5", "#DDF4FC", "#FFF0B8"], ["#DDF4FC", "#B9D8F7", "#FFFFFF"], ["#FFD9B0", "#A8E4F5", "#B9D8F7"], ["#B9D8F7", "#DDF4FC", "#FFF0B8"]];
 const placeholder = (seed, label) => {
   const [a, b, c] = PH_COLORS[seed % PH_COLORS.length];
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><circle cx="${80 + (seed % 3) * 90}" cy="120" r="70" fill="${c}" opacity=".55"/><circle cx="330" cy="400" r="90" fill="#fff" opacity=".4"/><path d="M0 430 Q120 360 230 420 T400 390 V500 H0Z" fill="#fff" opacity=".45"/><g fill="none" stroke="#454B55" stroke-opacity=".55" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" transform="translate(160 210)"><rect width="80" height="64" rx="12"/><circle cx="24" cy="22" r="7"/><path d="m80 48-24-24L8 64"/></g><text x="200" y="330" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="700" fill="#454B55" fill-opacity=".7">Your artwork here</text><text x="200" y="358" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#454B55" fill-opacity=".6">${String(label).replace(/&/g, "&amp;").replace(/</g, "&lt;")}</text></svg>`;
@@ -710,21 +710,21 @@ function MascotArt() {
   if (m) return <img src={m} alt="Malkiaa mascot" />;
   return (
     <svg viewBox="0 0 300 420" role="img" aria-label="Placeholder mascot. Replace with your own character.">
-      <ellipse cx="150" cy="400" rx="120" ry="16" fill="#57CBE5" opacity=".18"/>
-      <path d="M62 420c4-70 38-96 88-96s84 26 88 96z" fill="#FFB66F"/>
+      <ellipse cx="150" cy="400" rx="120" ry="16" fill="#B9D8F7" opacity=".18"/>
+      <path d="M62 420c4-70 38-96 88-96s84 26 88 96z" fill="#FFF0B8"/>
       <path d="M118 324l32 34 32-34" fill="#fff" stroke="#E79A55" strokeWidth="3" strokeLinejoin="round"/>
       <rect x="132" y="290" width="36" height="42" rx="14" fill="#FFE3D1"/>
-      <path d="M62 170c-30 40-28 120 6 150 6-40 4-90 18-130z" fill="#57CBE5"/>
-      <path d="M238 170c30 40 28 120-6 150-6-40-4-90-18-130z" fill="#57CBE5"/>
-      <ellipse cx="150" cy="170" rx="92" ry="98" fill="#57CBE5"/>
+      <path d="M62 170c-30 40-28 120 6 150 6-40 4-90 18-130z" fill="#B9D8F7"/>
+      <path d="M238 170c30 40 28 120-6 150-6-40-4-90-18-130z" fill="#B9D8F7"/>
+      <ellipse cx="150" cy="170" rx="92" ry="98" fill="#B9D8F7"/>
       <ellipse cx="150" cy="188" rx="72" ry="76" fill="#FFE9DC"/>
       <path d="M72 150c10-60 50-88 80-88s72 24 80 88c-30-18-62-32-80-32s-52 14-80 32z" fill="#7BD8EE"/>
-      <path d="M118 112c4 20-4 40-18 56 24-6 38-26 42-56zM182 112c-4 20 4 40 18 56-24-6-38-26-42-56z" fill="#57CBE5"/>
+      <path d="M118 112c4 20-4 40-18 56 24-6 38-26 42-56zM182 112c-4 20 4 40 18 56-24-6-38-26-42-56z" fill="#B9D8F7"/>
       <ellipse cx="118" cy="200" rx="14" ry="19" fill="#454B55"/><ellipse cx="182" cy="200" rx="14" ry="19" fill="#454B55"/>
       <circle cx="122" cy="193" r="5.5" fill="#fff"/><circle cx="186" cy="193" r="5.5" fill="#fff"/>
-      <ellipse cx="96" cy="226" rx="13" ry="7" fill="#FFB66F" opacity=".7"/><ellipse cx="204" cy="226" rx="13" ry="7" fill="#FFB66F" opacity=".7"/>
+      <ellipse cx="96" cy="226" rx="13" ry="7" fill="#FFF0B8" opacity=".7"/><ellipse cx="204" cy="226" rx="13" ry="7" fill="#FFF0B8" opacity=".7"/>
       <path d="M138 232c6 8 18 8 24 0" fill="none" stroke="#454B55" strokeWidth="4" strokeLinecap="round"/>
-      <path d="M216 76l12-26 12 26 26 12-26 12-12 26-12-26-26-12z" fill="#FFB66F" transform="translate(-30 -18) scale(.8)"/>
+      <path d="M216 76l12-26 12 26 26 12-26 12-12 26-12-26-26-12z" fill="#FFF0B8" transform="translate(-30 -18) scale(.8)"/>
       <path d="M76 70l7-15 7 15 15 7-15 7-7 15-7-15-15-7z" fill="#fff" opacity=".9"/>
     </svg>
   );
@@ -1364,7 +1364,6 @@ function ProfilePanel() {
           <TextIn label="Bio (About page card)" value={p.bio} onChange={set(["profile", "bio"])} multiline className="full" />
           <TextIn label="Introduction (About page)" value={a.introduction} onChange={set(["profile", "about", "introduction"])} multiline className="full" />
           <TextIn label="Creative philosophy" value={a.philosophy} onChange={set(["profile", "about", "philosophy"])} multiline className="full" />
-          <ImagePicker label="About page illustration or photo" value={a.image} onChange={set(["profile", "about", "image"])} maxDim={1400} />
         </div>
       </section>
       <section className="card">
@@ -1658,8 +1657,8 @@ function AppearancePanel() {
         <h2 style={{ marginBottom: 14 }}>Accent color</h2>
         <div className="swatches">
           {SWATCHES.map((c) => <button key={c} className="sw" style={{ background: c }} aria-pressed={ap.accent.toLowerCase() === c.toLowerCase()} onClick={() => sets(["appearance", "accent"])(c)} aria-label={"Accent " + c} />)}
-          <input type="color" value={/^#[0-9a-f]{6}$/i.test(ap.accent) ? ap.accent : "#57CBE5"} onChange={(e) => sets(["appearance", "accent"])(e.target.value)} aria-label="Custom accent color" style={{ width: 44, height: 36, border: 0, background: "transparent", cursor: "pointer" }} />
-          <Btn kind="ghost" size="sm" onClick={() => sets(["appearance", "accent"])("#57CBE5")}>Reset</Btn>
+          <input type="color" value={/^#[0-9a-f]{6}$/i.test(ap.accent) ? ap.accent : "#B9D8F7"} onChange={(e) => sets(["appearance", "accent"])(e.target.value)} aria-label="Custom accent color" style={{ width: 44, height: 36, border: 0, background: "transparent", cursor: "pointer" }} />
+          <Btn kind="ghost" size="sm" onClick={() => sets(["appearance", "accent"])("#B9D8F7")}>Reset</Btn>
         </div>
       </section>
       <section className="card">
@@ -1678,7 +1677,7 @@ function MediaPanel() {
   const { site, upd } = useCreator();
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
   const groups = [
-    ["Site images", [["Profile picture", ["profile", "avatar"], 600, true], ["Mascot", ["mascot", "image"], 1400], ["About page image", ["profile", "about", "image"], 1400], ["Home banner", ["appearance", "banner"], 1800]]],
+    ["Site images", [["Profile picture", ["profile", "avatar"], 600, true], ["Mascot", ["mascot", "image"], 1400], ["Home banner", ["appearance", "banner"], 1800]]],
     ["Artworks", site.artworks.map((a, i) => [a.title || "Artwork " + (i + 1), ["artworks", i, "image"], 1800])],
     ["Services", site.services.map((x, i) => [x.title, ["services", i, "image"], 1400])],
     ["Price examples", site.pricing.flatMap((g, gi) => g.items.map((it, ii) => [g.title + ": " + it.name, ["pricing", gi, "items", ii, "image"], 1400]))],
@@ -2620,7 +2619,7 @@ function App() {
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(""), 2600); return () => clearTimeout(t); }, [toast]);
 
   useEffect(() => {
-    const c = (site.appearance.accent || "#57CBE5"), r = document.documentElement.style;
+    const c = (site.appearance.accent || "#B9D8F7"), r = document.documentElement.style;
     r.setProperty("--cyan", c); r.setProperty("--on-accent", hexLum(c) > 0.35 ? "#1E3640" : "#FFFFFF");
   }, [site.appearance.accent]);
 
