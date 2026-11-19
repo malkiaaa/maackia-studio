@@ -2088,8 +2088,12 @@ function PageBuilderBlocks({ page }) {
   return <div className="page" style={{display:"flex",flexDirection:"column",gap:14}}>{blocks.map(b=><BuilderBlock key={b.id} block={b} />)}</div>;
 }
 function WebsiteBuilder() {
-  const { site, upd } = useCreator();
+  const { site, upd, save } = useCreator();
   const [page,setPage] = useState("home");
+  const [draftBusy,setDraftBusy] = useState(false);
+  const [draftMessage,setDraftMessage] = useState("");
+  useEffect(() => { let active=true; Store.api("get_draft_site",{},true).then(r=>{if(active && r.site?.builder) upd(n=>{n.builder=r.site.builder;});}).catch(()=>{}); return ()=>{active=false;}; }, []);
+  const saveDraft = async () => { setDraftBusy(true);setDraftMessage("");try{await Store.api("save_draft_site",{site:plain(site)},true);setDraftMessage("Draft saved privately. It is not public yet.");}catch(e){setDraftMessage(e.message||"Could not save draft.");}setDraftBusy(false); };
   const [selected,setSelected] = useState(null);
   const [notice,setNotice] = useState("");
   const all = site.builder?.pages || {};
@@ -2106,7 +2110,7 @@ function WebsiteBuilder() {
       <div className="note info" style={{marginTop:12,fontSize:".72rem"}}>Core ordering, payment, login and tracking functions remain protected.</div>
     </section>
     <section className="card" style={{minWidth:0}}>
-      <div className="card-head"><div><h3>{BUILDER_PAGES.find(x=>x[0]===page)?.[1]} canvas</h3><p className="muted" style={{fontSize:".75rem"}}>Select a block to edit it. Visitors see published blocks.</p></div><span className="tag">{blocks.length} blocks</span></div>
+      <div className="card-head"><div><h3>{BUILDER_PAGES.find(x=>x[0]===page)?.[1]} canvas</h3><p className="muted" style={{fontSize:".75rem"}}>Select a block to edit it. Drafts stay private until published.</p></div><span className="tag">{blocks.length} blocks</span></div><div className="btns" style={{marginBottom:12}}><Btn kind="ghost" size="sm" disabled={draftBusy} onClick={saveDraft}>{draftBusy?"Saving draft…":"Save draft"}</Btn><Btn kind="cyan" size="sm" onClick={save}>Publish website</Btn></div>{draftMessage&&<div className="note info">{draftMessage}</div>}
       <div style={{display:"grid",gap:10,minHeight:220}}>
         {blocks.map((b,i)=><div key={b.id} onClick={()=>setSelected(b.id)} style={{border:selected===b.id?"2px solid var(--cyan)":"1px solid var(--line)",borderRadius:14,padding:10,cursor:"pointer",background:selected===b.id?"var(--tint)":"transparent"}}>
           <div style={{display:"flex",justifyContent:"space-between",gap:8,alignItems:"center",marginBottom:8}}><small className="muted">{BLOCK_TYPES.find(x=>x[0]===b.type)?.[1]} · {i+1}</small><span className="btns"><button className="ib" disabled={i===0} onClick={e=>{e.stopPropagation();moveBlock(b.id,-1);}}>↑</button><button className="ib" disabled={i===blocks.length-1} onClick={e=>{e.stopPropagation();moveBlock(b.id,1);}}>↓</button><button className="ib bad" onClick={e=>{e.stopPropagation();remove(b.id);}}>×</button></span></div>
