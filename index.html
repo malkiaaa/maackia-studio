@@ -907,7 +907,9 @@ function Home({ go, open }) {
         {latest.length ? <div className="strip">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
       </section>}
 
-      <ReviewsCarousel />\n\n      {w.services && <section className="card span-12">
+      <ReviewsCarousel />
+
+      {w.services && <section className="card span-12">
         <div className="card-head"><h2>{T("sec_services")}</h2><Btn kind="ghost" size="sm" onClick={() => go("services")}>All details</Btn></div>
         <div className="svc-grid">
           {CONFIG.services.map((s) => (
@@ -1258,7 +1260,8 @@ const CreatorCtx = createContext(null);
 const useCreator = () => useContext(CreatorCtx);
 const TABS = [
   { id: "overview", label: "Overview", icon: "grid" },
-  { id: "orders", label: "Client Orders", icon: "mail" },\n  { id: "reviews", label: "Client Reviews", icon: "star" },
+  { id: "orders", label: "Client Orders", icon: "mail" },
+  { id: "reviews", label: "Client Reviews", icon: "star" },
   { id: "offers", label: "Service details", icon: "sparkles" },
   { id: "profile", label: "Edit Profile", icon: "user" },
   { id: "media", label: "All images", icon: "image" },
@@ -1991,7 +1994,8 @@ function CreatorPage() {
       </div>
       {tab === "overview" && <Overview setTab={pick} />}
       {tab === "profile" && <ProfilePanel />}
-      {tab === "orders" && <OrdersPanel />}\n      {tab === "reviews" && <ReviewsPanel />}
+      {tab === "orders" && <OrdersPanel />}
+      {tab === "reviews" && <ReviewsPanel />}
       {tab === "offers" && <OffersPanel />}
       {tab === "media" && <MediaPanel />}
       {tab === "contact" && <ContactPanel />}
@@ -2439,7 +2443,8 @@ function CommissionBoard() {
 
 /* ---- visitor: tracking */
 function Track() {
-  const [rid, setRid] = useState(""); const [em, setEm] = useState(""); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [q, setQ] = useState("");\n  const [reviewRating, setReviewRating] = useState("5"); const [reviewText, setReviewText] = useState(""); const [reviewAnonymous, setReviewAnonymous] = useState(false); const [reviewBusy, setReviewBusy] = useState(false); const [reviewMessage, setReviewMessage] = useState("");
+  const [rid, setRid] = useState(""); const [em, setEm] = useState(""); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [q, setQ] = useState("");
+  const [reviewRating, setReviewRating] = useState("5"); const [reviewText, setReviewText] = useState(""); const [reviewAnonymous, setReviewAnonymous] = useState(false); const [reviewBusy, setReviewBusy] = useState(false); const [reviewMessage, setReviewMessage] = useState("");
   const look = async (e) => {
     e && e.preventDefault(); setBusy(true); setMsg("");
     try { const id = rid.trim().toUpperCase(), tr = await Store.lookup(id, em.trim()); if (!tr) { setT(null); setMsg("No order matches that Request ID and email."); } else setT(tr); } catch (x2) { setMsg("Could not look up your order right now."); }
