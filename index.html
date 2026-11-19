@@ -225,6 +225,14 @@ textarea.in{min-height:96px;resize:vertical}
 .chipx button{border:0;background:transparent;cursor:pointer;display:grid;place-items:center;border-radius:50%;width:22px;height:22px}
 .chipx button:hover{background:var(--peach);color:#1E3640}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:120;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;animation:enter .25s ease both;max-width:calc(100vw - 32px)}
+.review-window{overflow:hidden;position:relative;width:100%;mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.review-track{display:flex;gap:14px;width:max-content;animation:review-drift 58s linear infinite}
+.review-window:hover .review-track{animation-play-state:paused}
+.review-card{width:min(340px,78vw);flex:none;background:var(--powder);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px;white-space:normal}
+.review-stars{color:#D6A23B;letter-spacing:2px;font-size:1rem}
+.review-card p{overflow-wrap:anywhere}
+@keyframes review-drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.review-track{animation:none}.review-window{overflow-x:auto;mask-image:none}}
 
 .mbar,.bnav{display:none}
 .drawer-back{position:fixed;inset:0;background:rgba(20,35,45,.55);z-index:60}
@@ -899,7 +907,7 @@ function Home({ go, open }) {
         {latest.length ? <div className="strip">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
       </section>}
 
-      {w.services && <section className="card span-12">
+      <ReviewsCarousel />\n\n      {w.services && <section className="card span-12">
         <div className="card-head"><h2>{T("sec_services")}</h2><Btn kind="ghost" size="sm" onClick={() => go("services")}>All details</Btn></div>
         <div className="svc-grid">
           {CONFIG.services.map((s) => (
@@ -930,6 +938,33 @@ function Home({ go, open }) {
         </div>
       </section>}
     </div>
+  );
+}
+
+function ReviewsCarousel() {
+  const [reviews, setReviews] = useState([]);
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    let active = true;
+    Store.api("public_reviews", {}).then((result) => {
+      if (active) setReviews(Array.isArray(result.reviews) ? result.reviews : []);
+    }).catch(() => { if (active) setMessage("Client reviews are temporarily unavailable."); });
+    return () => { active = false; };
+  }, []);
+  if (!reviews.length && !message) return null;
+  return (
+    <section className="card span-12">
+      <div className="card-head"><div><h2>Kind Words from Clients</h2><p className="muted">A few words from people I've worked with.</p></div><Icon name="heart" /></div>
+      {message ? <p className="muted">{message}</p> : <div className="review-window" aria-label="Client reviews, slowly scrolling">
+        <div className="review-track">
+          {[...reviews, ...reviews].map((r, i) => <article className="review-card" key={r.id + "-" + i}>
+            <div className="review-stars" aria-label={r.rating + " out of 5 stars"}>{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>
+            <p>“{r.message}”</p><b>{r.display_name || "Anonymous"}</b>
+            <small className="muted">{fmtDate(r.created_at)}</small>
+          </article>)}
+        </div>
+      </div>}
+    </section>
   );
 }
 
@@ -1223,7 +1258,7 @@ const CreatorCtx = createContext(null);
 const useCreator = () => useContext(CreatorCtx);
 const TABS = [
   { id: "overview", label: "Overview", icon: "grid" },
-  { id: "orders", label: "Client Orders", icon: "mail" },
+  { id: "orders", label: "Client Orders", icon: "mail" },\n  { id: "reviews", label: "Client Reviews", icon: "star" },
   { id: "offers", label: "Service details", icon: "sparkles" },
   { id: "profile", label: "Edit Profile", icon: "user" },
   { id: "media", label: "All images", icon: "image" },
@@ -1956,7 +1991,7 @@ function CreatorPage() {
       </div>
       {tab === "overview" && <Overview setTab={pick} />}
       {tab === "profile" && <ProfilePanel />}
-      {tab === "orders" && <OrdersPanel />}
+      {tab === "orders" && <OrdersPanel />}\n      {tab === "reviews" && <ReviewsPanel />}
       {tab === "offers" && <OffersPanel />}
       {tab === "media" && <MediaPanel />}
       {tab === "contact" && <ContactPanel />}
@@ -2169,7 +2204,10 @@ const Store = {
   async submit(order, track) { return (await this.api("submit", { order, track })).track; },
   async lookup(id, email) {
     if (!(await this.client())) { const tr = await this.getTrack(id); return tr && tr.emailHash === (await sha(email.toLowerCase() + "|" + id)) ? tr : null; }
-    try { return (await this.api("track", { id, email })).track; } catch (e) { if (/no order/i.test(e.message)) return null; throw e; }
+    try {
+      const result = await this.api("track", { id, email });
+      return result.track ? { ...result.track, reviewSubmitted: Boolean(result.reviewSubmitted) } : null;
+    } catch (e) { if (/no order/i.test(e.message)) return null; throw e; }
   },
   async respond(id, email, response, text) { return (await this.api("respond", { id, email, response, text })).track; },
   async create(f, s, c) {
@@ -2401,7 +2439,7 @@ function CommissionBoard() {
 
 /* ---- visitor: tracking */
 function Track() {
-  const [rid, setRid] = useState(""); const [em, setEm] = useState(""); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [q, setQ] = useState("");
+  const [rid, setRid] = useState(""); const [em, setEm] = useState(""); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [q, setQ] = useState("");\n  const [reviewRating, setReviewRating] = useState("5"); const [reviewText, setReviewText] = useState(""); const [reviewAnonymous, setReviewAnonymous] = useState(false); const [reviewBusy, setReviewBusy] = useState(false); const [reviewMessage, setReviewMessage] = useState("");
   const look = async (e) => {
     e && e.preventDefault(); setBusy(true); setMsg("");
     try { const id = rid.trim().toUpperCase(), tr = await Store.lookup(id, em.trim()); if (!tr) { setT(null); setMsg("No order matches that Request ID and email."); } else setT(tr); } catch (x2) { setMsg("Could not look up your order right now."); }
@@ -2411,6 +2449,21 @@ function Track() {
     const n = clone(t), now = new Date().toISOString(); n.proposal.response = resp; n.updates.push({ at: now, from: "client", text: text || "Client: " + resp });
     n.status = resp === "Accepted" ? "Awaiting Payment" : resp === "Declined" ? "Cancelled" : "Reviewing";
     try { const n2 = (await Store.client()) ? await Store.respond(t.id, em.trim(), resp, text || "Client: " + resp) : (await Store.setTrack(n), n); setT(n2); setQ(""); } catch (x2) { setMsg("Could not save your response. Please try again."); }
+  };
+  const submitReview = async (e) => {
+    e.preventDefault(); setReviewBusy(true); setReviewMessage("");
+    try {
+      const result = await Store.api("submit_review", {
+        id: t.id, email: em.trim(), rating: Number(reviewRating),
+        message: reviewText.trim(), isAnonymous: reviewAnonymous
+      });
+      setT({ ...t, reviewSubmitted: true });
+      setReviewText("");
+      setReviewMessage(result.message || "Thank you. Your review is awaiting approval.");
+    } catch (error) {
+      setReviewMessage(error.message || "Could not submit your review. Please try again.");
+    }
+    setReviewBusy(false);
   };
   const idx = t ? TL.findIndex((a) => a[1].includes(t.status)) : -1, p = t && t.proposal;
   return (
@@ -2424,7 +2477,20 @@ function Track() {
           <p style={{ marginTop: 10 }}><b>Final price: {idr(p.finalPrice)}</b></p>{p.delivery && <p>Estimated delivery: {p.delivery}</p>}{p.notes && <p style={{ whiteSpace: "pre-line" }}>{p.notes}</p>}{p.revision && <p><b>Revisions:</b> {p.revision}</p>}{p.paymentInfo && <p style={{ whiteSpace: "pre-line" }}><b>Payment instructions:</b> {p.paymentInfo}</p>}
           {!p.response ? <div style={{ marginTop: 12 }}><div className="btns"><Btn onClick={() => act("Accepted")}>Accept Proposal</Btn><Btn kind="danger" onClick={() => act("Declined")}>Decline Proposal</Btn></div><div className="pwrow" style={{ marginTop: 10 }}><input className="in" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask a question about this proposal" /><Btn kind="cyan" size="sm" disabled={!q.trim()} onClick={() => act("Clarification requested", "Client question: " + q.trim())}>Request Clarification</Btn></div></div> : <div className="note info" style={{ marginTop: 12 }}>Your response: {p.response}. Accepting does not mean payment has been made. Payment status is shown above.</div>}</section>}
         <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Updates</h2>{t.updates.length ? t.updates.slice().reverse().map((u, i) => <p key={i} style={{ marginBottom: 6 }}><small className="muted">{fmtDate(u.at)} {u.from === "client" ? "(you)" : ""}</small><br />{u.text}</p>) : <p className="muted">No updates yet.</p>}
-          {t.finalFiles.length > 0 && <div style={{ marginTop: 10 }}><h3>Final files</h3>{t.finalFiles.map((fl) => <p key={fl.url}><a href={fl.url} download={fl.name}>{fl.name}</a></p>)}</div>}</section></div>}
+          {t.finalFiles.length > 0 && <div style={{ marginTop: 10 }}><h3>Final files</h3>{t.finalFiles.map((fl) => <p key={fl.url}><a href={fl.url} download={fl.name}>{fl.name}</a></p>)}</div>}</section>
+        {t.status === "Completed" && <section className="card span-12">
+          <h2 style={{ marginBottom: 8 }}>Leave a Review</h2>
+          {t.reviewSubmitted
+            ? <div className="note ok">Thank you. Your review has been submitted and is waiting for studio approval.</div>
+            : <form className="panel" onSubmit={submitReview}>
+              <p className="muted">Share your experience with Malkiaa Studio. Only completed commissions can leave a review.</p>
+              <Field label="Your rating"><select className="in" value={reviewRating} onChange={(e) => setReviewRating(e.target.value)}>{[5,4,3,2,1].map((n) => <option key={n} value={n}>{n} / 5 stars</option>)}</select></Field>
+              <Field label="Your review"><textarea className="in" minLength={10} maxLength={1200} required value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Tell me about your experience (10–1200 characters)." /></Field>
+              <label className="switch"><span><b>Post anonymously</b><small className="muted" style={{ display: "block" }}>Your order name will not be shown publicly.</small></span><input type="checkbox" checked={reviewAnonymous} onChange={(e) => setReviewAnonymous(e.target.checked)} /></label>
+              {reviewMessage && <div className="note info" role="status">{reviewMessage}</div>}
+              <div><Btn type="submit" disabled={reviewBusy || reviewText.trim().length < 10}>{reviewBusy ? "Submitting..." : "Submit review"}</Btn></div>
+            </form>}
+        </section>}</div>}
     </div>
   );
 }
@@ -2565,6 +2631,54 @@ function OrdersPanel() {
       <section className="card"><h2 style={{ marginBottom: 12 }}>Client requests</h2>{list === null ? <p className="muted">Loading...</p> : list.length === 0 ? <p className="muted">No requests yet.</p> : <div className="list">{list.map((o) => <button key={o.id} className="rowi" style={{ textAlign: "left", cursor: "pointer", width: "100%" }} onClick={() => setSel(o)}><div className="grow"><b>{o.id} - {o.form.name}</b><small className="muted">{o.form.email} / {o.serviceTitle} / {fmtDate(o.createdAt)} / {idr(o.estimate.total)}</small></div><span className="tag">{o.status}</span></button>)}</div>}</section>
     </div>
   );
+}
+
+function ReviewsPanel() {
+  const [reviews, setReviews] = useState(null);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState("");
+  const load = async () => {
+    try {
+      const result = await Store.api("reviews_admin_list", {}, true);
+      setReviews(Array.isArray(result.reviews) ? result.reviews : []);
+      setMessage("");
+    } catch (error) { setMessage(error.message || "Could not load reviews."); setReviews([]); }
+  };
+  useEffect(() => { load(); }, []);
+  const moderate = async (review, status) => {
+    setBusy(review.id); setMessage("");
+    try { await Store.api("reviews_admin_update", { id: review.id, status }, true); await load(); }
+    catch (error) { setMessage(error.message || "Could not update review."); }
+    setBusy("");
+  };
+  const remove = async (review) => {
+    if (!window.confirm("Permanently delete this review?")) return;
+    setBusy(review.id); setMessage("");
+    try { await Store.api("reviews_admin_delete", { id: review.id }, true); await load(); }
+    catch (error) { setMessage(error.message || "Could not delete review."); }
+    setBusy("");
+  };
+  const counts = (status) => (reviews || []).filter((r) => r.status === status).length;
+  return <div className="panel">
+    <div className="grid">{["pending","approved","hidden"].map((status) => <section className="card stat span-4" key={status}><span className="lbl">{status}</span><b>{counts(status)}</b></section>)}</div>
+    {message && <div className="note info">{message}</div>}
+    <section className="card">
+      <div className="card-head"><h2>Client Reviews</h2><Btn kind="ghost" size="sm" onClick={load} disabled={!!busy}>Refresh</Btn></div>
+      <p className="muted" style={{ marginBottom: 12 }}>New reviews stay private until you approve them. Only approved reviews appear on the public homepage.</p>
+      {reviews === null ? <p className="muted">Loading reviews...</p> : !reviews.length ? <p className="muted">No reviews submitted yet.</p> :
+        <div className="list">{reviews.map((review) => <article className="rowi" key={review.id} style={{ alignItems: "flex-start" }}>
+          <div className="grow" style={{ whiteSpace: "normal" }}>
+            <div className="meta"><b>{review.display_name}</b><span className="tag">{review.status}</span><span className="tag">{review.rating}/5 ★</span><small className="muted">{review.commission_id} · {fmtDate(review.created_at)}</small></div>
+            <p style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>{review.message}</p>
+          </div>
+          <div className="acts">
+            {review.status !== "approved" && <Btn size="sm" kind="cyan" disabled={!!busy} onClick={() => moderate(review,"approved")}>Approve</Btn>}
+            {review.status !== "hidden" && <Btn size="sm" kind="ghost" disabled={!!busy} onClick={() => moderate(review,"hidden")}>Hide</Btn>}
+            <Btn size="sm" kind="danger" disabled={!!busy} onClick={() => remove(review)}>Delete</Btn>
+          </div>
+        </article>)}</div>}
+    </section>
+  </div>;
 }
 
 /* ============================================================ app */
