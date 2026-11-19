@@ -2014,7 +2014,7 @@ let _sbClient = null;
 let _sbStatus = "unconfigured"; // unconfigured | connecting | connected | error
 
 /* PUBLIC values only (project URL + anon key). Fill in so every visitor's browser, not just yours, reaches Supabase. */
-const SB_EMBEDDED = { url: "", anonKey: "" };
+const SB_EMBEDDED = { url: "https://ypvksdnyfmikghjprslk.supabase.co", anonKey: "sb_publishable_EY7UxHDydXYUuw-yZnw6kA_9Dbhqjfn" };
 function getSbCfg() {
   if (SB_EMBEDDED.url && SB_EMBEDDED.anonKey) return SB_EMBEDDED;
   try { return JSON.parse(localStorage.getItem(SB_CFG_KEY) || "null"); } catch (e) { return null; }
