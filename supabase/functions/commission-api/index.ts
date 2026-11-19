@@ -423,7 +423,109 @@ Deno.serve(async (req) => {
         return json({ error: "No order matches that Request ID and email." }, 404);
       }
       const { emailHash: _privateHash, ...publicTrack } = track;
-      return json({ track: publicTrack });
+      const { data: existingReview } = await db.from("client_reviews")
+        .select("id").eq("commission_id", id).maybeSingle();
+      return json({ track: publicTrack, reviewSubmitted: Boolean(existingReview) });
+    }
+
+    if (action === "submit_review") {
+      const id = clean(body?.id, 40).toUpperCase();
+      const email = clean(body?.email, 254).toLowerCase();
+      const rating = Number(body?.rating);
+      const message = clean(body?.message, 1200);
+      const isAnonymous = body?.isAnonymous === true;
+      if (!id || !email || !Number.isInteger(rating) || rating < 1 || rating > 5 ||
+          message.length < 10) {
+        return json({ error: "Please provide a valid rating and a review of at least 10 characters." }, 400);
+      }
+
+      const { data: track } = await db.from("order_tracks")
+        .select("id,status,emailHash,client_name").eq("id", id).maybeSingle();
+      const suppliedHash = await sha256(email + "|" + id);
+      if (!track || track.emailHash !== suppliedHash) {
+        return json({ error: "No order matches that Request ID and email." }, 404);
+      }
+      if (track.status !== "Completed") {
+        return json({ error: "Reviews can only be submitted after a commission is completed." }, 409);
+      }
+
+      const { data: existingReview } = await db.from("client_reviews")
+        .select("id").eq("commission_id", id).maybeSingle();
+      if (existingReview) {
+        return json({ error: "A review has already been submitted for this commission." }, 409);
+      }
+
+      const { data: review, error } = await db.from("client_reviews").insert({
+        commission_id: id,
+        rating,
+        message,
+        display_name: isAnonymous ? "Anonymous" : (clean(track.client_name, 120) || "Client"),
+        is_anonymous: isAnonymous,
+        status: "pending",
+      }).select("id,status").single();
+      if (error) {
+        if (error.code === "23505") {
+          return json({ error: "A review has already been submitted for this commission." }, 409);
+        }
+        console.error("client review submission failed", error);
+        return json({ error: "Could not submit your review. Please try again." }, 500);
+      }
+      return json({ ok: true, status: review.status, message: "Thank you. Your review has been sent for approval." }, 201);
+    }
+
+    if (action === "public_reviews") {
+      const { data, error } = await db.from("client_reviews")
+        .select("id,rating,message,display_name,is_anonymous,created_at")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (error) {
+        console.error("public reviews lookup failed", error);
+        return json({ error: "Could not load client reviews." }, 500);
+      }
+      return json({ reviews: data || [] });
+    }
+
+    if (action === "reviews_admin_list") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const { data, error } = await db.from("client_reviews")
+        .select("*").order("created_at", { ascending: false }).limit(200);
+      if (error) {
+        console.error("creator reviews lookup failed", error);
+        return json({ error: "Could not load client reviews." }, 500);
+      }
+      return json({ reviews: data || [] });
+    }
+
+    if (action === "reviews_admin_update") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const id = clean(body?.id, 80);
+      const status = clean(body?.status, 20);
+      if (!id || !["approved", "hidden"].includes(status)) {
+        return json({ error: "Invalid review moderation request." }, 400);
+      }
+      const { error } = await db.from("client_reviews")
+        .update({ status, moderated_at: new Date().toISOString() }).eq("id", id);
+      if (error) {
+        console.error("review moderation failed", error);
+        return json({ error: "Could not update this review." }, 500);
+      }
+      return json({ ok: true });
+    }
+
+    if (action === "reviews_admin_delete") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const id = clean(body?.id, 80);
+      if (!id) return json({ error: "A review ID is required." }, 400);
+      const { error } = await db.from("client_reviews").delete().eq("id", id);
+      if (error) {
+        console.error("review deletion failed", error);
+        return json({ error: "Could not delete this review." }, 500);
+      }
+      return json({ ok: true });
     }
 
     if (action === "respond") {
