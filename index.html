@@ -509,6 +509,29 @@ button,.btn{white-space:normal}
 @media (prefers-reduced-motion:reduce){
   html:focus-within{scroll-behavior:auto}
 }
+@media(max-width:767px){
+  .workflow-page{width:100%;min-width:0}
+  .workflow-page .steps{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;width:100%;min-width:0}
+  .workflow-page .step{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;column-gap:12px;row-gap:5px;width:100%;min-width:0;padding:14px}
+  .workflow-page .step .n{grid-column:1;grid-row:1 / span 2;width:40px;height:40px;border-radius:13px;font-size:1.15rem}
+  .workflow-page .step h3{grid-column:2;min-width:0;margin:0;overflow-wrap:anywhere}
+  .workflow-page .step p{grid-column:2;min-width:0;margin:0;overflow-wrap:anywhere;line-height:1.55}
+  .workflow-page>section.card{margin-top:16px!important;padding:15px;min-width:0}
+  .workflow-page .stages{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%;min-width:0;margin-top:12px}
+  .workflow-page .stage,
+  .workflow-page .stage:first-child,
+  .workflow-page .stage:last-child{min-width:0;width:100%;padding:13px 14px;border:0!important;border-radius:14px!important;overflow-wrap:anywhere}
+  .workflow-page .stage b{font-size:1rem!important;line-height:1.35}
+  .workflow-page .stage span{line-height:1.5}
+  .workflow-page>.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+  .workflow-page>.btns .btn{min-width:0;white-space:normal}
+}
+@media(max-width:380px){
+  .workflow-page .step{padding:12px;column-gap:9px}
+  .workflow-page .step .n{width:36px;height:36px}
+  .workflow-page>section.card{padding:12px}
+  .workflow-page>.btns{grid-template-columns:1fr}
+}
 
 </style>
 
@@ -1349,7 +1372,7 @@ function Terms({ lang, setLang, go }) {
 function Workflow({ go }) {
   const w = CONFIG.workflow;
   return (
-    <div className="page">
+    <div className="page workflow-page">
       <PageHead crumb="WORKFLOW" title="Workflow">{T("workflow_sub")}</PageHead>
       <div className="steps">
         {w.steps.map((s, i) => (
