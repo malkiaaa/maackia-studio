@@ -2165,40 +2165,9 @@ const Store = {
     if (sb) return await Store.submit(order, track);
     await Store.setOrder(order);
     await Store.setTrack(track);
-    // 2. Fire email notifications after confirmed DB save (non-blocking, errors logged not thrown)
-    Store.sendNotifications(order, f).catch((e) => console.warn("Email notification error (request still saved):", e));
     return track;
   },
 
-  // Send artist + optional client email via Supabase Edge Function (server-side, keys never in browser)
-  async sendNotifications(order, form) {
-    const sb = await this.client();
-    if (!sb) return; // No Supabase = no edge function = skip silently
-    const cfg = getSbCfg();
-    if (!cfg || !cfg.url) return;
-    const fnUrl = cfg.url.replace(/\/$/, "") + "/functions/v1/notify-commission";
-    const payload = {
-      orderId: order.id,
-      clientName: form.name,
-      clientEmail: form.email,
-      serviceTitle: order.serviceTitle,
-      tierName: order.tierName,
-      estimatedTotal: order.estimate.total,
-      estimateCustom: order.estimate.custom,
-      createdAt: order.createdAt,
-      dashboardUrl: window.location.href.split("#")[0] + "#creator",
-    };
-    // Fire-and-forget POST to edge function — the function reads secrets server-side
-    const resp = await fetch(fnUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.anonKey },
-      body: JSON.stringify(payload),
-    });
-    if (!resp.ok) {
-      const txt = await resp.text().catch(() => resp.status);
-      console.warn("Edge function responded with error:", txt);
-    }
-  },
 };
 
 // Connection status hook
