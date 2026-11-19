@@ -133,7 +133,7 @@ async function deliverEmail(
 
   if (!webhookUrl || !webhookSecret) {
     message = "GAS_WEBHOOK_URL and GAS_WEBHOOK_SECRET must be configured in Supabase Edge Function secrets.";
-  } else if (!recipient || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(recipient)) {
+  } else if (!recipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
     message = "A valid notification recipient email is required.";
   } else {
     try {
