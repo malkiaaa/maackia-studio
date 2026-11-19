@@ -1819,6 +1819,27 @@ function EmailPanel() {
   const [testing, setTesting] = useState(false);
   const set = (k) => (v) => setCfg((p) => ({ ...p, [k]: v }));
 
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const sb = await Store.client();
+        if (!sb) return;
+        const { data, error } = await sb.from("app_settings")
+          .select("value").eq("key", "email_config").maybeSingle();
+        if (error) throw error;
+        if (active && data?.value) {
+          const next = { ...defaultCfg, ...data.value };
+          setCfg(next);
+          setEmailCfgLocal(next);
+        }
+      } catch (error) {
+        console.warn("Could not load saved email settings:", error);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   const save = async () => {
     if (!cfg.artistEmail) { setMsg({ text: "Please enter the artist notification email.", ok: false }); return; }
     setSaving(true);
