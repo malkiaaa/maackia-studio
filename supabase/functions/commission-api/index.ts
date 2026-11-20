@@ -366,8 +366,8 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
 
   const artistEmail = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
 
-  // Send the customer confirmation first; notify the studio owner afterward.
-  if (config.sendClient !== false && clientEmail) {
+  // Every new request notifies both the client and the Creator. This is not user-configurable.
+  if (clientEmail) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
       subject: "[Malkiaa Studio] Commission Request Received — " + order.id,
@@ -376,16 +376,78 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
       kind: "client",
     }));
   }
-  if (config.sendArtist !== false) {
+  results.push(await deliverEmail(db, config, {
+    to: artistEmail,
+    subject: "[Malkiaa Studio] New Commission Request " + order.id,
+    html: commissionEmailHtml(order, clientName, false),
+    orderId: order.id,
+    kind: "artist",
+  }));
+  return results;
+}
+
+
+
+function orderUpdateEmailHtml(order: any, track: any, eventType: string, message: string, forClient: boolean) {
+  const id = escapeHtml(order.id);
+  const name = escapeHtml(clean(order.form?.name, 120) || "Client");
+  const service = escapeHtml(order.serviceTitle || "Commission");
+  const status = escapeHtml(track?.status || order.status || "Updated");
+  const safeMessage = escapeHtml(message || "A new update is available.").replace(/\n/g, "<br>");
+  const clientIntro = eventType === "finished_art"
+    ? "Your finished artwork has been delivered."
+    : eventType === "proposal"
+      ? "Your commission proposal is ready to review."
+      : "There is a new update to your commission.";
+  const body = forClient
+    ? "<p>Hello " + name + ",</p><p>" + clientIntro + "</p><p>" + safeMessage + "</p><p><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Current status:</b> " + status + "</p><p>To track your order, open the Malkiaa Studio website and choose <b>Track Order</b>. Enter the Request ID above and the same email address used when submitting your commission. You can review proposal details, progress updates and delivered files there.</p><p>Please keep this email for your records.</p>"
+    : "<p>A commission update was recorded.</p><p><b>Client:</b> " + name + "<br><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Status:</b> " + status + "</p><p>" + safeMessage + "</p><p>Open Creator Dashboard to review the order and email delivery history.</p>";
+  return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'><h2>Malkiaa Studio</h2>" + body + "</body></html>";
+}
+
+async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType: string, eventId: string, message: string) {
+  const config = await getEmailConfig(db);
+  const clientEmail = clean(order?.form?.email, 254).toLowerCase();
+  const artistEmail = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
+  const subjectLabel = eventType === "finished_art" ? "Finished Art Delivered"
+    : eventType === "proposal" ? "Proposal Ready"
+    : eventType === "progress" ? "Progress Update"
+    : eventType === "status" ? "Order Status Updated"
+    : "Commission Update";
+  const results: any[] = [];
+  if (clientEmail) {
     results.push(await deliverEmail(db, config, {
-      to: artistEmail,
-      subject: "[Malkiaa Studio] New Commission Request " + order.id,
-      html: commissionEmailHtml(order, clientName, false),
+      to: clientEmail,
+      subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
+      html: orderUpdateEmailHtml(order, track, eventType, message, true),
       orderId: order.id,
-      kind: "artist",
+      kind: "client_evt_" + eventId,
+      idempotencyKey: order.id + ":client:" + eventId,
     }));
   }
+  results.push(await deliverEmail(db, config, {
+    to: artistEmail,
+    subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
+    html: orderUpdateEmailHtml(order, track, eventType, message, false),
+    orderId: order.id,
+    kind: "artist_evt_" + eventId,
+    idempotencyKey: order.id + ":artist:" + eventId,
+  }));
   return results;
+}
+
+async function addSignedFinalFileUrls(db: any, track: any) {
+  const files = Array.isArray(track?.finalFiles) ? track.finalFiles : [];
+  const signedFiles = await Promise.all(files.map(async (file: any) => {
+    if (!file?.path) return file;
+    const { data, error } = await db.storage.from("references").createSignedUrl(file.path, 60 * 60);
+    if (error || !data?.signedUrl) {
+      console.error("final artwork signed URL failed", { orderId: track.id, path: file.path, error });
+      return { name: file.name, type: file.type, unavailable: true };
+    }
+    return { name: file.name, type: file.type, path: file.path, url: data.signedUrl };
+  }));
+  return { ...track, finalFiles: signedFiles };
 }
 
 async function requireOwner(
@@ -578,6 +640,16 @@ Deno.serve(async (req) => {
       return json({ track: publicTrack, notifications, duplicate: submission.duplicate === true }, submission.duplicate === true ? 200 : 201);
     }
 
+    if (action === "creator_track") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const id = clean(body?.id, 40).toUpperCase();
+      const { data: track, error } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
+      if (error || !track) return json({ error: "Tracking record was not found." }, 404);
+      const { emailHash: _privateHash, ...safeTrack } = await addSignedFinalFileUrls(db, track);
+      return json({ track: safeTrack });
+    }
+
     if (action === "public_board") {
       const { data, error } = await db.from("order_tracks")
         .select("id,created_at,client_name,serviceTitle,status")
@@ -641,7 +713,7 @@ Deno.serve(async (req) => {
         console.error("could not mark tracking attempt successful", markError);
       }
 
-      const { emailHash: _privateHash, ...publicTrack } = track;
+      const { emailHash: _privateHash, ...publicTrack } = await addSignedFinalFileUrls(db, track);
       const { data: existingReview } = await db.from("client_reviews")
         .select("id").eq("commission_id", id).maybeSingle();
       return json({ track: publicTrack, reviewSubmitted: Boolean(existingReview) });
@@ -840,6 +912,36 @@ Deno.serve(async (req) => {
       const { error: draftError } = await db.from("app_settings").delete().eq("key", "site_draft");
       if (draftError) console.error("published draft cleanup failed", draftError);
       return json({ ok: true });
+    }
+
+    if (action === "notify_update") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const id = clean(body?.id, 40).toUpperCase();
+      const eventId = clean(body?.eventId, 80);
+      const eventType = clean(body?.eventType, 30);
+      const allowedEvents = ["proposal", "progress", "status", "finished_art", "manual"];
+      if (!/^ev_[A-Za-z0-9]{16,70}$/.test(eventId) || !allowedEvents.includes(eventType)) {
+        return json({ error: "Invalid order notification event." }, 400);
+      }
+      const [{ data: order, error: orderError }, { data: track, error: trackError }] = await Promise.all([
+        db.from("commission_requests").select("*").eq("id", id).maybeSingle(),
+        db.from("order_tracks").select("*").eq("id", id).maybeSingle(),
+      ]);
+      if (orderError || trackError || !order || !track) return json({ error: "Commission or tracking record was not found." }, 404);
+      if (eventType === "finished_art" && (!Array.isArray(track.finalFiles) || track.finalFiles.length === 0)) {
+        return json({ error: "Upload Finished Art before sending the delivery email." }, 409);
+      }
+      const defaults: Record<string, string> = {
+        proposal: "Your commission proposal is ready. Open Track Order to review the details.",
+        progress: "There is a new progress update for your commission. Open Track Order to view it.",
+        status: "Your commission status has changed. Open Track Order to view the latest status.",
+        finished_art: "Your Finished Art has been delivered. Open Track Order using your Request ID and email address to view and download the final files.",
+        manual: "A new update is available for your commission. Open Track Order to view the latest details.",
+      };
+      const message = clean(body?.message, 1200) || defaults[eventType];
+      const notifications = await sendOrderUpdateEmails(db, order, track, eventType, eventId, message);
+      return json({ ok: true, notifications });
     }
 
     if (action === "test") {
