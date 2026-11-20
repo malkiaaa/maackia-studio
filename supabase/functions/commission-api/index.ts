@@ -338,22 +338,22 @@ function commissionEmailText(order: any, clientName: string) {
   const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
     (order?.estimate?.custom ? " + custom quote" : "");
   return [
-    "MALKIAA STUDIO",
+    "Malkiaa Studio",
     "",
-    "Hello " + (clean(clientName, 120) || "Client") + ",",
-    "Thank you. Your commission request has been received and is waiting for review.",
+    "Hello " + (clean(clientName, 120) || "there") + ",",
+    "Thank you for contacting Malkiaa Studio. Your commission request has been received.",
     "",
-    "REQUEST DETAILS",
+    "Request details",
     "Request ID: " + clean(order.id, 40),
     "Service: " + clean(order.serviceTitle, 160),
-    "Tier: " + clean(order.tierName, 120),
-    "Estimate: " + price,
+    "Option: " + clean(order.tierName, 120),
+    "Current estimate: " + price,
     "",
-    "No payment has been taken. You will receive a proposal before payment is requested.",
-    "Keep this email. To track your order, open the Malkiaa Studio website and enter the Request ID above with the same email address used for your request.",
+    "No payment has been taken. We will review your request and contact you with the next steps before payment is due.",
+    "Please keep this message for your records. You can reply directly to this email if you have a question.",
     "",
-    "Malkiaa Studio — Commission support",
-    "This is an automatic transactional email about a commission request you submitted."
+    "Malkiaa Studio",
+    "Commission support · mmaackia@gmail.com"
   ].filter((line) => line !== undefined).join("\n");
 }
 
@@ -365,15 +365,20 @@ function commissionEmailHtml(order: any, clientName: string) {
   const estimate = Number(order?.estimate?.total) || 0;
   const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
     (order?.estimate?.custom ? " + custom quote" : "");
-  const greeting = "Thank you, " + name + ". Your commission request has been received and is waiting for review.";
-  const extra = "<p>Keep this email. Use your Request ID and email address to track your order on the website. No payment has been taken; you will receive a proposal before payment is requested.</p>";
-  return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'>" +
-    "<h2>Malkiaa Studio</h2><p>" + greeting + "</p>" +
-    "<table style='border-collapse:collapse;width:100%'>" +
-    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Request ID</td><td style='padding:8px;border-bottom:1px solid #ddd'><b>" + id + "</b></td></tr>" +
-    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Service</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + service + " " + tier + "</td></tr>" +
-    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Estimate</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + price + "</td></tr>" +
-    "</table>" + extra + "</body></html>";
+  const greeting = "Thank you, " + name + ". We have received your commission request.";
+  const extra = "<p>No payment has been taken. We will review your request and contact you with the next steps before payment is due.</p><p>Please keep this message for your records. If you have a question, you can reply directly to this email.</p>";
+  return "<!doctype html><html><body style='margin:0;padding:24px;background:#ffffff;color:#303943;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6'>" +
+    "<div style='max-width:600px;margin:0 auto'>" +
+    "<p style='margin:0 0 20px;font-size:20px;font-weight:700;color:#263f50'>Malkiaa Studio</p>" +
+    "<p>" + greeting + "</p>" +
+    "<p style='margin:24px 0 8px;font-weight:700'>Request details</p>" +
+    "<table role='presentation' style='border-collapse:collapse;width:100%'>" +
+    "<tr><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;color:#667085'>Request ID</td><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right'><b>" + id + "</b></td></tr>" +
+    "<tr><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;color:#667085'>Service</td><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right'>" + service + " " + tier + "</td></tr>" +
+    "<tr><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;color:#667085'>Estimate</td><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right'>" + price + "</td></tr>" +
+    "</table>" + extra +
+    "<p style='margin-top:28px;padding-top:16px;border-top:1px solid #e5e7eb;color:#667085;font-size:13px'>Malkiaa Studio · Commission support<br>mmaackia@gmail.com</p>" +
+    "</div></body></html>";
 }
 
 async function sendCommissionEmails(db: any, order: any, form: any) {
@@ -386,7 +391,7 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
   if (clientEmail) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
-      subject: "[Malkiaa Studio] Commission Request Received — " + order.id,
+      subject: "We received your commission request | " + order.id,
       html: commissionEmailHtml(order, clientName),
       text: commissionEmailText(order, clientName),
       orderId: order.id,
@@ -407,23 +412,23 @@ function orderUpdateEmailText(order: any, track: any, eventType: string, message
     manual: "There is a new update to your commission.",
   };
   return [
-    "MALKIAA STUDIO",
+    "Malkiaa Studio",
     "",
-    "Hello " + (clean(order?.form?.name, 120) || "Client") + ",",
-    labels[eventType] || "There is a new update to your commission.",
+    "Hello " + (clean(order?.form?.name, 120) || "there") + ",",
+    labels[eventType] || "There is an update to your commission.",
     "",
     clean(message, 1200) || "A new update is available.",
     "",
-    "REQUEST DETAILS",
+    "Request details",
     "Request ID: " + clean(order.id, 40),
     "Service: " + clean(order.serviceTitle, 160),
     "Current status: " + clean(track?.status || order.status || "Updated", 80),
     "",
-    "To track your order, open the Malkiaa Studio website and choose Track Order. Enter the Request ID above and the same email address used when submitting your commission.",
-    "Please keep this email for your records.",
+    "You can review the latest details in Track Order on the Malkiaa Studio website. Please use the same email address you used for your request.",
+    "If you have a question, reply directly to this email.",
     "",
-    "Malkiaa Studio — Commission support",
-    "This is an automatic transactional email about your commission."
+    "Malkiaa Studio",
+    "Commission support · mmaackia@gmail.com"
   ].join("\n");
 }
 
@@ -438,8 +443,15 @@ function orderUpdateEmailHtml(order: any, track: any, eventType: string, message
     : eventType === "proposal"
       ? "Your commission proposal is ready to review."
       : "There is a new update to your commission.";
-  const body = "<p>Hello " + name + ",</p><p>" + clientIntro + "</p><p>" + safeMessage + "</p><p><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Current status:</b> " + status + "</p><p>To track your order, open the Malkiaa Studio website and choose <b>Track Order</b>. Enter the Request ID above and the same email address used when submitting your commission. You can review proposal details, progress updates and delivered files there.</p><p>Please keep this email for your records.</p>";
-  return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'><h2>Malkiaa Studio</h2>" + body + "</body></html>";
+  const body = "<p>Hello " + name + ",</p><p>" + clientIntro + "</p><p>" + safeMessage + "</p>" +
+    "<p style='margin:24px 0 8px;font-weight:700'>Request details</p>" +
+    "<p><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Current status:</b> " + status + "</p>" +
+    "<p>You can review the latest details in Track Order on the Malkiaa Studio website. Please use the same email address you used for your request.</p>" +
+    "<p>If you have a question, reply directly to this email.</p>";
+  return "<!doctype html><html><body style='margin:0;padding:24px;background:#ffffff;color:#303943;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6'><div style='max-width:600px;margin:0 auto'>" +
+    "<p style='margin:0 0 20px;font-size:20px;font-weight:700;color:#263f50'>Malkiaa Studio</p>" + body +
+    "<p style='margin-top:28px;padding-top:16px;border-top:1px solid #e5e7eb;color:#667085;font-size:13px'>Malkiaa Studio · Commission support<br>mmaackia@gmail.com</p>" +
+    "</div></body></html>";
 }
 
 async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType: string, eventId: string, message: string) {
@@ -454,7 +466,7 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
   if (clientEmail) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
-      subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
+      subject: subjectLabel + " for your commission | " + order.id,
       html: orderUpdateEmailHtml(order, track, eventType, message),
       text: orderUpdateEmailText(order, track, eventType, message),
       orderId: order.id,
@@ -1153,8 +1165,8 @@ Deno.serve(async (req) => {
         results.push(await deliverEmail(db, config, {
           to: clean(item.recipient, 254),
           subject: eventType
-            ? "[Malkiaa Studio] " + subjectLabel + " — " + id
-            : "[Malkiaa Studio] Commission Request Received — " + id,
+            ? subjectLabel + " for your commission | " + id
+            : "We received your commission request | " + id,
           html,
           text: plainText,
           orderId: id,
