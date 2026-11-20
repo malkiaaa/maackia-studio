@@ -47,6 +47,123 @@ type EmailConfig = {
   sendClient?: boolean;
 };
 
+
+const DEFAULT_SERVER_TIERS = [
+  { id: "t1", name: "Headshot / Icon", price: 150000 },
+  { id: "t2", name: "Bust Up", price: 200000 },
+  { id: "t3", name: "Half Body", price: 250000 },
+  { id: "t4", name: "Full Body", price: 0 },
+];
+const DEFAULT_SERVER_ADDONS = [
+  { id: "ad1", name: "Rendered Background", type: "fixed", price: 100000, select: "single" },
+  { id: "ad2", name: "Additional Character", type: "percent", price: 80, select: "multiple" },
+  { id: "ad3", name: "Additional Details", type: "fixed", price: 30000, select: "multiple" },
+  { id: "ad4", name: "Animation", type: "custom", price: 0, select: "single" },
+];
+
+function calculateServerEstimate(site: any, order: any) {
+  const form = order?.form;
+  if (!site || !Array.isArray(site.services) || !form || typeof form !== "object" || Array.isArray(form)) {
+    return { ok: false, error: "Commission pricing configuration is unavailable or invalid." };
+  }
+  const service = site.services.find((item: any) => item?.id === order?.serviceId);
+  if (!service) return { ok: false, error: "Unknown commission service." };
+  const tiers = Array.isArray(service.tiers) ? service.tiers : DEFAULT_SERVER_TIERS;
+  const addons = Array.isArray(service.addons) ? service.addons : DEFAULT_SERVER_ADDONS;
+  const tier = tiers.find((item: any) => item?.id === form.tier);
+  if (!tier) return { ok: false, error: "Unknown commission tier." };
+  const base = Number(tier.price);
+  if (!Number.isFinite(base) || base < 0) return { ok: false, error: "Invalid server pricing configuration." };
+
+  const rawChars = form.chars === undefined || form.chars === null || form.chars === "" ? 1 : Number(form.chars);
+  if (!Number.isInteger(rawChars) || rawChars < 1 || rawChars > 4) {
+    return { ok: false, error: "Character count must be between 1 and 4." };
+  }
+  const selectedAddons = form.addons === undefined ? {} : form.addons;
+  if (!selectedAddons || typeof selectedAddons !== "object" || Array.isArray(selectedAddons)) {
+    return { ok: false, error: "Invalid add-on selection." };
+  }
+  const knownAddonIds = new Set(addons.map((item: any) => item?.id));
+  for (const [id, quantityValue] of Object.entries(selectedAddons)) {
+    if (!knownAddonIds.has(id)) return { ok: false, error: "Unknown add-on." };
+    const addon = addons.find((item: any) => item?.id === id);
+    if (/additional character/i.test(String(addon?.name || ""))) {
+      if (Number(quantityValue) !== 0 && Number(quantityValue) !== 1) return { ok: false, error: "Character add-on is controlled by character count." };
+      continue;
+    }
+    const quantity = Number(quantityValue);
+    const max = addon?.select === "single" ? 1 : 10;
+    if (!Number.isInteger(quantity) || quantity < 0 || quantity > max) {
+      return { ok: false, error: "Invalid add-on quantity." };
+    }
+  }
+
+  const lines: any[] = [];
+  let custom = false;
+  if (base > 0) lines.push([String(tier.name || "Commission"), base, ""]);
+  else { custom = true; lines.push([String(tier.name || "Commission"), 0, "Custom quote"]); }
+  let subtotal = base;
+  const extraCharacters = rawChars - 1;
+  if (extraCharacters > 0) {
+    const characterAddon = addons.find((item: any) => /additional character/i.test(String(item?.name || "")));
+    const rate = characterAddon && characterAddon.type === "percent" ? Number(characterAddon.price) : 80;
+    if (!Number.isFinite(rate) || rate < 0) return { ok: false, error: "Invalid server pricing configuration." };
+    const amount = base * 0.8 * extraCharacters;
+    subtotal += amount;
+    lines.push(["Additional Character × " + extraCharacters + " (80% each)", amount, ""]);
+  }
+
+  for (const addon of addons) {
+    if (!addon?.id || /additional character/i.test(String(addon.name || ""))) continue;
+    const quantity = Number(selectedAddons[addon.id] || 0);
+    if (!quantity) continue;
+    const price = Number(addon.price);
+    if (!Number.isFinite(price) || price < 0) return { ok: false, error: "Invalid server pricing configuration." };
+    const label = String(addon.name || addon.id) + (quantity > 1 ? " x" + quantity : "");
+    if (addon.type === "custom") {
+      custom = true;
+      lines.push([label, 0, "Custom quote"]);
+      continue;
+    }
+    if (addon.type !== "fixed" && addon.type !== "percent") return { ok: false, error: "Invalid server pricing configuration." };
+    const amount = addon.type === "percent" ? base * price / 100 * quantity : price * quantity;
+    subtotal += amount;
+    lines.push([label, amount, ""]);
+  }
+
+  const licenses = Array.isArray(site.licenses) ? site.licenses : [];
+  const licenseId = form.license || "personal";
+  const license = licenses.find((item: any) => item?.id === licenseId);
+  if (!license) return { ok: false, error: "Unknown license selection." };
+  const licenseValue = Number(license.value);
+  if (!Number.isFinite(licenseValue) || licenseValue < 0) return { ok: false, error: "Invalid server pricing configuration." };
+  let licenseAmount = 0;
+  let licenseCustom = false;
+  if (license.type === "custom") licenseCustom = true;
+  else if (license.type === "percent") licenseAmount = subtotal * licenseValue / 100;
+  else if (license.type === "fixed") licenseAmount = licenseValue;
+  else return { ok: false, error: "Invalid server pricing configuration." };
+
+  const estimate = {
+    lines,
+    licenseLabel: String(license.label || ""),
+    licenseAmount,
+    licenseCustom,
+    total: subtotal + licenseAmount,
+    custom: custom || licenseCustom,
+  };
+  if (!Number.isFinite(estimate.total) || estimate.total < 0) {
+    return { ok: false, error: "Invalid calculated commission price." };
+  }
+  return {
+    ok: true,
+    estimate,
+    serviceTitle: String(service.title || ""),
+    tierName: String(tier.name || ""),
+    clientEstimateMismatch: Number(order?.estimate?.total) !== estimate.total,
+  };
+}
+
 async function getEmailConfig(db: any): Promise<EmailConfig> {
   const { data } = await db.from("app_settings")
     .select("value").eq("key", "email_config").maybeSingle();
@@ -341,15 +458,32 @@ Deno.serve(async (req) => {
       return json({ site: data?.value || null });
     }
 
+
     if (action === "submit") {
       const order = body?.order;
       const form = order?.form;
       const email = clean(form?.email, 254).toLowerCase();
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
         return json({ error: "A valid client email is required." }, 400);
       }
-      if (!order?.serviceTitle || !form || typeof form !== "object") {
+      if (!order?.serviceId || !form || typeof form !== "object" || Array.isArray(form)) {
         return json({ error: "Incomplete commission request." }, 400);
+      }
+
+      const { data: siteRow, error: siteError } = await db.from("app_settings")
+        .select("value").eq("key", "site_content").maybeSingle();
+      if (siteError || !siteRow?.value) {
+        console.error("server pricing configuration lookup failed", siteError);
+        return json({ error: "Commission pricing is temporarily unavailable. Please contact the studio." }, 503);
+      }
+      const pricing = calculateServerEstimate(siteRow.value, order);
+      if (!pricing.ok) return json({ error: pricing.error }, 400);
+      if (pricing.clientEstimateMismatch) {
+        console.warn("client estimate differed from server calculation; server estimate applied", {
+          serviceId: order.serviceId,
+          submittedEstimate: Number(order?.estimate?.total),
+          serverEstimate: pricing.estimate.total,
+        });
       }
 
       const { data: generatedId, error: idError } = await db.rpc("next_commission_id");
@@ -363,6 +497,7 @@ Deno.serve(async (req) => {
       }
 
       const emailHash = await sha256(email + "|" + id);
+      const safeForm = { ...form, email };
       const safeOrder = {
         id,
         created_at: new Date().toISOString(),
@@ -370,10 +505,10 @@ Deno.serve(async (req) => {
         status: "Pending Review",
         payment: "Unpaid",
         serviceId: clean(order.serviceId, 100),
-        serviceTitle: clean(order.serviceTitle, 180),
-        tierName: clean(order.tierName, 120),
-        form,
-        estimate: order.estimate && typeof order.estimate === "object" ? order.estimate : {},
+        serviceTitle: pricing.serviceTitle,
+        tierName: pricing.tierName,
+        form: safeForm,
+        estimate: pricing.estimate,
         notes: "",
         finalPrice: null,
         extraLines: "",
@@ -385,8 +520,8 @@ Deno.serve(async (req) => {
         serviceTitle: safeOrder.serviceTitle,
         status: "Pending Review",
         payment: "Unpaid",
-        estimate: Number(order?.estimate?.total) || 0,
-        custom: Boolean(order?.estimate?.custom),
+        estimate: pricing.estimate.total,
+        custom: pricing.estimate.custom,
         emailHash,
         client_name: clean(form?.name, 120) || "Client",
         proposal: null,
@@ -402,8 +537,6 @@ Deno.serve(async (req) => {
       }
       const { error: trackError } = await db.from("order_tracks").insert(safeTrack);
       if (trackError) {
-        // Preserve the saved commission. Never delete a valid request as rollback
-        // for a secondary tracking-row failure; log it for owner-side recovery.
         console.error("tracking insert failed; commission request was preserved", { id, error: trackError });
         return json({
           error: "The commission was saved, but order tracking could not be initialized. Please contact the studio and do not submit the form again.",
@@ -411,8 +544,7 @@ Deno.serve(async (req) => {
         }, 503);
       }
 
-      // Email failure never rolls back a saved commission.
-      const notifications = await sendCommissionEmails(db, safeOrder, form)
+      const notifications = await sendCommissionEmails(db, safeOrder, safeForm)
         .catch((error) => {
           console.error("commission notification failed", error);
           return [];
