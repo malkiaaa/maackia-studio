@@ -134,7 +134,10 @@ begin
     raise exception 'Invalid commission ID' using errcode = '22023';
   end if;
 
-  delete from public.client_reviews where commission_id = p_commission_id;
+  if pg_catalog.to_regclass('public.client_reviews') is not null then
+    execute 'delete from public.client_reviews where commission_id = $1'
+      using p_commission_id;
+  end if;
   delete from public.order_tracks where id = p_commission_id;
   delete from public.commission_management where id = p_commission_id;
   delete from public.notifications where order_id = p_commission_id;
