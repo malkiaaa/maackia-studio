@@ -940,7 +940,15 @@ Deno.serve(async (req) => {
         manual: "A new update is available for your commission. Open Track Order to view the latest details.",
       };
       const message = clean(body?.message, 1200) || defaults[eventType];
+      const clientEmail = clean(order?.form?.email, 254).toLowerCase();
+      if (!clientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
+        return json({ error: "This commission has no valid client email address. Update the order client email before sending." }, 422);
+      }
       const notifications = await sendOrderUpdateEmails(db, order, track, eventType, eventId, message);
+      const clientNotification = notifications.find((item: any) => String(item.kind || "").startsWith("client_evt_" + eventType + "_"));
+      if (!clientNotification) {
+        return json({ error: "The client notification was not created. Check the client email and commission record.", notifications }, 502);
+      }
       return json({ ok: true, notifications });
     }
 
