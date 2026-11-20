@@ -3155,7 +3155,7 @@ function OrderDetail({ o, onBack, onSaved }) {
   const save = async (extra, eventType, eventMessage) => {
     const n = { ...d };
     const tr = clone(t || {});
-    const statusChanged = n.status !== (t?.status || d.status);
+    const statusChanged = n.status !== (t?.status || d.status) || n.payment !== (t?.payment || d.payment);
     tr.status = n.status;
     tr.payment = n.payment;
     if (extra) extra(tr, n);
