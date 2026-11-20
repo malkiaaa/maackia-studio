@@ -440,3 +440,18 @@ test("marking payment Paid advances an Awaiting Payment commission to Paid for c
   assert.match(backend, /payment === "Paid" && requestedStatus === "Awaiting Payment" \? "Paid"/);
   assert.match(migration, /p_payment = 'Paid' and p_status = 'Awaiting Payment' then 'Paid'/);
 });
+
+
+test("finished art cannot persist browser blob URLs and must use permanent Storage paths", () => {
+  assert.match(html, /legacy local previews/);
+  assert.match(html, /persistentFiles = \(tr\.finalFiles \|\| \[\]\)\.filter/);
+  assert.match(html, /Re-upload every artwork file before delivery/);
+  assert.match(backend, /Every Finished Art file must be uploaded to permanent Storage/);
+  assert.match(backend, /file\.url && String\(file\.url\)\.startsWith\("blob:"\)/);
+  assert.match(backend, /eventType === "finished_art"[\s\S]*?permanent Storage/);
+});
+
+test("legacy local preview URLs are never exposed as client delivery URLs", () => {
+  assert.match(backend, /if \(!file\?\.path \|\| !\/\^incoming/);
+  assert.match(backend, /unavailable: true/);
+});
