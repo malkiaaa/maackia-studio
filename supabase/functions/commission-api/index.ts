@@ -106,6 +106,12 @@ function calculateServerEstimate(site, order) {
     }
   }
 
+  for (const addon of addons) {
+    if (addon.required && !(Number(selectedAddons[addon.id]) > 0)) {
+      return { ok: false, error: "A required add-on is missing." };
+    }
+  }
+
   const lines = [];
   let custom = false;
   if (base > 0) lines.push([String(tier.name || "Commission"), base, ""]);
