@@ -466,3 +466,42 @@ test("Creator image uploads use authenticated permanent Supabase Storage, not Ar
   assert.match(backend, /getPublicUrl\(path\)/);
   assert.match(backend, /owner\.user\.id \+ "\/" \+ crypto\.randomUUID\(\)/);
 });
+
+
+test("commission services support independent add/delete and persist through the existing site publisher", () => {
+  const start = html.indexOf("function ServicesPanel()");
+  const end = html.indexOf("function ListEditor(", start);
+  const panel = html.slice(start, end);
+  assert.match(panel, /n\.services\.push/);
+  assert.match(panel, /ConfirmDelete onYes=\{\(\) => upd\(\(n\) => \{ n\.services\.splice\(i, 1\)/);
+  assert.match(panel, /Cover image \(shown on service card\)/);
+  assert.match(panel, /Detail gallery/);
+  assert.match(panel, /n\.services\[i\]\.gallery/);
+  assert.match(panel, /External booking URL/);
+  assert.match(html, /return Store\.api\("save_site", \{ site \}, true\)/);
+});
+
+test("service detail uses a swipeable gallery while service cards retain one cover image", () => {
+  const start = html.indexOf("function Services({ go })");
+  const end = html.indexOf("/* ---- visitor: request form */", start);
+  const publicServices = html.slice(start, end);
+  assert.match(publicServices, /className="service-gallery-track"/);
+  assert.match(publicServices, /scroll-snap-type:x mandatory/);
+  assert.match(publicServices, /service-gallery-thumbs/);
+  assert.match(publicServices, /service-gallery-dots/);
+  assert.match(publicServices, /images=\{gallery\}/);
+  assert.match(publicServices, /safeImg\(s\.image\)/);
+  assert.match(publicServices, /go\("service-" \+ s\.id\)/);
+  assert.match(publicServices, /go\("order-" \+ s\.id\)/);
+});
+
+test("service detail exposes deliverables, turnaround, usage terms and service-specific booking", () => {
+  const start = html.indexOf("function ServiceDetail({ id, go })");
+  const end = html.indexOf("/* ---- visitor: request form */", start);
+  const detail = html.slice(start, end);
+  for (const field of ["Deliverables", "Estimated turnaround", "Usage / license", "x.usageTerms", "x.serviceTerms", "bookingUrl"]) {
+    assert.ok(detail.includes(field), "missing service detail field: " + field);
+  }
+  assert.match(detail, /href=\{bookingUrl\}/);
+  assert.match(detail, /go\("order-" \+ s\.id\)/);
+});
