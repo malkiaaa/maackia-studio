@@ -1567,6 +1567,7 @@ function FeaturedArtworkCarousel({ items }) {
   };
   const startPointer = (e) => {
     pointerStart.current = e.clientX;
+    if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
     setPaused(true);
   };
   const endPointer = (e) => {
@@ -2490,7 +2491,7 @@ function AppearancePanel() {
 }
 
 function MediaPanel() {
-  const { site, upd, save, saving } = useCreator();
+  const { site, upd, save, saving, dirty } = useCreator();
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
   const [featuredBusy, setFeaturedBusy] = useState(false);
   const [featuredMessage, setFeaturedMessage] = useState("");
@@ -2573,7 +2574,7 @@ function MediaPanel() {
           {!featured.length && <p className="muted">Belum ada Featured Artwork. Upload hingga 10 gambar untuk menampilkannya di Home.</p>}
         </div>
         <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
-          <Btn kind="cyan" icon="save" disabled={saving || !featured.length && !site.featuredArtworks?.length} onClick={save}>{saving ? "Saving…" : "Save Featured Artwork"}</Btn>
+          <Btn kind="cyan" icon="save" disabled={saving || !dirty} onClick={save}>{saving ? "Saving…" : "Save Featured Artwork"}</Btn>
         </div>
       </section>
       <section className="card">
