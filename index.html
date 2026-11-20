@@ -2734,7 +2734,7 @@ const Store = {
           if (!Object.prototype.hasOwnProperty.call(track, key)) continue;
           if (key === "finalFiles") {
             const files = Array.isArray(track.finalFiles) ? track.finalFiles : [];
-            const invalid = files.some((file) => !file?.path || !/^[A-Za-z0-9-]{20,80}$/.test(file.path));
+            const invalid = files.some((file) => !file?.path || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9))));
             if (invalid) throw new Error("One or more Finished Art files are legacy local previews. Re-upload every artwork file before saving or delivering this commission.");
             patch.finalFiles = files.map((file) => ({ name: file.name, path: file.path, type: file.type }));
           } else patch[key] = track[key];
@@ -3320,7 +3320,7 @@ function OrderDetail({ o, onBack, onSaved }) {
       const ref = await Store.uploadReference(file, "final-" + d.id);
       const tr = clone(t || {});
       // Discard non-persistent legacy blob previews only when the Creator replaces them.
-      const persistentFiles = (tr.finalFiles || []).filter((item) => item?.path && /^[A-Za-z0-9-]{20,80}$/.test(item.path));
+      const persistentFiles = (tr.finalFiles || []).filter((item) => item?.path && item.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(item.path.slice(9)));
       tr.finalFiles = [...persistentFiles, { name: file.name, path: ref.path, type: file.type }];
       const saved = await Store.saveCommissionState(d, tr);
       setT(saved.track || tr);
@@ -3334,7 +3334,7 @@ function OrderDetail({ o, onBack, onSaved }) {
   };
   const sendFinishedArt = async () => {
     if (!t?.finalFiles?.length) { setMsg("Upload at least one Finished Art image before sending."); return; }
-    if (t.finalFiles.some((file) => !file?.path || !/^[A-Za-z0-9-]{20,80}$/.test(file.path))) {
+    if (t.finalFiles.some((file) => !file?.path || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9))))) {
       setMsg("Some Finished Art previews are not stored permanently. Re-upload every artwork file before delivery.");
       return;
     }
