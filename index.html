@@ -1726,7 +1726,7 @@ function AboutProfileCard({ p, a }) {
   const pickPhoto = (e) => {
     const file = e.target.files && e.target.files[0]; e.target.value = "";
     if (!file || !cc) return;
-    if (!/^image\\/(png|jpeg|webp|gif)$/.test(file.type)) { setErr("Use a PNG, JPG, WebP or GIF image."); return; }
+    if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) { setErr("Use a PNG, JPG, WebP or GIF image."); return; }
     setCropFile(file);
   };
   const applyProfileCrop = async (cropped) => {
@@ -2097,7 +2097,7 @@ function CropImageModal({ file, onCancel, onApply }) {
     const canvas=document.createElement("canvas"),scale=Math.min(1,1800/Math.max(cw,ch));
     canvas.width=Math.max(1,Math.round(cw*scale));canvas.height=Math.max(1,Math.round(ch*scale));
     canvas.getContext("2d").drawImage(img,sx,sy,cw,ch,0,0,canvas.width,canvas.height);
-    canvas.toBlob(blob=>{if(!blob){setBusy(false);setError("Gagal memproses crop gambar.");return;}onApply(new File([blob],(file.name||"image").replace(/\\.[^.]+$/,"")+".webp",{type:"image/webp"}));},"image/webp",.88);
+    canvas.toBlob(blob=>{if(!blob){setBusy(false);setError("Gagal memproses crop gambar.");return;}onApply(new File([blob],(file.name||"image").replace(/\.[^.]+$/,"")+".webp",{type:"image/webp"}));},"image/webp",.88);
   };
   return <div className="crop-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)onCancel();}}>
     <section className="crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
@@ -2114,7 +2114,7 @@ function CropImageModal({ file, onCancel, onApply }) {
 }
 function ImagePicker({ label, value, onChange, maxDim = 1800, round }) {
   const [busy,setBusy]=useState(false),[err,setErr]=useState(""),[cropFile,setCropFile]=useState(null),ref=useRef(null);
-  const pick=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;if(!/^image\\/(png|jpeg|webp|gif)$/.test(f.type)){setErr("Use a PNG, JPG, WebP or GIF image.");return;}setErr("");setCropFile(f);};
+  const pick=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;if(!/^image\/(png|jpeg|webp|gif)$/.test(f.type)){setErr("Use a PNG, JPG, WebP or GIF image.");return;}setErr("");setCropFile(f);};
   const applyCrop=async cropped=>{setBusy(true);setErr("");try{onChange(await storeImage(cropped,maxDim));setCropFile(null);}catch(x){setErr(x&&x.message?x.message:"Could not upload this image.");}finally{setBusy(false);}};
   const src=safeImg(value);
   return <div className="field full">{label&&<span>{label}</span>}<div className="imgpick"><div className="pv" style={round?{borderRadius:"50%"}:undefined}>{src?<img src={src} alt=""/>:<Icon name="image"/>}</div><div className="btns"><input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pick}/><Btn kind="cyan" size="sm" icon="upload" disabled={busy} onClick={()=>ref.current&&ref.current.click()}>{busy?"Uploading...":src?"Replace":"Upload"}</Btn>{src&&<Btn kind="ghost" size="sm" onClick={()=>onChange("")}>Remove</Btn>}</div></div>{err&&<div className="err">{err}</div>}{cropFile&&<CropImageModal file={cropFile} onCancel={()=>setCropFile(null)} onApply={applyCrop}/>}</div>;
@@ -2521,12 +2521,11 @@ function MediaPanel() {
     if (n.featuredId === id) n.featuredId = (n.artworks[0]||{}).id||"";
   });
   const uploadFeatured = (fileList) => {
-    const files = Array.from(fileList || []).filter((f) => /^image\\/(png|jpeg|webp|gif)$/.test(f.type));
+    const files = Array.from(fileList || []).filter((f) => /^image\/(png|jpeg|webp|gif)$/.test(f.type));
     if (!files.length) return;
     const remaining = Math.max(0, 10 - featured.length);
     if (!remaining) { setFeaturedMessage("Featured Artwork sudah mencapai batas 10 gambar."); return; }
     setFeaturedFailed(files.length > remaining ? ["Maksimal 10 gambar. " + (files.length - remaining) + " file tidak diproses."] : []);
-    setFeaturedUploaded([]);
     setFeaturedQueue(files.slice(0, remaining));
     setFeaturedMessage("");
     setFeaturedBusy(true);
@@ -2536,7 +2535,7 @@ function MediaPanel() {
     if (!current) return;
     try {
       const url = await storeImage(cropped, 1600);
-      const entry = {id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\\.[^.]+$/,"").slice(0,140),title:""};\n      upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat([entry]).slice(0,10); });
+      const entry = {id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\.[^.]+$/,"").slice(0,140),title:""};\n      upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat([entry]).slice(0,10); });
     } catch (error) {
       setFeaturedFailed((items) => items.concat([(current.name||"Image")+": "+(error&&error.message?error.message:"Upload gagal.")]));
     }
