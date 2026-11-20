@@ -351,3 +351,18 @@ test("client tracking separates proposal, payment, messages, and final delivery"
   assert.match(track, /updates\.slice\(\)\.sort/);
   assert.match(track, /Final artwork and download links will appear here/);
 });
+
+
+test("Track Order overview uses responsive non-overlapping status layout", () => {
+  const start = html.indexOf("ORDER OVERVIEW");
+  const end = html.indexOf("01 · PRICE & PROPOSAL", start);
+  const overview = html.slice(start, end);
+  assert.match(overview, /track-overview-head/);
+  assert.match(overview, /track-overview-badges/);
+  assert.match(overview, /track-overview-stages/);
+  assert.match(html, /\.track-overview-stages\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(html, /@media\(max-width:1023px\)[\s\S]*?\.track-overview-stages\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(html, /@media\(max-width:767px\)[\s\S]*?\.track-overview-stages\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(html, /\.track-overview-badges \.tag\{display:inline-flex/);
+  assert.match(html, /\.track-overview-stages \.stage:last-child\{grid-column:1\/-1;width:calc/);
+});
