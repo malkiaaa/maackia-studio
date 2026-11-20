@@ -289,3 +289,36 @@ test("server character limit matches the commission form maximum", () => {
   assert.match(html, /max="20"/);
   assert.match(backend, /rawChars > 20/);
 });
+
+
+test("Creator order updates send emails to both the client and Creator", () => {
+  assert.match(backend, /async function sendOrderUpdateEmails/);
+  assert.match(backend, /kind: "client_evt_" \+ eventType/);
+  assert.match(backend, /kind: "artist_evt_" \+ eventType/);
+  assert.match(backend, /if \(action === "notify_update"\)/);
+  assert.match(backend, /requireOwner\(req, db\)/);
+});
+
+test("new commission emails are sent to both recipients without a client opt-out toggle", () => {
+  const start = backend.indexOf("async function sendCommissionEmails");
+  const end = backend.indexOf("async function addSignedFinalFileUrls", start);
+  const action = backend.slice(start, end);
+  assert.match(action, /to: clientEmail/);
+  assert.match(action, /to: artistEmail/);
+  assert.doesNotMatch(action, /config\.sendClient/);
+  assert.doesNotMatch(html, /Send confirmation email to client after submission/);
+});
+
+test("Finished Art is previewed before delivery and private files are signed for tracking", () => {
+  assert.match(html, /Finished Art pre-review/);
+  assert.match(html, /Send Finished Art to Client/);
+  assert.match(backend, /async function addSignedFinalFileUrls/);
+  assert.match(backend, /createSignedUrl\(file\.path, 60 \* 60\)/);
+  assert.match(backend, /if \(action === "creator_track"\)/);
+});
+
+test("manual client email and lifecycle update actions are owner-authorized", () => {
+  assert.match(html, /Send Email to Client/);
+  assert.match(html, /Store\.api\("notify_update"/);
+  assert.match(backend, /const allowedEvents = \["proposal", "progress", "status", "finished_art", "manual"\]/);
+});
