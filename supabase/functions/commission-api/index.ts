@@ -571,9 +571,33 @@ Deno.serve(async (req) => {
       return json({ items });
     }
 
+
     if (action === "track") {
       const id = clean(body?.id, 40).toUpperCase();
       const email = clean(body?.email, 254).toLowerCase();
+      const forwardedFor = req.headers.get("x-forwarded-for") || "";
+      const ipAddress = clean(
+        req.headers.get("cf-connecting-ip") ||
+        req.headers.get("x-real-ip") ||
+        forwardedFor.split(",")[0] ||
+        "unknown",
+        100,
+      );
+      const ipHash = await sha256("track-ip|" + ipAddress);
+      const rateEmailHash = await sha256("track-email|" + email);
+      const { data: rateResult, error: rateError } = await db.rpc("record_track_attempt", {
+        p_ip_hash: ipHash,
+        p_email_hash: rateEmailHash,
+        p_request_id: id,
+      });
+      if (rateError || !rateResult) {
+        console.error("tracking rate-limit check failed", rateError);
+        return json({ error: "No order matches that Request ID and email." }, 503);
+      }
+      if (rateResult.allowed !== true) {
+        return json({ error: "No order matches that Request ID and email." }, 429);
+      }
+
       if (!id || !email) return json({ error: "No order matches that Request ID and email." }, 404);
       const { data: track } = await db.from("order_tracks")
         .select("*").eq("id", id).maybeSingle();
@@ -581,6 +605,16 @@ Deno.serve(async (req) => {
       if (!track || track.emailHash !== suppliedHash) {
         return json({ error: "No order matches that Request ID and email." }, 404);
       }
+
+      const { error: markError } = await db.rpc("mark_track_attempt_success", {
+        p_attempt_id: rateResult.attempt_id,
+      });
+      if (markError) {
+        // Fail closed for subsequent attempts: this lookup remains counted as
+        // failed rather than silently weakening the rate limit.
+        console.error("could not mark tracking attempt successful", markError);
+      }
+
       const { emailHash: _privateHash, ...publicTrack } = track;
       const { data: existingReview } = await db.from("client_reviews")
         .select("id").eq("commission_id", id).maybeSingle();
