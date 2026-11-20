@@ -518,18 +518,18 @@ test("service detail exposes deliverables, turnaround, usage terms and service-s
 
 
 test("commission email includes meaningful plain text alongside HTML", () => {
-  assert.match(backend, /function commissionEmailText\\(/);
-  assert.match(backend, /function orderUpdateEmailText\\(/);
-  assert.match(backend, /text: commissionEmailText\\(order, clientName\\)/);
-  assert.match(backend, /text: orderUpdateEmailText\\(order, track, eventType, message\\)/);
-  assert.match(backend, /text: clean\\(input\\.text, 20000\\)/);
+  assert.match(backend, /function commissionEmailText\(/);
+  assert.match(backend, /function orderUpdateEmailText\(/);
+  assert.match(backend, /text: commissionEmailText\(order, clientName\)/);
+  assert.match(backend, /text: orderUpdateEmailText\(order, track, eventType, message\)/);
+  assert.match(backend, /text: clean\(input\\.text, 20000\)/);
 });
 
 test("Apps Script validates plain text, checks quota and logs privacy-safe send diagnostics", () => {
   const gas = readFileSync(new URL("../supabase/apps-script/Code.gs", import.meta.url), "utf8");
-  assert.match(gas, /const text = String\\(payload\\.text \\|\\| ""\\)\\.trim\\(\\)/);
-  assert.match(gas, /MailApp\\.getRemainingDailyQuota\\(\\)/);
-  assert.match(gas, /recipientMasked: maskEmail\\(to\\)/);
-  assert.match(gas, /recipientDomain: to\\.split\\("@")\\[1\\]/);
-  assert.match(gas, /function maskEmail\\(/);
+  assert.match(gas, /const text = String\(payload\\.text \\|\\| ""\)\\.trim\(\)/);
+  assert.match(gas, /MailApp\\.getRemainingDailyQuota\(\)/);
+  assert.match(gas, /recipientMasked: maskEmail\(to\)/);
+  assert.match(gas, /recipientDomain: to\\.split\("@")\\[1\\]/);
+  assert.match(gas, /function maskEmail\(/);
 });
