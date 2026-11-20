@@ -63,7 +63,9 @@ has passed the full staging test plan.
 - A new commission is written to `commission_requests` and `order_tracks` first.
 - The Edge Function then sends the studio notification to the configured
   `email_config.artistEmail`, falling back to **mmaackia@gmail.com** when blank.
-- The client confirmation remains controlled by `email_config.sendClient`.
+- The client confirmation is always sent; there is no client-notification opt-out toggle in Creator settings.
+- Proposal, progress, status, manual email, and finished-art delivery events send an email to both the client and the Creator.
+- Finished-art images stay in the private `references` bucket. Tracking requests receive one-hour signed URLs only after the client supplies the matching Request ID and email; Creator preview links require an authenticated Creator session.
 - The Edge Function reads `GAS_WEBHOOK_URL` and `GAS_WEBHOOK_SECRET` only from
   Supabase Edge Function secrets.
 - The `notifications` table records recipient, status, attempt count, message, and
@@ -91,18 +93,17 @@ Do not consider the migration complete until these tests pass on the staging dep
    can access. Confirm the commission appears in the Creator Dashboard and that the
    studio notification arrives. Confirm the client email arrives when
    `sendClient=true`.
-5. **Notification history:** verify both notification rows show `sent`, the expected
-   recipient, an incremented attempt count, and a successful timestamp.
-6. **Duplicate guard:** resend the same Apps Script payload with the same
+5. **Lifecycle updates:** send a proposal, post a progress update, change status, and deliver Finished Art. Verify each event sends one email to the client and one to the Creator.
+6. **Finished Art preview:** upload an image, confirm Creator preview is visible before sending, then deliver it. Verify the client tracking page can view/download the file using a signed URL.
+7. **Notification history:** verify notification rows show `sent`, the expected recipient, an incremented attempt count, and a successful timestamp.
+8. **Duplicate guard:** resend the same Apps Script payload with the same
    `idempotencyKey` using a controlled test request. It must report
    `duplicate: true` and must not send another email.
-7. **Failure and retry:** temporarily use an invalid webhook URL in staging secrets,
+9. **Failure and retry:** temporarily use an invalid webhook URL in staging secrets,
    submit a controlled request, and verify the commission remains saved while its
    notification is marked `failed`. Restore the correct URL, then use **Retry failed**
    and confirm the same notification row becomes `sent`.
-8. **Client opt-out:** set `sendClient=false`, submit a test request, and verify only
-   the studio notification is attempted.
-9. **Security:** confirm no secret appears in `index.html`, browser DevTools requests,
+10. **Security:** confirm no secret appears in `index.html`, browser DevTools requests,
    or repository source. Do not disable RLS or expose the service-role key.
 
 After testing, remove the legacy `RESEND_API_KEY` Supabase secret if no other function
