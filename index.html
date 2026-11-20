@@ -171,6 +171,8 @@ button.art:hover img{transform:scale(1.05)}
 @media(max-width:767px){.featured-section{grid-column:span 12}.home-work-grid{grid-template-columns:minmax(0,1fr);gap:14px}.home-review-editor{grid-template-columns:1fr}.home-review-editor textarea,.home-review-editor .wide{grid-column:auto}.latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.latest-grid .art{aspect-ratio:1/1;min-height:0}.featured-section .feat>.art{aspect-ratio:4/5;min-height:220px}}
 
 .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.service-gallery{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.service-gallery-main{position:relative;overflow:hidden;border-radius:22px;background:var(--powder)}.service-gallery-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;scrollbar-width:thin}.service-gallery-slide{flex:0 0 100%;min-width:0;aspect-ratio:16/10;scroll-snap-align:center;background:var(--powder)}.service-gallery-slide img{display:block;width:100%;height:100%;object-fit:contain}.service-gallery-nav{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;pointer-events:none}.service-gallery-nav button{pointer-events:auto;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.94);box-shadow:var(--shadow);cursor:pointer;font-size:1.2rem}.service-gallery-dots{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}.service-gallery-dots button{width:9px;height:9px;border:0;border-radius:50%;background:var(--line);padding:0;cursor:pointer}.service-gallery-dots button[aria-current=true]{background:var(--ink);width:22px;border-radius:99px}.service-gallery-thumbs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px}.service-gallery-thumbs button{width:72px;height:58px;flex:none;padding:0;border:2px solid transparent;border-radius:10px;overflow:hidden;background:var(--powder);cursor:pointer}.service-gallery-thumbs button[aria-pressed=true]{border-color:var(--ink)}.service-gallery-thumbs img{width:100%;height:100%;object-fit:cover}.service-gallery-empty{aspect-ratio:16/10;display:grid;place-items:center;color:var(--muted)}
+@media(max-width:767px){.service-gallery-slide{aspect-ratio:4/3}.service-gallery-thumbs button{width:62px;height:50px}}
 .svc{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--powder);border:0;border-radius:22px;padding:16px;cursor:pointer;transition:transform .2s,background .2s}
 .svc:hover{transform:translateY(-4px) rotate(-1deg);background:var(--primary)}
 .svc .ico{width:40px;height:40px;border-radius:14px;background:var(--card);display:grid;place-items:center;color:var(--cyan)}
@@ -2033,7 +2035,9 @@ function ServicesPanel() {
             <TextIn label="Short description" value={s.short} onChange={sets(["services", i, "short"])} className="full" />
             <TextIn label="Detailed description" value={s.detail} onChange={sets(["services", i, "detail"])} multiline className="full" />
             <Field label="Example category"><select className="in" value={s.category} onChange={(e) => sets(["services", i, "category"])(e.target.value)}>{site.categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></Field>
-            <ImagePicker label="Preview image (optional)" value={s.image} onChange={sets(["services", i, "image"])} maxDim={1400} />
+            <ImagePicker label="Cover image (shown on service card)" value={s.image} onChange={sets(["services", i, "image"])} maxDim={1400} />
+            <TextIn label="External booking URL (optional)" value={s.orderUrl || ""} onChange={sets(["services", i, "orderUrl"])} placeholder="https://..." className="full" hint="If set, Request Commission opens this link. Otherwise it opens the built-in request form." />
+            <Field label={"Detail gallery (" + (s.gallery || []).length + " images)"} className="full"><div className="list">{(s.gallery || []).map((url, gi) => <div className="rowi" key={url + gi}><div className="thumb">{safeImg(url) ? <img src={safeImg(url)} alt="" /> : <Icon name="image" />}</div><div className="grow"><small className="muted">Gallery image {gi + 1}</small></div><ConfirmDelete onYes={() => upd((n) => { n.services[i].gallery = (n.services[i].gallery || []).filter((_, j) => j !== gi); })} label="Remove gallery image" /></div>)}</div><ImagePicker label="Add gallery image" value="" onChange={(url) => { if (url) upd((n) => { const a = n.services[i].gallery || (n.services[i].gallery = []); if (a.length < 12) a.push(url); }); }} maxDim={1800} /><small className="muted">Upload up to 12 images. These appear in the swipeable detail gallery, not on the service card.</small></Field>
           </div>
           <div className="btns" style={{ marginTop: 12, justifyContent: "flex-end" }}>
             <button className="ib" disabled={i === 0} onClick={() => upd((n) => { n.services = move(n.services, i, -1); })} aria-label="Move up"><Icon name="up" /></button>
@@ -2042,7 +2046,7 @@ function ServicesPanel() {
           </div>
         </section>
       ))}
-      <Btn icon="plus" onClick={() => upd((n) => { n.services.push({ id: uid("s"), icon: "sparkles", title: "New service", short: "", detail: "", category: (n.categories[0] || {}).id || "", image: "" }); })}>Add service</Btn>
+      <Btn icon="plus" onClick={() => upd((n) => { n.services.push({ id: uid("s"), icon: "sparkles", title: "New service", short: "", detail: "", category: (n.categories[0] || {}).id || "", image: "", gallery: [], orderUrl: "", ...clone(SVC_DEF) }); })}>Add service</Btn>
     </div>
   );
 }
@@ -2594,7 +2598,7 @@ const PAY_STATUS = ["Unpaid", "Invoice sent", "Paid", "Refunded"];
 const TL = [["Request Submitted", ["Pending Review"]], ["Reviewing", ["Reviewing"]], ["Proposal", ["Proposal Sent", "Awaiting Client Approval"]], ["Payment", ["Awaiting Payment", "Paid"]], ["In Progress", ["In Progress", "Waiting for Feedback"]], ["Revision", ["Revision"]], ["Completed", ["Completed"]]];
 const idr = (n) => "IDR " + Math.round(n || 0).toLocaleString("id-ID");
 const SVC_DEF = {
-  status: "Available", license: "Personal use included. Commercial use available.", delivery: "To be confirmed in your proposal", files: "PNG and JPG",
+  status: "Available", license: "Personal use included. Commercial use available.", delivery: "To be confirmed in your proposal", files: "PNG and JPG", usageTerms: "", serviceTerms: "", orderUrl: "", gallery: [],
   tiers: [{ id: "t1", name: "Headshot / Icon", price: 150000 }, { id: "t2", name: "Bust Up", price: 200000 }, { id: "t3", name: "Half Body", price: 250000 }, { id: "t4", name: "Full Body", price: 0 }],
   includes: ["Finished illustration", "PNG file", "JPG file", "WIP updates", "Revisions according to the Terms of Service"],
   addons: [
@@ -2914,15 +2918,15 @@ function Services({ go }) {
       <div className="grid">
         {CONFIG.services.map((s, i) => {
           const x = X(s), sp = startPrice(s), ex = CONFIG.artworks.find((a) => a.category === s.category) || CONFIG.artworks[0] || { title: "", category: "", image: "" };
-          const off = x.status === "Unavailable";
+          const off = x.status === "Unavailable", cover = safeImg(s.image) || safeImg(ex.image);
           return (
             <article key={s.id} className="card lift span-4" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <Art art={s.image ? { ...ex, image: s.image } : ex} i={i} ratio="wide" />
+              <div className="art wide">{cover ? <img src={cover} alt={s.title + " cover"} loading="lazy" /> : <div className="service-gallery-empty">No cover image</div>}</div>
               <div className="meta"><span className="tag">{catLabel(s.category)}</span><span className={spCls(x.status)}>{x.status}</span></div>
               <h3>{s.title}</h3>
               <p className="muted" style={{ flex: 1 }}>{s.short}</p>
               <div><b style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}>{sp ? "From " + idr(sp) : "Custom quote"}</b><small className="muted" style={{ display: "block" }}>{x.license}</small></div>
-              <div className="btns"><Btn kind="cyan" size="sm" onClick={() => go("service-" + s.id)}>View Details</Btn><Btn size="sm" disabled={off} onClick={() => go("order-" + s.id)}>Request Commission</Btn></div>
+              <div className="btns"><Btn kind="cyan" size="sm" onClick={() => go("service-" + s.id)}>View Details</Btn>{safeUrl(s.orderUrl) ? <a className={"btn sm" + (off ? " ghost" : "")} href={safeUrl(s.orderUrl)} target="_blank" rel="noopener noreferrer" aria-disabled={off} onClick={(e) => { if (off) e.preventDefault(); }}>Request Commission</a> : <Btn size="sm" disabled={off} onClick={() => go("order-" + s.id)}>Request Commission</Btn>}</div>
             </article>
           );
         })}
@@ -2930,10 +2934,27 @@ function Services({ go }) {
     </div>
   );
 }
+function ServiceGallery({ images, title }) {
+  const track = useRef(null), [active, setActive] = useState(0);
+  const urls = (images || []).map((v) => typeof v === "string" ? safeImg(v) : safeImg(v && v.url)).filter(Boolean);
+  const jump = (index) => { const el = track.current; if (!el) return; const next = Math.max(0, Math.min(urls.length - 1, index)); el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" }); setActive(next); };
+  const sync = () => { const el = track.current; if (el && el.clientWidth) setActive(Math.max(0, Math.min(urls.length - 1, Math.round(el.scrollLeft / el.clientWidth)))); };
+  if (!urls.length) return <section className="card span-12"><h2 style={{ marginBottom: 12 }}>Preview gallery</h2><div className="service-gallery-empty">No gallery images added yet.</div></section>;
+  return <section className="card span-12"><div className="card-head"><h2>Preview gallery</h2><small className="muted">{active + 1} / {urls.length}</small></div>
+    <div className="service-gallery"><div className="service-gallery-main"><div className="service-gallery-track" ref={track} onScroll={sync}>{urls.map((url, i) => <div className="service-gallery-slide" key={url + i}><img src={url} alt={title + " preview " + (i + 1)} loading={i > 1 ? "lazy" : "eager"} /></div>)}</div>
+      {urls.length > 1 && <div className="service-gallery-nav"><button type="button" onClick={() => jump(active - 1)} aria-label="Previous image">‹</button><button type="button" onClick={() => jump(active + 1)} aria-label="Next image">›</button></div>}
+    </div>
+    {urls.length > 1 && <><div className="service-gallery-dots">{urls.map((_, i) => <button key={i} type="button" aria-label={"Go to image " + (i + 1)} aria-current={active === i} onClick={() => jump(i)} />)}</div><div className="service-gallery-thumbs">{urls.map((url, i) => <button key={url + i} type="button" aria-label={"Show image " + (i + 1)} aria-pressed={active === i} onClick={() => jump(i)}><img src={url} alt="" loading="lazy" /></button>)}</div></>}
+    </div>
+  </section>;
+}
 function ServiceDetail({ id, go }) {
   const s = CONFIG.services.find((a) => a.id === id); const [ok, setOk] = useState(false);
   if (!s) return <div className="page"><PageHead crumb="SERVICE" title="Service not found" /><Btn onClick={() => go("services")}>Back to services</Btn></div>;
-  const x = X(s), sp = startPrice(s), av = safeImg(CONFIG.profile.avatar), gal = CONFIG.artworks.filter((a) => a.category === s.category).slice(0, 4), terms = (CONFIG.terms.en || []);
+  const x = X(s), sp = startPrice(s), av = safeImg(CONFIG.profile.avatar);
+  const fallbackGallery = CONFIG.artworks.filter((a) => a.category === s.category && safeImg(a.image)).slice(0, 4).map((a) => a.image);
+  const gallery = (s.gallery || []).length ? s.gallery : (s.image ? [s.image, ...fallbackGallery.filter((u) => u !== s.image)] : fallbackGallery);
+  const terms = (CONFIG.terms.en || []), bookingUrl = safeUrl(s.orderUrl);
   return (
     <div className="page">
       <PageHead crumb={"COMMISSION SERVICES / " + s.title.toUpperCase()} title={s.title} />
@@ -2943,19 +2964,22 @@ function ServiceDetail({ id, go }) {
           <div style={{ flex: 1, minWidth: 180 }}><b>{CONFIG.profile.name}</b><div className="meta"><span className="tag">{catLabel(s.category)}</span><span className={spCls(x.status)}>{x.status}</span></div></div>
           <div><small className="muted">Starting price</small><div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem" }}>{sp ? idr(sp) : "Custom quote"}</div></div>
         </section>
-        {gal.length > 0 && <section className="card span-12"><h2 style={{ marginBottom: 12 }}>Preview gallery</h2><div className="strip">{gal.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" />)}</div></section>}
+        <ServiceGallery images={gallery} title={s.title} />
         <section className="card span-7"><h2 style={{ marginBottom: 8 }}>Description</h2><p style={{ whiteSpace: "pre-line" }}>{x.desc}</p>
-          <div className="kv" style={{ marginTop: 14 }}><div className="kv-row"><Icon name="file" /><div><span>Files and format</span>{x.files}</div></div><div className="kv-row"><Icon name="check" /><div><span>Estimated time</span>{x.delivery}</div></div><div className="kv-row"><Icon name="globe" /><div><span>License</span>{x.license}</div></div></div></section>
-        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Includes</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.includes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
+          <div className="kv" style={{ marginTop: 14 }}><div className="kv-row"><Icon name="file" /><div><span>Files and format</span>{x.files}</div></div><div className="kv-row"><Icon name="check" /><div><span>Estimated turnaround</span>{x.delivery}</div></div><div className="kv-row"><Icon name="globe" /><div><span>Usage / license</span>{x.license}</div></div></div>
+          {x.usageTerms && <p style={{ whiteSpace: "pre-line", marginTop: 12 }}>{x.usageTerms}</p>}
+        </section>
+        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Deliverables</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.includes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
         <section className="card span-7"><h2 style={{ marginBottom: 8 }}>Base prices and add-ons</h2>
           <div className="list">{x.tiers.map((t) => <div key={t.id} className="rowi"><b className="grow">{t.name}</b>{t.price > 0 ? idr(t.price) : "Custom quote"}</div>)}</div>
           <h3 style={{ margin: "16px 0 8px" }}>Add-ons</h3>
           <div className="list">{x.addons.map((a) => <div key={a.id} className="rowi"><div className="grow"><b>{a.name}{a.required ? " (required)" : ""}</b><small className="muted">{a.desc}</small></div><span>{a.type === "custom" ? "Custom quote" : a.type === "percent" ? "+" + a.price + "%" : "+" + idr(a.price)}</span></div>)}</div></section>
         <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Important notes</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.notes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
         <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Artist terms</h2>
+          {x.serviceTerms && <p style={{ whiteSpace: "pre-line", marginBottom: 12 }}>{x.serviceTerms}</p>}
           {terms.length ? terms.map((t, i) => <details key={i} style={{ marginBottom: 6 }}><summary><b>{t.title}</b></summary><p style={{ whiteSpace: "pre-line", marginTop: 6 }}>{t.body}</p></details>) : <p className="muted">The artist has not added terms yet.</p>}
           <label className="switch" style={{ marginTop: 14 }}><span>I have read and agree to the Terms of Service.</span><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} /></label>
-          <div className="btns" style={{ marginTop: 14 }}><Btn disabled={!ok || x.status === "Unavailable"} onClick={() => go("order-" + s.id)}>{x.status === "Unavailable" ? "Currently unavailable" : "Request Commission"}</Btn><Btn kind="ghost" onClick={() => go("services")}>Back</Btn></div></section>
+          <div className="btns" style={{ marginTop: 14 }}>{bookingUrl ? <a className="btn peach" href={bookingUrl} target="_blank" rel="noopener noreferrer">Request Commission</a> : <Btn disabled={!ok || x.status === "Unavailable"} onClick={() => go("order-" + s.id)}>{x.status === "Unavailable" ? "Currently unavailable" : "Request Commission"}</Btn>}<Btn kind="ghost" onClick={() => go("services")}>Back</Btn></div></section>
       </div>
     </div>
   );
@@ -3239,8 +3263,10 @@ function OffersPanel() {
           <div className="form">
             <Field label="Availability"><select className="in" value={x.status} onChange={(e) => mut((s2) => { s2.status = e.target.value; })}>{SVC_STATUS.map((o) => <option key={o}>{o}</option>)}</select></Field>
             <TextIn label="License info (shown on card)" value={x.license} onChange={(v) => mut((s2) => { s2.license = v; })} />
-            <TextIn label="Estimated time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} /><TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
-            {list("Includes", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add an item")}{list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
+            <TextIn label="Estimated turnaround time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} /><TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
+            <TextIn label="Usage / license terms for this service" value={x.usageTerms || ""} onChange={(v) => mut((s2) => { s2.usageTerms = v; })} multiline className="full" placeholder="Personal use, commercial use, redistribution, credit..." />
+            <TextIn label="Additional service terms" value={x.serviceTerms || ""} onChange={(v) => mut((s2) => { s2.serviceTerms = v; })} multiline className="full" placeholder="What clients should know before ordering..." />
+            {list("Deliverables / What the client receives", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add a deliverable")}{list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
             <Field label="Base prices (0 = custom quote)" className="full"><div className="list">{x.tiers.map((t, ti) => <div key={t.id} className="rowi"><input className="in" value={t.name} onChange={(e) => mut((s2) => { s2.tiers[ti].name = e.target.value; })} aria-label="Name" /><input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers[ti].price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} /><ConfirmDelete onYes={() => mut((s2) => { s2.tiers.splice(ti, 1); })} label="Delete" /></div>)}</div><Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.tiers.push({ id: uid("t"), name: "New type", price: 0 }); })}>Add base price</Btn></Field>
             <Field label="Add-ons" className="full"><div className="list">{x.addons.map((a, ai) => <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}><div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}><input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons[ai].name = e.target.value; })} aria-label="Name" /><input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons[ai].desc = e.target.value; })} placeholder="Description" aria-label="Description" /></div>
               <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons[ai].type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
