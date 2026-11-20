@@ -11,19 +11,20 @@ The Edge Function now calls the RPCs introduced by these migrations. **Do not de
 1. Open the **Supabase staging project** (verify its project reference and URL in Project Settings → General).
 2. Open **SQL Editor** and create a new query.
 3. Copy and run the full contents of `supabase/migrations/202611200001_track_attempt_rate_limit.sql`.
-4. Run `supabase/migrations/202611200002_atomic_commissions.sql`.
-5. Confirm the following routines exist under Database → Functions:
+4. Before the atomic-commission migration, check whether `public.client_reviews` exists. If it does not, run the existing `supabase/migrations/202611190001_client_reviews.sql` first (this is a prerequisite for the existing review workflow; it is not part of this new hardening migration).
+5. Run `supabase/migrations/202611200002_atomic_commissions.sql`.
+6. Confirm the following routines exist under Database → Functions:
    - `record_track_attempt(text, text, text)`
    - `mark_track_attempt_success(uuid)`
    - `cleanup_track_attempts()`
    - `submit_commission_atomic(text, text, jsonb, jsonb)`
    - `delete_commission_atomic(text)`
-6. Run the SQL integration tests in the SQL Editor:
+7. Run the SQL integration tests in the SQL Editor:
    - `tests/track_attempt_rate_limit.sql`
    - `tests/atomic_commission_rpc.sql`
    Each test is wrapped in a transaction and ends with `ROLLBACK`; it should print a `PASS` notice if all assertions succeed.
-7. Only after migrations and SQL tests pass, deploy `supabase/functions/commission-api/index.ts` to the staging Edge Function named `commission-api`.
-8. Test one valid commission submission, one tracking lookup, and Creator deletion in staging. Check Edge Function logs for RPC errors and verify the email hash matches the generated Request ID.
+8. Only after migrations and SQL tests pass, deploy `supabase/functions/commission-api/index.ts` to the staging Edge Function named `commission-api`.
+9. Test one valid commission submission, one tracking lookup, and Creator deletion in staging. Check Edge Function logs for RPC errors and verify the email hash matches the generated Request ID.
 
 ## Migration behavior
 
