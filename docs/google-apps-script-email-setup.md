@@ -108,3 +108,28 @@ Do not consider the migration complete until these tests pass on the staging dep
 
 After testing, remove the legacy `RESEND_API_KEY` Supabase secret if no other function
 uses it. Do not change Production or the `main` branch during staging validation.
+
+
+## 7. Local development environment
+
+The website calls the Supabase Edge Function directly. It does not send email from a Vercel API route, and private mail webhook credentials must never be placed in Vercel client-side variables or variables exposed with a `VITE_`/`NEXT_PUBLIC_` prefix.
+
+For local Edge Function testing, create a local-only env file such as `supabase/.env.local` and pass it to the Supabase CLI with `supabase functions serve commission-api --env-file supabase/.env.local`:
+
+```dotenv
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<local-project-service-role-key>
+GAS_WEBHOOK_URL=https://script.google.com/macros/s/<deployment-id>/exec
+GAS_WEBHOOK_SECRET=<same-random-secret-as-Apps-Script>
+```
+
+Keep that file out of Git. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are supplied by the Supabase Edge Function runtime in the hosted project; for local CLI execution, provide the local project values.
+
+## 8. Hosting environment checklist
+
+For each hosted Supabase environment, configure these under **Supabase → Edge Functions → Secrets**:
+
+- `GAS_WEBHOOK_URL` — deployed Google Apps Script Web App URL ending in `/exec`.
+- `GAS_WEBHOOK_SECRET` — same secret as the Apps Script Script Properties.
+
+The hosted function runtime also requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; Supabase provides these automatically for deployed Edge Functions. Do not add the mail webhook URL or secret to Vercel. No Vercel email environment variables are used by this integration. The browser uses only the public Supabase project URL and publishable/anon key embedded in the site.
