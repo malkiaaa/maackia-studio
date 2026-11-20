@@ -2728,15 +2728,18 @@ const Store = {
         finalPrice: order.finalPrice == null || order.finalPrice === "" ? null : Number(order.finalPrice),
         extraLines: order.extraLines || ""
       },
-      track: {
-        proposal: track.proposal ?? null,
-        updates: Array.isArray(track.updates) ? track.updates : [],
-        finalFiles: Array.isArray(track.finalFiles) ? track.finalFiles.map((file) => file.path
-          ? { name: file.name, path: file.path, type: file.type }
-          : { name: file.name, url: file.url, type: file.type }) : [],
-        estimate: track.estimate,
-        custom: Boolean(track.custom)
-      }
+      track: (() => {
+        const patch = {};
+        for (const key of ["proposal", "updates", "finalFiles", "estimate", "custom"]) {
+          if (!Object.prototype.hasOwnProperty.call(track, key)) continue;
+          if (key === "finalFiles") {
+            patch.finalFiles = Array.isArray(track.finalFiles) ? track.finalFiles.map((file) => file.path
+              ? { name: file.name, path: file.path, type: file.type }
+              : { name: file.name, url: file.url, type: file.type }) : [];
+          } else patch[key] = track[key];
+        }
+        return patch;
+      })()
     };
     return this.api("creator_save_commission", payload, true);
   },
@@ -3272,6 +3275,10 @@ function OrderDetail({ o, onBack, onSaved }) {
       setD(n);
       setT(saved.track || tr);
       onSaved(n);
+      try {
+        const fresh = await Store.getTrack(n.id);
+        if (fresh) setT(fresh);
+      } catch (_) {}
     } catch (x2) {
       setMsg("Could not save commission and tracking data: " + (x2?.message || "Please try again."));
       return false;
