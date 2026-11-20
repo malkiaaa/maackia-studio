@@ -1128,7 +1128,7 @@ function buildDoc(site) {
   const json = JSON.stringify(site).replace(/</g, "\\u003c");
   const S = "<" + "script", E = "<" + "/script>";
   const lib = (u) => S + ' src="' + u + '">' + E;
-  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + "</style>" +
+  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + ".crop-modal-backdrop{position:fixed;inset:0;z-index:99999;background:rgba(13,20,29,.78);display:grid;place-items:center;padding:18px;overflow:auto}.crop-modal{width:min(560px,100%);max-height:min(92vh,900px);overflow:auto;background:var(--card,#fff);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.32)}.crop-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.crop-modal-head h3{margin:0 0 4px}.crop-modal-head p{margin:0;font-size:.88rem}.crop-preview{position:relative;width:100%;max-height:48vh;background:#17202b;border-radius:14px;overflow:hidden;display:grid;place-items:center}.crop-preview img{width:100%;height:100%;object-fit:cover;transition:transform .12s;transform-origin:center}.crop-guide{position:absolute;inset:8%;border:1px solid rgba(255,255,255,.85);box-shadow:0 0 0 999px rgba(0,0,0,.16);pointer-events:none;border-radius:2px}.crop-controls{display:grid;gap:12px;margin-top:16px}.crop-controls label{display:grid;gap:6px;font-size:.88rem;font-weight:600}.crop-controls label span{font-weight:400}.crop-controls input[type=range]{width:100%;accent-color:var(--primary)}.crop-modal-actions{justify-content:flex-end;margin-top:18px}@media(max-width:600px){.crop-modal{padding:14px;border-radius:17px}.crop-preview{max-height:40vh}}</style>" +
     '<div id="root"></div>' +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js") +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js") +
@@ -1721,17 +1721,22 @@ function AboutProfileCard({ p, a }) {
   const fileRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [cropFile, setCropFile] = useState(null);
   const src = safeImg(a.cardImage);
-  const pickPhoto = async (e) => {
+  const pickPhoto = (e) => {
     const file = e.target.files && e.target.files[0]; e.target.value = "";
     if (!file || !cc) return;
+    if (!/^image\\/(png|jpeg|webp|gif)$/.test(file.type)) { setErr("Use a PNG, JPG, WebP or GIF image."); return; }
+    setCropFile(file);
+  };
+  const applyProfileCrop = async (cropped) => {
     setBusy(true); setErr("");
     try {
-      const url = await storeImage(file, 1200);
+      const url = await storeImage(cropped, 1200);
       cc.upd((n) => { n.profile = n.profile || {}; n.profile.about = n.profile.about || {}; n.profile.about.cardImage = url; });
     } catch (error) {
       setErr(error && error.message === "type" ? "Use a PNG, JPG, WebP or GIF image." : "Could not upload this image.");
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setCropFile(null); }
   };
   const removePhoto = () => cc && cc.upd((n) => { n.profile.about = n.profile.about || {}; n.profile.about.cardImage = ""; });
   return (
@@ -1749,6 +1754,7 @@ function AboutProfileCard({ p, a }) {
         {p.bio && <p style={{ marginTop: 14, whiteSpace: "pre-line" }}>{p.bio}</p>}
       </div>
       {err && <div className="about-image-error" role="status">{err}</div>}
+      {cropFile && <CropImageModal file={cropFile} onCancel={() => setCropFile(null)} onApply={applyProfileCrop} />}
     </section>
   );
 }
@@ -2078,32 +2084,40 @@ function TextIn({ label, value, onChange, hint, className, placeholder, multilin
     </Field>
   );
 }
-function ImagePicker({ label, value, onChange, maxDim = 1800, round }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-  const ref = useRef(null);
-  const pick = async (e) => {
-    const f = e.target.files && e.target.files[0]; e.target.value = "";
-    if (!f) return;
-    setBusy(true); setErr("");
-    try { onChange(await storeImage(f, maxDim)); } catch (x) { setErr(x && x.message ? x.message : "Could not upload this image."); }
-    setBusy(false);
+function CropImageModal({ file, onCancel, onApply }) {
+  const [ratio,setRatio]=useState("original"),[zoom,setZoom]=useState(1),[x,setX]=useState(50),[y,setY]=useState(50),[busy,setBusy]=useState(false),[error,setError]=useState(""),[dimensions,setDimensions]=useState(null);
+  const imageRef=useRef(null),previewUrl=useMemo(()=>URL.createObjectURL(file),[file]);
+  useEffect(()=>()=>URL.revokeObjectURL(previewUrl),[previewUrl]);
+  const selectedRatio=ratio==="square"?1:ratio==="portrait"?4/5:ratio==="landscape"?16/9:dimensions?dimensions.width/dimensions.height:1;
+  const finish=()=>{
+    const img=imageRef.current;if(!img||!img.naturalWidth||!img.naturalHeight)return;
+    setBusy(true);setError("");const iw=img.naturalWidth,ih=img.naturalHeight,ar=selectedRatio;
+    let cw=Math.min(iw,ih*ar),ch=cw/ar;if(ch>ih){ch=ih;cw=ch*ar;}cw/=zoom;ch/=zoom;
+    const sx=Math.max(0,Math.min(iw-cw,(iw-cw)*x/100)),sy=Math.max(0,Math.min(ih-ch,(ih-ch)*y/100));
+    const canvas=document.createElement("canvas"),scale=Math.min(1,1800/Math.max(cw,ch));
+    canvas.width=Math.max(1,Math.round(cw*scale));canvas.height=Math.max(1,Math.round(ch*scale));
+    canvas.getContext("2d").drawImage(img,sx,sy,cw,ch,0,0,canvas.width,canvas.height);
+    canvas.toBlob(blob=>{if(!blob){setBusy(false);setError("Gagal memproses crop gambar.");return;}onApply(new File([blob],(file.name||"image").replace(/\\.[^.]+$/,"")+".webp",{type:"image/webp"}));},"image/webp",.88);
   };
-  const src = safeImg(value);
-  return (
-    <div className="field full">
-      {label && <span>{label}</span>}
-      <div className="imgpick">
-        <div className="pv" style={round ? { borderRadius: "50%" } : undefined}>{src ? <img src={src} alt="" /> : <Icon name="image" />}</div>
-        <div className="btns">
-          <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pick} />
-          <Btn kind="cyan" size="sm" icon="upload" disabled={busy} onClick={() => ref.current && ref.current.click()}>{busy ? "Uploading..." : src ? "Replace" : "Upload"}</Btn>
-          {src && <Btn kind="ghost" size="sm" onClick={() => onChange("")}>Remove</Btn>}
-        </div>
+  return <div className="crop-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)onCancel();}}>
+    <section className="crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
+      <div className="crop-modal-head"><div><h3 id="crop-title">Crop image</h3><p className="muted">Atur area gambar sebelum diunggah.</p></div><button type="button" className="ib" onClick={onCancel} disabled={busy} aria-label="Close crop editor">×</button></div>
+      <div className="crop-preview" style={{aspectRatio:String(selectedRatio)}}><img ref={imageRef} src={previewUrl} alt="Crop preview" onLoad={e=>setDimensions({width:e.currentTarget.naturalWidth,height:e.currentTarget.naturalHeight})} style={{objectFit:"cover",objectPosition:x+"% "+y+"%",transform:"scale("+zoom+")"}}/><div className="crop-guide"/></div>
+      <div className="crop-controls">
+        <label>Aspect ratio<select className="in" value={ratio} onChange={e=>setRatio(e.target.value)}><option value="original">Original</option><option value="square">1:1 Square</option><option value="portrait">4:5 Portrait</option><option value="landscape">16:9 Landscape</option></select></label>
+        <label>Zoom <span>{zoom.toFixed(1)}×</span><input type="range" min="1" max="3" step=".05" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
+        <label>Horizontal position<input type="range" min="0" max="100" value={x} onChange={e=>setX(Number(e.target.value))}/></label>
+        <label>Vertical position<input type="range" min="0" max="100" value={y} onChange={e=>setY(Number(e.target.value))}/></label>
       </div>
-      {err && <div className="err">{err}</div>}
-    </div>
-  );
+      {error&&<p className="err">{error}</p>}<div className="btns crop-modal-actions"><Btn kind="ghost" disabled={busy} onClick={onCancel}>Cancel</Btn><Btn kind="cyan" disabled={!dimensions||busy} onClick={finish}>{busy?"Processing…":"Use this crop"}</Btn></div>
+    </section></div>;
+}
+function ImagePicker({ label, value, onChange, maxDim = 1800, round }) {
+  const [busy,setBusy]=useState(false),[err,setErr]=useState(""),[cropFile,setCropFile]=useState(null),ref=useRef(null);
+  const pick=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;if(!/^image\\/(png|jpeg|webp|gif)$/.test(f.type)){setErr("Use a PNG, JPG, WebP or GIF image.");return;}setErr("");setCropFile(f);};
+  const applyCrop=async cropped=>{setBusy(true);setErr("");try{onChange(await storeImage(cropped,maxDim));setCropFile(null);}catch(x){setErr(x&&x.message?x.message:"Could not upload this image.");}finally{setBusy(false);}};
+  const src=safeImg(value);
+  return <div className="field full">{label&&<span>{label}</span>}<div className="imgpick"><div className="pv" style={round?{borderRadius:"50%"}:undefined}>{src?<img src={src} alt=""/>:<Icon name="image"/>}</div><div className="btns"><input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pick}/><Btn kind="cyan" size="sm" icon="upload" disabled={busy} onClick={()=>ref.current&&ref.current.click()}>{busy?"Uploading...":src?"Replace":"Upload"}</Btn>{src&&<Btn kind="ghost" size="sm" onClick={()=>onChange("")}>Remove</Btn>}</div></div>{err&&<div className="err">{err}</div>}{cropFile&&<CropImageModal file={cropFile} onCancel={()=>setCropFile(null)} onApply={applyCrop}/>}</div>;
 }
 function ConfirmDelete({ onYes, label = "Delete" }) {
   const [ask, setAsk] = useState(false);
