@@ -3897,21 +3897,10 @@ function OrderDetail({ o, onBack, onSaved }) {
   const [pr, setPr] = useState({ delivery: "", notes: "", revision: "", paymentInfo: "" });
   useEffect(() => { Store.getTrack(o.id).then(setT).catch(() => setMsg("Could not load the client tracking record.")); }, [o.id]);
   const f = d.form, set = (k) => (v) => setD((p) => ({ ...p, [k]: v }));
-  const notify = async (eventType, message) => {
-    const eventId = "ev_" + crypto.randomUUID().replace(/-/g, "");
-    const result = await Store.api("notify_update", { id: d.id, eventId, eventType, message }, true);
-    if (!Array.isArray(result.notifications)) throw new Error("The email service returned an invalid response. Check Supabase commission-api logs.");
-    const clientResult = result.notifications.find((item) => String(item.kind || "").startsWith("client_evt_" + eventType + "_"));
-    if (!clientResult) throw new Error("No client email was attempted. Check that this commission has a valid client email address.");
-    const failures = result.notifications.filter((item) => item.status !== "sent");
-    if (failures.length) throw new Error("Email service failed: " + failures.map((item) => item.message || (item.kind + ": " + item.status)).join(" | "));
-    return result.notifications;
-  };
-  const save = async (extra, eventType, eventMessage) => {
+  const save = async (extra) => {
     const n = { ...d };
     if (n.payment === "Paid" && n.status === "Awaiting Payment") n.status = "Paid";
     const tr = clone(t || {});
-    const statusChanged = n.status !== (t?.status || d.status) || n.payment !== (t?.payment || d.payment);
     tr.status = n.status;
     tr.payment = n.payment;
     if (extra) extra(tr, n);
@@ -3928,14 +3917,7 @@ function OrderDetail({ o, onBack, onSaved }) {
       setMsg("Could not save commission and tracking data: " + (x2?.message || "Please try again."));
       return false;
     }
-    if (eventType || statusChanged) {
-      try {
-        await notify(eventType || "status", eventMessage || ("Order status updated to " + n.status + ". Payment status: " + n.payment + "."));
-        setMsg("Changes saved and email accepted by the mail service. Inbox delivery is not guaranteed.");
-      } catch (mailError) {
-        setMsg("Changes saved and tracking updated, but the email notification failed: " + (mailError?.message || "Check Email Notifications and retry."));
-      }
-    } else setMsg("Changes saved and tracking synchronized.");
+    setMsg("Changes saved. Client tracking has been synchronized; no email was sent.");
     return true;
   };
   const sendProposal = () => save((tr, n) => {
@@ -3946,11 +3928,11 @@ function OrderDetail({ o, onBack, onSaved }) {
     tr.status = n.status;
     tr.estimate = fp || tr.estimate;
     tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "A proposal has been sent. Please review it." }];
-  }, "proposal", "Your commission proposal is ready. Please open Track Order to review the price, delivery estimate and payment instructions.");
+  });
   const post = async () => {
     if (!pub.trim()) return;
     const message = pub.trim();
-    const ok = await save((tr) => { tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: message }]; }, "progress", message);
+    const ok = await save((tr) => { tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: message }]; });
     if (ok) setPub("");
   };
   const finalUp = async (e) => {
@@ -3989,22 +3971,9 @@ function OrderDetail({ o, onBack, onSaved }) {
       tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "Finished Art has been delivered. Your order is marked completed." }];
       const saved = await Store.saveCommissionState(n, tr);
       setD(n); setT(saved.track || tr); onSaved(n);
-      try {
-        await notify("finished_art", "Your Finished Art has been uploaded and delivered. Open Track Order using your Request ID and email address to view the final artwork and download the files.");
-        setMsg("Finished Art delivered. Commission status and tracking are Completed; email was accepted by the mail service.");
-      } catch (mailError) {
-        setMsg("Finished Art delivered and commission marked Completed, but email notification failed: " + (mailError?.message || "Check Email Notifications and retry."));
-      }
+      setMsg("Finished Art delivered to Track Order. Commission status is Completed; no email was sent.");
       try { const fresh = await Store.getTrack(n.id); if (fresh) setT(fresh); } catch (_) {}
     } catch (x2) { setMsg("Could not save Finished Art or synchronize commission status: " + (x2?.message || "Please try again.")); }
-    finally { setBusy(""); }
-  };
-  const sendClientEmail = async () => {
-    setBusy("manual");
-    try {
-      await notify("manual", pub.trim() || ("A new update is available for your commission. Current status: " + d.status + ". Open Track Order to view the latest details."));
-      setMsg("The mail service accepted the email for the client only. Inbox delivery is not guaranteed; if it is missing, check Spam/Promotions and the recipient address.");
-    } catch (x2) { setMsg("Email could not be sent: " + (x2?.message || "Check Email Notifications.")); }
     finally { setBusy(""); }
   };
   const E = d.estimate;
@@ -4024,10 +3993,10 @@ function OrderDetail({ o, onBack, onSaved }) {
         <TextIn label="Estimated delivery" value={pr.delivery} onChange={(v) => setPr({ ...pr, delivery: v })} /><TextIn label="Revision policy" value={pr.revision} onChange={(v) => setPr({ ...pr, revision: v })} />
         <TextIn label="Proposal notes" value={pr.notes} onChange={(v) => setPr({ ...pr, notes: v })} multiline className="full" /><TextIn label="Payment instructions" value={pr.paymentInfo} onChange={(v) => setPr({ ...pr, paymentInfo: v })} multiline className="full" /></div>
         <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={() => save()}>Save changes</Btn><Btn onClick={sendProposal} disabled={!d.finalPrice || !!busy}>Send proposal to client</Btn></div>
-        <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post} disabled={!!busy}>Post update</Btn></div>
+        <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post} disabled={!!busy}>Post update to Track Order</Btn></div>
         <div style={{ marginTop: 12 }}><small className="muted">Upload Finished Art (image preview, max 10 MB per file)</small><input type="file" accept="image/*" className="in" onChange={finalUp} disabled={!!busy} /><small className="muted">Re-upload every artwork file that was previously shown as a local preview. Only files with a permanent Storage path can be delivered to clients.</small></div>
-        {t?.finalFiles?.length > 0 && <div style={{ marginTop: 14 }}><h3>Finished Art pre-review</h3><div className="strip">{t.finalFiles.map((fl, i) => <div key={fl.path || fl.url || i} style={{ minWidth: 160, maxWidth: 240 }}><div className="art sq">{fl.unavailable ? <small className="muted">Legacy preview unavailable — re-upload this artwork.</small> : <img src={fl.url} alt={fl.name || "Finished Art preview"} />}</div><small className="muted">{fl.name}</small></div>)}</div><p className="muted" style={{ marginTop: 8 }}>Check every image before sending. The client will be able to view the files from the tracking page after delivery.</p></div>}
-        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={sendFinishedArt} disabled={!t?.finalFiles?.length || !!busy || d.status === "Completed"}>{busy === "finished" ? "Sending Finished Art…" : "Send Finished Art to Client"}</Btn><Btn kind="ghost" onClick={sendClientEmail} disabled={!!busy}>{busy === "manual" ? "Sending Email…" : "Send Email to Client"}</Btn></div>
+        {t?.finalFiles?.length > 0 && <div style={{ marginTop: 14 }}><h3>Finished Art pre-review</h3><div className="strip">{t.finalFiles.map((fl, i) => <div key={fl.path || fl.url || i} style={{ minWidth: 160, maxWidth: 240 }}><div className="art sq">{fl.unavailable ? <small className="muted">Legacy preview unavailable — re-upload this artwork.</small> : <img src={fl.url} alt={fl.name || "Finished Art preview"} />}</div><small className="muted">{fl.name}</small></div>)}</div><p className="muted" style={{ marginTop: 8 }}>Check every image before marking the order completed. The client will be able to view the files from the tracking page after delivery.</p></div>}
+        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={sendFinishedArt} disabled={!t?.finalFiles?.length || !!busy || d.status === "Completed"}>{busy === "finished" ? "Saving…" : "Mark Completed & Deliver to Track Order"}</Btn></div>
         {msg && <div className="note info" role="status" style={{ marginTop: 12 }}>{msg}</div>}
         {t && t.proposal && <p className="muted" style={{ marginTop: 10 }}>Proposal response: {t.proposal.response || "waiting"}</p>}{t && (t.updates || []).filter((u) => u.from === "client").map((u, i) => <p key={i} className="note info" style={{ marginTop: 6 }}>{u.text}</p>)}</section>
     </div>
@@ -4067,7 +4036,7 @@ function NotifPanel() {
 }
 
 function OrdersPanel() {
-  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState(""); const [emailing, setEmailing] = useState("");
+  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
   const [connStatus] = useConnectionStatus();
   const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr("Could not load requests: "+(e&&e.message||"")));
   useEffect(() => {
@@ -4075,17 +4044,6 @@ function OrdersPanel() {
     if (_sbClient) channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
     return ()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
   },[connStatus]);
-  const emailClient = async (order) => {
-    setEmailing(order.id); setErr("");
-    try {
-      const eventId="ev_"+crypto.randomUUID().replace(/-/g,"");
-      const result=await Store.api("notify_update",{id:order.id,eventId,eventType:"manual",message:"A personal update is available for your commission. Current status: "+(order.status||"Pending Review")+". Open Track Order using your Request ID and the email address used when ordering."},true);
-      const failed=(result.notifications||[]).filter(n=>n.status!=="sent");
-      if(failed.length) throw new Error(failed.map(n=>n.message).filter(Boolean).join("; ")||"The mail service could not accept the message.");
-      setErr("Email update accepted for "+((order.form||{}).email||"the client")+". Inbox delivery is not guaranteed.");
-    } catch(e) { setErr("Email could not be sent for "+order.id+": "+(e.message||"Please check Email Notifications.")); }
-    finally { setEmailing(""); }
-  };
   const deleteClientOrder = async (order) => {
     if(!window.confirm("Permanently delete commission "+order.id+" for "+((order.form||{}).name||"this client")+"? This cannot be undone.")) return;
     setDeleting(order.id); setErr("");
@@ -4105,7 +4063,6 @@ function OrdersPanel() {
         </button>
         <span className="tag">{o.status||"Pending Review"}</span>
         <div className="btns" style={{gap:6,flex:"0 0 auto"}}>
-          <Btn kind="cyan" size="sm" disabled={!!emailing||!(o.form||{}).email} onClick={()=>emailClient(o)}>{emailing===o.id?"Sending...":"Send email"}</Btn>
           <Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?"Deleting...":"Delete"}</Btn>
         </div>
       </article>)}</div>}
