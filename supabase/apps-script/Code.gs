@@ -6,6 +6,11 @@
  *   Who has access: Anyone
  *
  * Authentication is performed with a shared secret in the JSON request body.
+ *
+ * This webhook ONLY sends email. It does not insert or update order_tracks and
+ * must never generate or write emailHash. The Supabase commission-api owns
+ * normalized-email hashing and all commission/tracking database writes.
+ *
  * Do not store the secret in source control or expose it to the browser.
  */
 
