@@ -965,6 +965,70 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
  .track-overview-badges .tag{font-size:.66rem;padding:5px 9px}
 }
 
+
+/* Mobile width containment — prevent flex/grid content-box shrink and clipped hero */
+@media (max-width: 767px) {
+  *, *::before, *::after { box-sizing: border-box !important; }
+  html, body, #root, .shell, .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .shell { display: block !important; overflow-x: clip !important; }
+  .main {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    flex: 0 0 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: clip !important;
+  }
+  .main-inner {
+    display: block !important;
+    flex: 1 1 auto !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
+  }
+  .main-inner > .grid.page,
+  .main-inner > .page.grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-auto-columns: minmax(0, 1fr) !important;
+    justify-items: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding: 0 !important;
+  }
+  .main-inner > .grid.page > .home-intro-card,
+  .main-inner > .page.grid > .home-intro-card,
+  .main-inner > .grid.page > .featured-section,
+  .main-inner > .page.grid > .featured-section {
+    grid-column: 1 / -1 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+  .home-intro-card .home-intro-text,
+  .home-intro-card .home-intro-text h2,
+  .home-intro-card .home-intro-text p {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+}
+
 </style>
 
 <div id="root"></div>
