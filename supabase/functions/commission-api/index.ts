@@ -1153,11 +1153,6 @@ Deno.serve(async (req) => {
         const plainText = eventType
           ? orderUpdateEmailText(order, track, eventType, message)
           : commissionEmailText(order, clean(order.form?.name, 120));
-        const subjectLabel = eventType === "finished_art" ? "Finished Art Delivered"
-          : eventType === "proposal" ? "Proposal Ready"
-          : eventType === "progress" ? "Progress Update"
-          : eventType === "status" ? "Order Status Updated"
-          : eventType === "manual" ? "Commission Update" : "";
         results.push(await deliverEmail(db, config, {
           to: clean(item.recipient, 254),
           subject: "[Malkiaa Studio] Commission Update — " + id,
