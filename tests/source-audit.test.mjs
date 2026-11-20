@@ -296,7 +296,7 @@ test("commission and order-update emails are sent only to clients", () => {
   const updateEnd = backend.indexOf("async function addSignedFinalFileUrls", updateStart);
   const updateAction = backend.slice(updateStart, updateEnd);
   assert.match(updateAction, /kind: "client_evt_" \+ eventType/);
-  assert.doesNotMatch(updateAction, /artistEmail|artist_evt_/);
+  assert.doesNotMatch(updateAction, /artistEmail|artist_evt_|forClient/);
 
   const notifyStart = html.indexOf("const notify = async (eventType, message) =>");
   const notifyEnd = html.indexOf("const save = async", notifyStart);
@@ -308,13 +308,14 @@ test("commission and order-update emails are sent only to clients", () => {
   const end = backend.indexOf("async function addSignedFinalFileUrls", start);
   const action = backend.slice(start, end);
   assert.match(action, /to: clientEmail/);
-  assert.doesNotMatch(action, /artistEmail|kind: "artist"/);
-  assert.doesNotMatch(html, /Send confirmation email to client after submission/);
+  assert.doesNotMatch(action, /artistEmail|kind: "artist"|isClient/);
+  assert.doesNotMatch(html, /Send confirmation email to client after submission|artistEmail|client and Creator|Creator and client are notified|copied to the Creator/);
 });
 
 test("standalone test email is disabled and failed retries are client-only", () => {
   assert.match(backend, /Standalone test emails are disabled/);
   assert.match(backend, /failedClientNotifications/);
+  assert.doesNotMatch(backend, /artistEmail|sendArtist|artist_evt_|isClient|forClient/);
   assert.match(backend, /startsWith\("client_evt_"\)/);
 });
 
@@ -333,7 +334,7 @@ test("manual client email and lifecycle update actions are owner-authorized", ()
 });
 
 
-test("payment status changes also trigger client and Creator email notifications", () => {
+test("payment status changes trigger client-only email notifications", () => {
   assert.match(html, /n\.payment !== \(t\?\.payment \|\| d\.payment\)/);
 });
 
