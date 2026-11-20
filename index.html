@@ -3406,10 +3406,8 @@ function OrderDetail({ o, onBack, onSaved }) {
     const result = await Store.api("notify_update", { id: d.id, eventId, eventType, message }, true);
     if (!Array.isArray(result.notifications)) throw new Error("The email service returned an invalid response. Check Supabase commission-api logs.");
     const clientResult = result.notifications.find((item) => String(item.kind || "").startsWith("client_evt_" + eventType + "_"));
-    const artistResult = result.notifications.find((item) => String(item.kind || "").startsWith("artist_evt_" + eventType + "_"));
     if (!clientResult) throw new Error("No client email was attempted. Check that this commission has a valid client email address.");
     const failures = result.notifications.filter((item) => item.status !== "sent");
-    if (!artistResult) failures.push({ message: "Creator notification result is missing." });
     if (failures.length) throw new Error("Email service failed: " + failures.map((item) => item.message || (item.kind + ": " + item.status)).join(" | "));
     return result.notifications;
   };
