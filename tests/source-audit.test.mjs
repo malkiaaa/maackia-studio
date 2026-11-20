@@ -6,6 +6,26 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const backend = readFileSync(new URL("../supabase/functions/commission-api/index.ts", import.meta.url), "utf8");
 const reviewMigration = readFileSync(new URL("../supabase/migrations/202611190001_client_reviews.sql", import.meta.url), "utf8");
 
+function getServerEstimate() {
+  const start = backend.indexOf("function calculateServerEstimate(");
+  const end = backend.indexOf("\nasync function getEmailConfig", start);
+  assert.ok(start >= 0 && end > start, "server estimate calculator must be extractable");
+  return new Function(backend.slice(start, end) + "; return calculateServerEstimate;")();
+}
+
+const pricingSite = {
+  services: [{ id: "svc", title: "Illustration", tiers: [{ id: "base", name: "Base", price: 1000 }], addons: [
+    { id: "chars", name: "Additional Character", type: "percent", price: 80, select: "multiple" },
+    { id: "background", name: "Background", type: "fixed", price: 500, select: "single" },
+    { id: "detail", name: "Detail", type: "fixed", price: 100, select: "multiple" },
+  ] }],
+  licenses: [{ id: "personal", label: "Personal", type: "fixed", value: 0 }],
+};
+
+function orderFor(overrides = {}) {
+  return { serviceId: "svc", form: { tier: "base", chars: 1, addons: {}, license: "personal" }, estimate: { total: 1000 }, ...overrides };
+}
+
 function extractCalc(source) {
   const start = source.indexOf("function calc(");
   const end = source.indexOf("\nconst sha", start);
@@ -94,4 +114,70 @@ test("creator review moderation and destructive commission actions are owner-gat
 
 test("frontend source does not contain server-side secrets", () => {
   assert.doesNotMatch(html, /(?:SUPABASE_SERVICE_ROLE_KEY|GAS_WEBHOOK_SECRET)\s*[:=]\s*["'][^"']+["']/);
+});
+
+
+test("server estimate applies 100%, 180%, 260%, 340% character pricing", () => {
+  const calculate = getServerEstimate();
+  [1000, 1800, 2600, 3400].forEach((expected, index) => {
+    const result = calculate(pricingSite, orderFor({ form: { tier: "base", chars: index + 1, addons: {}, license: "personal" } }));
+    assert.equal(result.ok, true);
+    assert.equal(result.estimate.total, expected);
+  });
+});
+
+test("fixed add-ons are charged once per selected quantity, not per character", () => {
+  const calculate = getServerEstimate();
+  const result = calculate(pricingSite, orderFor({ form: { tier: "base", chars: 4, addons: { background: 1 }, license: "personal" } }));
+  assert.equal(result.estimate.total, 3900);
+  assert.equal(result.estimate.lines.find((line) => line[0] === "Background")[1], 500);
+});
+
+test("client price manipulation is ignored and server total is authoritative", () => {
+  const calculate = getServerEstimate();
+  const result = calculate(pricingSite, orderFor({ estimate: { total: -999999999, lines: [["fake", -1]] } }));
+  assert.equal(result.ok, true);
+  assert.equal(result.clientEstimateMismatch, true);
+  assert.equal(result.estimate.total, 1000);
+  assert.equal(result.estimate.lines.some((line) => line[0] === "fake"), false);
+});
+
+test("server rejects unknown services and tiers", () => {
+  const calculate = getServerEstimate();
+  assert.equal(calculate(pricingSite, orderFor({ serviceId: "not-real" })).ok, false);
+  assert.equal(calculate(pricingSite, orderFor({ form: { tier: "not-real", chars: 1, addons: {}, license: "personal" } })).ok, false);
+});
+
+test("server rejects character counts outside 1 through 4", () => {
+  const calculate = getServerEstimate();
+  for (const chars of [0, 5, -1, 1.5, "many"]) {
+    assert.equal(calculate(pricingSite, orderFor({ form: { tier: "base", chars, addons: {}, license: "personal" } })).ok, false);
+  }
+});
+
+test("server rejects negative prices in its trusted pricing configuration", () => {
+  const calculate = getServerEstimate();
+  const negativeTier = structuredClone(pricingSite);
+  negativeTier.services[0].tiers[0].price = -1;
+  assert.equal(calculate(negativeTier, orderFor()).ok, false);
+  const negativeAddon = structuredClone(pricingSite);
+  negativeAddon.services[0].addons[1].price = -10;
+  assert.equal(calculate(negativeAddon, orderFor({ form: { tier: "base", chars: 1, addons: { background: 1 }, license: "personal" } })).ok, false);
+});
+
+test("server rejects unknown add-ons, invalid quantities and unknown licenses", () => {
+  const calculate = getServerEstimate();
+  assert.equal(calculate(pricingSite, orderFor({ form: { tier: "base", chars: 1, addons: { injected: 1 }, license: "personal" } })).ok, false);
+  assert.equal(calculate(pricingSite, orderFor({ form: { tier: "base", chars: 1, addons: { background: 2 }, license: "personal" } })).ok, false);
+  assert.equal(calculate(pricingSite, orderFor({ form: { tier: "base", chars: 1, addons: {}, license: "injected" } })).ok, false);
+});
+
+test("submit persists only the server-calculated estimate", () => {
+  const start = backend.indexOf('if (action === "submit") {');
+  const end = backend.indexOf('if (action === "public_board") {', start);
+  const action = backend.slice(start, end);
+  assert.match(action, /calculateServerEstimate\(siteRow\.value, order\)/);
+  assert.match(action, /estimate: pricing\.estimate/);
+  assert.match(action, /estimate: pricing\.estimate\.total/);
+  assert.doesNotMatch(action, /estimate: order\.estimate/);
 });
