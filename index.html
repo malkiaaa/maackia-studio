@@ -2507,7 +2507,7 @@ function MediaPanel() {
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
   const [featuredBusy, setFeaturedBusy] = useState(false);
   const [featuredQueue, setFeaturedQueue] = useState([]);
-  const [featuredUploaded, setFeaturedUploaded] = useState([]);
+
   const [featuredFailed, setFeaturedFailed] = useState([]);
   const [featuredMessage, setFeaturedMessage] = useState("");
   const [draggingFeatured, setDraggingFeatured] = useState(false);
@@ -2535,7 +2535,8 @@ function MediaPanel() {
     if (!current) return;
     try {
       const url = await storeImage(cropped, 1600);
-      const entry = {id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\.[^.]+$/,"").slice(0,140),title:""};\n      upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat([entry]).slice(0,10); });
+      const entry = {id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\.[^.]+$/,"").slice(0,140),title:""};
+      upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat([entry]).slice(0,10); });
     } catch (error) {
       setFeaturedFailed((items) => items.concat([(current.name||"Image")+": "+(error&&error.message?error.message:"Upload gagal.")]));
     }
@@ -2553,7 +2554,8 @@ function MediaPanel() {
     ["Price examples", site.pricing.flatMap((g, gi) => g.items.map((it, ii) => [g.title + ": " + it.name, ["pricing", gi, "items", ii, "image"], 1400]))],
   ];
   return (
-    <div className="panel">\n      {featuredQueue.length > 0 && <CropImageModal key={featuredQueue[0].name + featuredQueue.length} file={featuredQueue[0]} onCancel={cancelFeaturedQueue} onApply={applyFeaturedCrop} />}
+    <div className="panel">
+      {featuredQueue.length > 0 && <CropImageModal key={featuredQueue[0].name + featuredQueue.length} file={featuredQueue[0]} onCancel={cancelFeaturedQueue} onApply={applyFeaturedCrop} />}
       <div className="note info">Upload images directly to permanent Supabase Storage from this dashboard. New uploads are saved in the studio media bucket; website content stores only the public file URL. Remove unlinks an image from the page but keeps the stored file as a safety copy.</div>
       {groups.map(([t, items]) => (
         <section key={t} className="card">
