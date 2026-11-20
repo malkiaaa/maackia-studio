@@ -92,7 +92,8 @@ function doPost(e) {
       subject: subject,
       body: text,
       htmlBody: html,
-      name: fromName
+      name: fromName,
+      replyTo: "mmaackia@gmail.com"
     });
 
     const sentAt = new Date().toISOString();
