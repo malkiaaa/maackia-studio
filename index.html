@@ -994,7 +994,7 @@ function buildDoc(site) {
   const json = JSON.stringify(site).replace(/</g, "\\u003c");
   const S = "<" + "script", E = "<" + "/script>";
   const lib = (u) => S + ' src="' + u + '">' + E;
-  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + "<style id="android-layout-patch-v1">\n
+  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + "\n
 /* ANDROID HOME REFINEMENT — isolated from iOS, tablet and desktop */
 @media (max-width: 767px) {
   html.is-android body { overflow-x:hidden; }
@@ -1093,7 +1093,7 @@ function buildDoc(site) {
   html.is-android .home-dashboard .home-intro-text .btns { max-width:100% !important; }
   html.is-android .home-dashboard .home-review-card { flex-basis:88% !important; }
 }
-\n</style>\n</style>" +
+\n\n</style>" +
     '<div id="root"></div>' +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js") +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js") +
