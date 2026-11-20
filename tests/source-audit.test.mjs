@@ -530,6 +530,6 @@ test("Apps Script validates plain text, checks quota and logs privacy-safe send 
   assert.match(gas, /const text = String\\(payload\\.text \\|\\| ""\\)\\.trim\\(\\)/);
   assert.match(gas, /MailApp\\.getRemainingDailyQuota\\(\\)/);
   assert.match(gas, /recipientMasked: maskEmail\\(to\\)/);
-  assert.match(gas, /recipientDomain: to\\.split\\("@">\\)\\[1\\]/);
+  assert.match(gas, /recipientDomain: to\\.split\\("@")\\[1\\]/);
   assert.match(gas, /function maskEmail\\(/);
 });
