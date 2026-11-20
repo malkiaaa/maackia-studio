@@ -421,7 +421,7 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
       subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
       html: orderUpdateEmailHtml(order, track, eventType, message, true),
       orderId: order.id,
-      kind: "client_evt_" + eventId,
+      kind: "client_evt_" + eventType + "_" + eventId,
       idempotencyKey: order.id + ":client:" + eventId,
     }));
   }
@@ -430,7 +430,7 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
     subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
     html: orderUpdateEmailHtml(order, track, eventType, message, false),
     orderId: order.id,
-    kind: "artist_evt_" + eventId,
+    kind: "artist_evt_" + eventType + "_" + eventId,
     idempotencyKey: order.id + ":artist:" + eventId,
   }));
   return results;
@@ -976,13 +976,26 @@ Deno.serve(async (req) => {
       if (orderError || !order) return json({ error: "Commission request was not found." }, 404);
       const results = [];
       const config = await getEmailConfig(db);
+      const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
       for (const item of failed || []) {
-        const isClient = item.kind === "client";
-        const html = commissionEmailHtml(order, clean(order.form?.name, 120), isClient);
+        const isClient = item.kind === "client" || item.kind.startsWith("client_evt_");
+        const eventMatch = item.kind.match(/^(?:client|artist)_evt_(proposal|progress|status|finished_art|manual)_/);
+        const eventType = eventMatch?.[1];
+        const latestUpdate = Array.isArray(track?.updates) ? [...track.updates].reverse().find((u: any) => u.from === "artist") : null;
+        const message = clean(latestUpdate?.text, 1200) || "A new update is available for your commission. Open Track Order to view the latest details.";
+        const html = eventType
+          ? orderUpdateEmailHtml(order, track, eventType, message, isClient)
+          : commissionEmailHtml(order, clean(order.form?.name, 120), isClient);
+        const subjectLabel = eventType === "finished_art" ? "Finished Art Delivered"
+          : eventType === "proposal" ? "Proposal Ready"
+          : eventType === "progress" ? "Progress Update"
+          : eventType === "status" ? "Order Status Updated"
+          : eventType === "manual" ? "Commission Update" : "";
         results.push(await deliverEmail(db, config, {
           to: clean(item.recipient, 254),
-          subject: isClient
-            ? "[Malkiaa Studio] Commission Request Received — " + id
+          subject: eventType
+            ? "[Malkiaa Studio] " + subjectLabel + " — " + id
+            : isClient ? "[Malkiaa Studio] Commission Request Received — " + id
             : "[Malkiaa Studio] New Commission Request " + id,
           html,
           orderId: id,
