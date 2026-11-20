@@ -433,3 +433,10 @@ test("completed commission review is linked to the same tracked commission", () 
   assert.match(backend, /track\.status !== "Completed"/);
   assert.match(backend, /commission_id: id/);
 });
+
+
+test("marking payment Paid advances an Awaiting Payment commission to Paid for client tracking", () => {
+  assert.match(html, /n\.payment === "Paid" && n\.status === "Awaiting Payment"\) n\.status = "Paid"/);
+  assert.match(backend, /payment === "Paid" && requestedStatus === "Awaiting Payment" \? "Paid"/);
+  assert.match(migration, /p_payment = 'Paid' and p_status = 'Awaiting Payment' then 'Paid'/);
+});
