@@ -202,6 +202,99 @@
 }
 </style>
 
+
+<style id="mobile-home-layout-recovery">
+@media (max-width: 767px) {
+  /* The main element contains TopBar and page content as siblings.
+     Keep them in a vertical flow; a row flex container was squeezing main-inner. */
+  .shell {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:clip;
+  }
+  .main {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow-x:clip;
+  }
+  .main > .mbar,
+  .main > .top,
+  .main > header {
+    flex:0 0 auto;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+  .main > .main-inner {
+    display:block;
+    flex:1 1 auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 auto !important;
+    box-sizing:border-box !important;
+    overflow-x:clip;
+    padding-left:max(16px, env(safe-area-inset-left, 0px)) !important;
+    padding-right:max(16px, env(safe-area-inset-right, 0px)) !important;
+  }
+  .main-inner > .page.grid {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-auto-columns:minmax(0,1fr) !important;
+    justify-content:stretch !important;
+    justify-items:stretch !important;
+    align-content:start;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 auto !important;
+    padding:0 !important;
+    transform:none !important;
+  }
+  .main-inner > .page.grid > .home-intro-card,
+  .main-inner > .page.grid > .featured-section {
+    grid-column:1 / -1 !important;
+    justify-self:stretch !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+    box-sizing:border-box !important;
+    transform:none !important;
+  }
+  .main-inner > .page.grid > .home-intro-card {
+    overflow:hidden;
+  }
+  .main-inner > .page.grid > .home-intro-card > .home-intro-text,
+  .main-inner > .page.grid > .featured-section > .feat {
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+  .main-inner .home-work-grid {
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    margin-inline:0;
+  }
+}
+@media (max-width: 380px) {
+  .main > .main-inner {
+    padding-left:max(13px, env(safe-area-inset-left, 0px)) !important;
+    padding-right:max(13px, env(safe-area-inset-right, 0px)) !important;
+  }
+}
+</style>
+
 </head><body>
 <title>Malkiaa Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
