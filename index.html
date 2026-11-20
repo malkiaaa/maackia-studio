@@ -3055,55 +3055,99 @@ function Track() {
   const [reviewRating, setReviewRating] = useState("5"); const [reviewText, setReviewText] = useState(""); const [reviewAnonymous, setReviewAnonymous] = useState(false); const [reviewBusy, setReviewBusy] = useState(false); const [reviewMessage, setReviewMessage] = useState("");
   const look = async (e) => {
     e && e.preventDefault(); setBusy(true); setMsg("");
-    try { const id = rid.trim().toUpperCase(), tr = await Store.lookup(id, em.trim()); if (!tr) { setT(null); setMsg("No order matches that Request ID and email."); } else setT(tr); } catch (x2) { setMsg("Could not look up your order right now."); }
-    setBusy(false);
+    try { const id = rid.trim().toUpperCase(), tr = await Store.lookup(id, em.trim()); if (!tr) { setT(null); setMsg("No order matches that Request ID and email."); } else setT(tr); }
+    catch (x2) { setT(null); setMsg("Could not look up your order right now. Please try again."); }
+    finally { setBusy(false); }
   };
   const act = async (resp, text) => {
-    const n = clone(t), now = new Date().toISOString(); n.proposal.response = resp; n.updates.push({ at: now, from: "client", text: text || "Client: " + resp });
-    n.status = resp === "Accepted" ? "Awaiting Payment" : resp === "Declined" ? "Cancelled" : "Reviewing";
-    try { const n2 = (await Store.client()) ? await Store.respond(t.id, em.trim(), resp, text || "Client: " + resp) : (await Store.setTrack(n), n); setT(n2); setQ(""); } catch (x2) { setMsg("Could not save your response. Please try again."); }
+    const now = new Date().toISOString(), responseText = text || "Client: " + resp;
+    try {
+      const n2 = (await Store.client())
+        ? await Store.respond(t.id, em.trim(), resp, responseText)
+        : (() => { const n = clone(t); n.proposal.response = resp; n.updates.push({ at: now, from: "client", text: responseText }); n.status = resp === "Accepted" ? "Awaiting Payment" : resp === "Declined" ? "Cancelled" : "Reviewing"; return Store.setTrack(n).then(() => n); })();
+      setT(n2); setQ(""); setMsg("");
+    } catch (x2) { setMsg("Could not save your response. Please try again."); }
   };
   const submitReview = async (e) => {
     e.preventDefault(); setReviewBusy(true); setReviewMessage("");
     try {
-      const result = await Store.api("submit_review", {
-        id: t.id, email: em.trim(), rating: Number(reviewRating),
-        message: reviewText.trim(), isAnonymous: reviewAnonymous
-      });
-      setT({ ...t, reviewSubmitted: true });
-      setReviewText("");
+      const result = await Store.api("submit_review", { id: t.id, email: em.trim(), rating: Number(reviewRating), message: reviewText.trim(), isAnonymous: reviewAnonymous });
+      setT({ ...t, reviewSubmitted: true }); setReviewText("");
       setReviewMessage(result.message || "Thank you. Your review is awaiting approval.");
-    } catch (error) {
-      setReviewMessage(error.message || "Could not submit your review. Please try again.");
-    }
-    setReviewBusy(false);
+    } catch (error) { setReviewMessage(error.message || "Could not submit your review. Please try again."); }
+    finally { setReviewBusy(false); }
   };
   const idx = t ? TL.findIndex((a) => a[1].includes(t.status)) : -1, p = t && t.proposal;
+  const updates = t ? (t.updates || []).slice().sort((a,b) => new Date(a.at || 0) - new Date(b.at || 0)) : [];
+  const paymentInfo = p && p.paymentInfo;
   return (
-    <div className="page"><PageHead crumb="TRACK ORDER" title="Track Your Order">Enter your Request ID and the email you used when ordering.</PageHead><StoreBanner />
-      <form className="card form" onSubmit={look}>{<TextIn label="Request ID" value={rid} onChange={setRid} placeholder="COMMISSION-2026-0001" />}<TextIn label="Email" value={em} onChange={setEm} /><div className="full"><Btn type="submit" disabled={busy || !rid || !em}>{busy ? "Checking..." : "Find my order"}</Btn></div>{msg && <div className="note bad full" role="alert">{msg}</div>}</form>
-      {t && <div className="grid" style={{ marginTop: 18 }}>
-        <section className="card span-12"><div className="meta"><b>{t.id}</b><span className="tag">{t.serviceTitle}</span><span className="tag">{t.status}</span><span className="tag">Payment: {t.payment}</span></div>
-          <div className="stages" style={{ marginTop: 14 }}>{TL.map((a, i) => <div key={a[0]} className="stage" style={i <= idx ? { background: "var(--cyan)", color: "var(--on-accent)" } : undefined}>{a[0]}</div>)}</div>
-          {["Cancelled", "Rejected"].includes(t.status) && <div className="note bad" style={{ marginTop: 12 }}>This request is {t.status.toLowerCase()}.</div>}</section>
-        {p && <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Proposal</h2><div className="list">{(p.lines || []).map((l, i) => <div key={i} className="rowi"><b className="grow">{l[0]}</b>{l[2] || idr(l[1])}</div>)}</div>
-          <p style={{ marginTop: 10 }}><b>Final price: {idr(p.finalPrice)}</b></p>{p.delivery && <p>Estimated delivery: {p.delivery}</p>}{p.notes && <p style={{ whiteSpace: "pre-line" }}>{p.notes}</p>}{p.revision && <p><b>Revisions:</b> {p.revision}</p>}{p.paymentInfo && <p style={{ whiteSpace: "pre-line" }}><b>Payment instructions:</b> {p.paymentInfo}</p>}
-          {!p.response ? <div style={{ marginTop: 12 }}><div className="btns"><Btn onClick={() => act("Accepted")}>Accept Proposal</Btn><Btn kind="danger" onClick={() => act("Declined")}>Decline Proposal</Btn></div><div className="pwrow" style={{ marginTop: 10 }}><input className="in" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask a question about this proposal" /><Btn kind="cyan" size="sm" disabled={!q.trim()} onClick={() => act("Clarification requested", "Client question: " + q.trim())}>Request Clarification</Btn></div></div> : <div className="note info" style={{ marginTop: 12 }}>Your response: {p.response}. Accepting does not mean payment has been made. Payment status is shown above.</div>}</section>}
-        <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Updates</h2>{t.updates.length ? t.updates.slice().reverse().map((u, i) => <p key={i} style={{ marginBottom: 6 }}><small className="muted">{fmtDate(u.at)} {u.from === "client" ? "(you)" : ""}</small><br />{u.text}</p>) : <p className="muted">No updates yet.</p>}
-          {t.finalFiles.length > 0 && <div style={{ marginTop: 10 }}><h3>Final files</h3>{t.finalFiles.map((fl) => <p key={fl.url}><a href={fl.url} download={fl.name}>{fl.name}</a></p>)}</div>}</section>
-        {t.status === "Completed" && <section className="card span-12">
-          <h2 style={{ marginBottom: 8 }}>Leave a Review</h2>
-          {t.reviewSubmitted
-            ? <div className="note ok">Thank you. Your review has been submitted and is waiting for studio approval.</div>
-            : <form className="panel" onSubmit={submitReview}>
-              <p className="muted">Share your experience with Malkiaa Studio. Only completed commissions can leave a review.</p>
-              <Field label="Your rating"><select className="in" value={reviewRating} onChange={(e) => setReviewRating(e.target.value)}>{[5,4,3,2,1].map((n) => <option key={n} value={n}>{n} / 5 stars</option>)}</select></Field>
-              <Field label="Your review"><textarea className="in" minLength={10} maxLength={1200} required value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Tell me about your experience (10–1200 characters)." /></Field>
-              <label className="switch"><span><b>Post anonymously</b><small className="muted" style={{ display: "block" }}>Your order name will not be shown publicly.</small></span><input type="checkbox" checked={reviewAnonymous} onChange={(e) => setReviewAnonymous(e.target.checked)} /></label>
-              {reviewMessage && <div className="note info" role="status">{reviewMessage}</div>}
-              <div><Btn type="submit" disabled={reviewBusy || reviewText.trim().length < 10}>{reviewBusy ? "Submitting..." : "Submit review"}</Btn></div>
-            </form>}
-        </section>}</div>}
+    <div className="page">
+      <PageHead crumb="TRACK ORDER" title="Track Your Order">Enter your Request ID and the email you used when ordering. Your order details are shown in separate sections below.</PageHead>
+      <StoreBanner />
+      <form className="card form" onSubmit={look}>
+        <TextIn label="Request ID" value={rid} onChange={setRid} placeholder="COMMISSION-2026-0001" />
+        <TextIn label="Email" value={em} onChange={setEm} />
+        <div className="full"><Btn type="submit" disabled={busy || !rid.trim() || !em.trim()}>{busy ? "Checking..." : "Find my order"}</Btn></div>
+        {msg && <div className="note bad full" role="alert">{msg}</div>}
+      </form>
+      {t && <div className="track-layout" style={{ display:"grid", gap:16, marginTop:18 }}>
+        <section className="card" style={{ borderTop:"5px solid var(--cyan)" }}>
+          <div className="card-head" style={{ alignItems:"flex-start", flexWrap:"wrap" }}>
+            <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
+            <div className="meta"><span className="tag">{t.status || "Pending Review"}</span><span className="tag">Payment: {t.payment || "Unpaid"}</span></div>
+          </div>
+          <div className="stages" style={{ marginTop:12 }}>{TL.map((a,i)=><div key={a[0]} className="stage" style={i<=idx?{background:"var(--cyan)",color:"var(--on-accent)"}:undefined}>{a[0]}</div>)}</div>
+          {["Cancelled","Rejected"].includes(t.status) && <div className="note bad" style={{ marginTop:12 }}>This request is {t.status.toLowerCase()}.</div>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>01 · PRICE & PROPOSAL</small><h2 style={{ marginTop:4 }}>Proposal</h2></div><span className="tag">{p ? "Available" : "Awaiting artist"}</span></div>
+          {p ? <>
+            <div className="list">{(p.lines||[]).map((l,i)=><div key={i} className="rowi"><b className="grow">{l[0]}</b><span>{l[2]||idr(l[1])}</span></div>)}</div>
+            <div className="srow tot" style={{ marginTop:8 }}><b>Final price</b><b>{idr(p.finalPrice)}</b></div>
+            {p.delivery && <p style={{ marginTop:10 }}><b>Estimated delivery:</b> {p.delivery}</p>}
+            {p.notes && <p style={{ marginTop:8, whiteSpace:"pre-line" }}>{p.notes}</p>}
+            {p.revision && <p style={{ marginTop:8 }}><b>Revision policy:</b> {p.revision}</p>}
+            {!p.response ? <div style={{ marginTop:14 }}>
+              <div className="btns"><Btn onClick={()=>act("Accepted")}>Accept Proposal</Btn><Btn kind="danger" onClick={()=>act("Declined")}>Decline Proposal</Btn></div>
+              <div className="pwrow" style={{ marginTop:10 }}><input className="in" value={q} onChange={e=>setQ(e.target.value)} placeholder="Ask a question about this proposal" /><Btn kind="cyan" size="sm" disabled={!q.trim()} onClick={()=>act("Clarification requested","Client question: "+q.trim())}>Request Clarification</Btn></div>
+            </div> : <div className="note info" style={{ marginTop:12 }}>Your response: <b>{p.response}</b>. Accepting a proposal does not mean payment has been made.</div>}
+          </> : <p className="muted">The artist has not sent a proposal yet. This section will update when it is ready.</p>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>02 · PAYMENT</small><h2 style={{ marginTop:4 }}>Payment information</h2></div><span className="tag">{t.payment || "Unpaid"}</span></div>
+          {paymentInfo ? <p style={{ whiteSpace:"pre-line" }}>{paymentInfo}</p> : <p className="muted">Payment instructions will appear here after the proposal is sent. Please do not make a payment before receiving the official instructions.</p>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>03 · COMMUNICATION</small><h2 style={{ marginTop:4 }}>Order messages</h2></div><span className="tag">{updates.length} updates</span></div>
+          {updates.length ? <div style={{ display:"grid", gap:12 }}>{updates.map((u,i)=><article key={i} style={{ padding:"12px 14px", borderRadius:16, border:"1px solid var(--line)", background:u.from==="client"?"var(--powder)":"#fff" }}>
+            <div className="meta" style={{ justifyContent:"space-between" }}><b>{u.from==="client"?"Your message":"Malkiaa Studio"}</b><small className="muted">{fmtDate(u.at)}</small></div>
+            <p style={{ marginTop:7, whiteSpace:"pre-wrap", overflowWrap:"anywhere" }}>{u.text}</p>
+          </article>)}</div> : <p className="muted">There are no messages or progress updates yet.</p>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>04 · DELIVERY</small><h2 style={{ marginTop:4 }}>Finished artwork</h2></div><span className="tag">{(t.finalFiles||[]).length ? "Delivered" : "Not delivered"}</span></div>
+          {(t.finalFiles||[]).length ? <div className="grid">{t.finalFiles.map((fl,i)=><div className="span-4" key={fl.path||fl.url||i} style={{ minWidth:0 }}>
+            {fl.type && fl.type.startsWith("image/") && <div className="art sq"><img src={fl.url} alt={fl.name||"Finished artwork"} /></div>}
+            <p style={{ marginTop:8, overflowWrap:"anywhere" }}><b>{fl.name||"Final artwork"}</b></p><a className="btn ghost sm" style={{ marginTop:8 }} href={fl.url} download={fl.name||"artwork"}>Download file</a>
+          </div>)}</div> : <p className="muted">Final artwork and download links will appear here once the artist completes delivery.</p>}
+        </section>
+
+        {t.status==="Completed" && <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>05 · FEEDBACK</small><h2 style={{ marginTop:4 }}>Leave a review</h2></div></div>
+          {t.reviewSubmitted ? <div className="note ok">Thank you. Your review has been submitted and is waiting for studio approval.</div> : <form className="panel" onSubmit={submitReview}>
+            <p className="muted">Only completed commissions can leave a review.</p>
+            <Field label="Your rating"><select className="in" value={reviewRating} onChange={e=>setReviewRating(e.target.value)}>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} / 5 stars</option>)}</select></Field>
+            <Field label="Your review"><textarea className="in" minLength={10} maxLength={1200} required value={reviewText} onChange={e=>setReviewText(e.target.value)} placeholder="Tell me about your experience (10–1200 characters)." /></Field>
+            <label className="switch"><span><b>Post anonymously</b><small className="muted" style={{ display:"block" }}>Your order name will not be shown publicly.</small></span><input type="checkbox" checked={reviewAnonymous} onChange={e=>setReviewAnonymous(e.target.checked)} /></label>
+            {reviewMessage && <div className="note info" role="status">{reviewMessage}</div>}
+            <div><Btn type="submit" disabled={reviewBusy||reviewText.trim().length<10}>{reviewBusy?"Submitting...":"Submit review"}</Btn></div>
+          </form>}
+        </section>}
+      </div>}
     </div>
   );
 }
@@ -3301,35 +3345,50 @@ function NotifPanel() {
 }
 
 function OrdersPanel() {
-  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
+  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState(""); const [emailing, setEmailing] = useState("");
   const [connStatus] = useConnectionStatus();
-  const load = () => Store.allOrders().then((a) => setList(a.sort((x, y) => (y.createdAt || y.created_at || "").localeCompare(x.createdAt || x.created_at || "")))).catch((e) => setErr("Could not load requests: " + (e && e.message || "")));
+  const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr("Could not load requests: "+(e&&e.message||"")));
   useEffect(() => {
-    load();
-    // Subscribe to realtime new commissions if Supabase connected
-    let channel = null;
-    if (_sbClient) {
-      channel = _sbClient.channel("commission_requests_changes")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "commission_requests" }, () => { load(); })
-        .subscribe();
-    }
-    return () => { if (channel) _sbClient && _sbClient.removeChannel(channel); };
-  }, [connStatus]);
-  if (sel) return <OrderDetail o={sel} onBack={() => { setSel(null); load(); }} onSaved={() => {}} />;
-  const n = (st) => (list || []).filter((o) => st.includes(o.status)).length;
-  const stats = [["Total", list ? list.length : 0], ["Pending", n(["Pending Review"])], ["Accepted", n(["Paid", "Awaiting Payment"])], ["In progress", n(["In Progress", "Waiting for Feedback", "Revision"])], ["Completed", n(["Completed"])], ["Rejected", n(["Rejected", "Cancelled"])]];
-  return (
-    <div className="panel"><StoreBanner />{err && <div className="note bad">{err}</div>}<NotifPanel />
-      <div className="grid">{stats.map(([l, v]) => <div key={l} className="card stat" style={{ gridColumn: "span 2" }}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
-      <section className="card"><h2 style={{ marginBottom: 12 }}>Client requests</h2>{list === null ? <p className="muted">Loading...</p> : list.length === 0 ? <p className="muted">No requests yet.</p> : <div className="list">{list.map((o) => <div key={o.id} className="rowi">
-        <button type="button" onClick={() => setSel(o)} style={{flex:1,minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
-          <div className="grow"><b>{o.id} - {(o.form||{}).name||"Client"}</b><small className="muted">{(o.form||{}).email||""} / {o.serviceTitle} / {fmtDate(o.createdAt||o.created_at)} / {idr((o.estimate||{}).total||0)}</small></div>
+    load(); let channel=null;
+    if (_sbClient) channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
+    return ()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
+  },[connStatus]);
+  const emailClient = async (order) => {
+    setEmailing(order.id); setErr("");
+    try {
+      const eventId="ev_"+crypto.randomUUID().replace(/-/g,"");
+      const result=await Store.api("notify_update",{id:order.id,eventId,eventType:"manual",message:"A personal update is available for your commission. Current status: "+(order.status||"Pending Review")+". Open Track Order using your Request ID and the email address used when ordering."},true);
+      const failed=(result.notifications||[]).filter(n=>n.status!=="sent");
+      if(failed.length) throw new Error(failed.map(n=>n.message).filter(Boolean).join("; ")||"The mail service could not accept the message.");
+      setErr("Email update accepted for "+((order.form||{}).email||"the client")+". Inbox delivery is not guaranteed.");
+    } catch(e) { setErr("Email could not be sent for "+order.id+": "+(e.message||"Please check Email Notifications.")); }
+    finally { setEmailing(""); }
+  };
+  const deleteClientOrder = async (order) => {
+    if(!window.confirm("Permanently delete commission "+order.id+" for "+((order.form||{}).name||"this client")+"? This cannot be undone.")) return;
+    setDeleting(order.id); setErr("");
+    try { await Store.deleteOrder(order.id); if(sel&&sel.id===order.id)setSel(null); await load(); }
+    catch(e) { setErr("Could not delete commission "+order.id+": "+(e.message||"")); }
+    finally { setDeleting(""); }
+  };
+  if(sel) return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
+  const n=(st)=>(list||[]).filter(o=>st.includes(o.status)).length;
+  const stats=[["Total",list?list.length:0],["Pending",n(["Pending Review"])],["Accepted",n(["Paid","Awaiting Payment"])],["In progress",n(["In Progress","Waiting for Feedback","Revision"])],["Completed",n(["Completed"])],["Rejected",n(["Rejected","Cancelled"])]];
+  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}<NotifPanel />
+    <div className="grid">{stats.map(([l,v])=><div key={l} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
+    <section className="card"><div className="card-head"><h2>Client requests</h2><Btn kind="ghost" size="sm" onClick={load}>Refresh</Btn></div>
+      {list===null?<p className="muted">Loading...</p>:list.length===0?<p className="muted">No requests yet.</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
+        <button type="button" onClick={()=>setSel(o)} style={{flex:"1 1 240px",minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
+          <div className="grow"><b>{o.id} · {(o.form||{}).name||"Client"}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||"Commission"} · {fmtDate(o.createdAt||o.created_at)} · {idr((o.estimate||{}).total||0)}</small></div>
         </button>
-        <span className="tag">{o.status}</span>
-        <button className="ib bad" type="button" disabled={deleting===o.id} title="Delete commission" aria-label={"Delete commission "+o.id} onClick={async()=>{if(!window.confirm("Permanently delete commission "+o.id+"? This cannot be undone."))return;setDeleting(o.id);setErr("");try{await Store.deleteOrder(o.id);await load();}catch(e){setErr("Could not delete commission: "+(e.message||""));}finally{setDeleting("");}}}><Icon name="trash"/></button>
-      </div>)}</div>}</section>
-    </div>
-  );
+        <span className="tag">{o.status||"Pending Review"}</span>
+        <div className="btns" style={{gap:6,flex:"0 0 auto"}}>
+          <Btn kind="cyan" size="sm" disabled={!!emailing||!(o.form||{}).email} onClick={()=>emailClient(o)}>{emailing===o.id?"Sending...":"Send email"}</Btn>
+          <Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?"Deleting...":"Delete"}</Btn>
+        </div>
+      </article>)}</div>}
+    </section>
+  </div>;
 }
 
 function ReviewsPanel() {
