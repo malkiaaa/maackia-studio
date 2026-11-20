@@ -1340,7 +1340,7 @@ function HomeReviews() {
             </div>}
           </article>;
         })}
-        {!reviews.length && <p className="muted">No reviews yet. Add the first review in Creator Mode.</p>}
+        {!displayReviews.length && <p className="muted">No reviews yet. Add the first review in Creator Mode.</p>}
       </div>
       {canEdit && active && <div className="home-review-editor" data-no-edit="true">
         <label>Client name<input value={active.name||""} onChange={(e)=>patch(active.id,"name",e.target.value)} /></label>
