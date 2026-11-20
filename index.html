@@ -2499,8 +2499,8 @@ function BuilderBlockView({ block, editing, selected, change }) {
 function PageBuilderBlocks({ page }) {
   const {site,upd,editing}=useCreator();
   const blocks=site.builder?.pages?.[page]||[];
-  if(!editing&&!blocks.length)return null;
   const [selected,setSelected]=useState(null),[slash,setSlash]=useState(""),[dragId,setDragId]=useState(null);
+  if(!editing&&!blocks.length)return null;
   const active=blocks.find(b=>b.id===selected)||null;
   const mutate=(fn)=>upd(n=>{n.builder=n.builder||{version:2,pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];fn(n.builder.pages[page]);});
   const change=(id,key,value)=>mutate(a=>{const b=a.find(x=>x.id===id);if(b)b[key]=value;});
@@ -2749,7 +2749,15 @@ const Store = {
     const cfg = getSbCfg(); if (!cfg || !cfg.url) throw new Error("Database is not configured.");
     let tok = cfg.anonKey; if (asOwner) { tok = await Auth.token(); if (!tok) throw new Error("Your session has expired. Please sign in again."); }
     const r = await fetch(cfg.url.replace(/\/$/, "") + "/functions/v1/commission-api", { method: "POST", headers: { "Content-Type": "application/json", apikey: cfg.anonKey, Authorization: "Bearer " + tok }, body: JSON.stringify({ action, ...body }) });
-    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Request failed (" + r.status + ")"); return j;
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const error = new Error(j.error || "Request failed (" + r.status + ")");
+      error.status = r.status;
+      error.payload = j;
+      if (j.commissionId) error.commissionId = j.commissionId;
+      throw error;
+    }
+    return j;
   },
   async submit(order, track) { return (await this.api("submit", { order, track })).track; },
   async lookup(id, email) {
@@ -2905,7 +2913,20 @@ function OrderFlow({ id, go }) {
       } catch (x2) { setUp("Could not upload " + file.name + ": " + (x2 && x2.message || "unknown error")); }
     }
   };
-  const submit = async () => { if (!check(7)) return; setBusy(true); setFail(""); try { setDone(await Store.create(f, s, c)); } catch (x2) { setFail("Your request could not be saved, so it was NOT submitted. " + ((x2 && x2.message) || "") + " Please try again."); } setBusy(false); };
+  const submit = async () => {
+    if (!check(7)) return;
+    setBusy(true); setFail("");
+    try {
+      setDone(await Store.create(f, s, c));
+    } catch (x2) {
+      if (x2 && x2.commissionId) {
+        setFail("Your commission was saved, but order tracking could not be initialized. Request ID: " + x2.commissionId + ". Do not submit again; contact the studio with this ID.");
+      } else {
+        setFail("Your request could not be saved, so it was NOT submitted. " + ((x2 && x2.message) || "") + " Please try again.");
+      }
+    }
+    setBusy(false);
+  };
   const tx = (k, l, o = {}) => <TextIn label={l} value={f[k]} onChange={set(k)} className={o.full ? "full" : ""} multiline={o.ml} placeholder={o.ph} hint={err[k] || o.hint} />;
   const radios = (k, l, opts) => <Field label={l} className="full"><div className="chips">{opts.map((o) => <label key={o} className="chip" aria-pressed={f[k] === o} style={{ cursor: "pointer" }}><input type="radio" name={k} checked={f[k] === o} onChange={() => set(k)(o)} style={{ marginRight: 6 }} />{o}</label>)}</div>{err[k] && <div className="err">{err[k]}</div>}</Field>;
   if (done) return (
