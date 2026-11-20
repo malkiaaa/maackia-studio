@@ -1588,7 +1588,7 @@ function FeaturedArtworkCarousel({ items }) {
           <button className="ib" type="button" onClick={next} aria-label="Next featured artwork"><Icon name="right" /></button>
         </div>}
       </div>
-      <div className="featured-artwork-viewport"
+      <div className="featured-artwork-viewport" tabIndex={0} role="group" aria-label="Featured artwork slides. Use left and right arrow keys to navigate."
         onPointerDown={startPointer}
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
