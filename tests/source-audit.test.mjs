@@ -589,3 +589,11 @@ test("all Creator image pickers route uploads through a reusable crop editor", (
   assert.match(html, /applyFeaturedCrop[\s\S]*?storeImage\(cropped, 1600\)/);
   assert.match(html, /className="crop-modal-backdrop"/);
 });
+
+
+test("desktop Home places Featured Artwork beside the hero without changing mobile stacking", () => {
+  assert.match(html, /home-dashboard-featured-pair/);
+  assert.match(html, /@media \(min-width:1024px\)[\s\S]*?home-dashboard-featured-pair>\.home-intro-card\{grid-column:span 7/);
+  assert.match(html, /@media \(min-width:1024px\)[\s\S]*?home-dashboard-featured-pair>\.featured-artwork-home\{grid-column:span 5/);
+  assert.match(html, /@media\(max-width:767px\)\{[\s\S]*?\.home-dashboard\{grid-template-columns:minmax\(0,1fr\)/);
+});
