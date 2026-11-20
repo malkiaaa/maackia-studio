@@ -322,3 +322,8 @@ test("manual client email and lifecycle update actions are owner-authorized", ()
   assert.match(html, /Store\.api\("notify_update"/);
   assert.match(backend, /const allowedEvents = \["proposal", "progress", "status", "finished_art", "manual"\]/);
 });
+
+
+test("payment status changes also trigger client and Creator email notifications", () => {
+  assert.match(html, /n\.payment !== \(t\?\.payment \|\| d\.payment\)/);
+});
