@@ -959,6 +959,56 @@ Deno.serve(async (req) => {
       return json({ path, token: data.token });
     }
 
+    if (action === "portfolio_upload") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+
+      const base64 = typeof body?.base64 === "string" ? body.base64 : "";
+      const contentType = clean(body?.contentType, 80).toLowerCase();
+      if (contentType !== "image/webp" || !base64 || base64.length > 5_600_000 ||
+          !/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) {
+        return json({ error: "Invalid image upload. Please choose a supported image and try again." }, 400);
+      }
+
+      let bytes: Uint8Array;
+      try {
+        const binary = atob(base64);
+        if (!binary.length || binary.length > 4 * 1024 * 1024) {
+          return json({ error: "Image is too large. The compressed image must be 4 MB or smaller." }, 413);
+        }
+        bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      } catch {
+        return json({ error: "The image data could not be decoded." }, 400);
+      }
+
+      const bucketName = "site-media";
+      const { data: bucket, error: bucketLookupError } = await db.storage.getBucket(bucketName);
+      if (!bucket) {
+        const { error: createBucketError } = await db.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 4 * 1024 * 1024,
+          allowedMimeTypes: ["image/webp"],
+        });
+        if (createBucketError && !/already exists|duplicate/i.test(createBucketError.message || "")) {
+          console.error("site media bucket creation failed", createBucketError, bucketLookupError);
+          return json({ error: "Could not initialise permanent image storage." }, 503);
+        }
+      }
+
+      const path = owner.user.id + "/" + crypto.randomUUID() + ".webp";
+      const { error: uploadError } = await db.storage.from(bucketName).upload(path, bytes, {
+        contentType,
+        cacheControl: "31536000",
+        upsert: false,
+      });
+      if (uploadError) {
+        console.error("site media upload failed", uploadError);
+        return json({ error: "Could not save the image to permanent storage." }, 500);
+      }
+      const { data: publicData } = db.storage.from(bucketName).getPublicUrl(path);
+      return json({ ok: true, bucket: bucketName, path, url: publicData.publicUrl });
+    }
+
     if (action === "save_site") {
       const owner = await requireOwner(req, db);
       if (!owner.ok) return json({ error: owner.error }, owner.status);
