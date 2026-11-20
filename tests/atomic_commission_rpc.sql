@@ -12,6 +12,7 @@ declare
   v_second jsonb;
   v_deleted boolean;
   v_failed boolean := false;
+  v_review_exists boolean := false;
 begin
   if exists (select 1 from public.commission_requests where id = v_id) then
     raise exception 'Synthetic test commission ID already exists; choose another ID.';
@@ -78,11 +79,15 @@ begin
   if v_deleted is distinct from true then
     raise exception 'Atomic deletion did not report a deleted commission.';
   end if;
+  if pg_catalog.to_regclass('public.client_reviews') is not null then
+    execute 'select exists (select 1 from public.client_reviews where commission_id = $1)'
+      into v_review_exists using v_id;
+  end if;
   if exists (select 1 from public.commission_requests where id = v_id)
      or exists (select 1 from public.order_tracks where id = v_id)
      or exists (select 1 from public.commission_management where id = v_id)
      or exists (select 1 from public.notifications where order_id = v_id)
-     or exists (select 1 from public.client_reviews where commission_id = v_id) then
+     or v_review_exists then
     raise exception 'Atomic deletion left related commission rows behind.';
   end if;
 
