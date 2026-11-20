@@ -354,7 +354,7 @@ function commissionEmailText(order: any, clientName: string) {
     "",
     "Malkiaa Studio — Commission support",
     "This is an automatic transactional email about a commission request you submitted."
-  ].filter((line) => line !== undefined).join("\\n");
+  ].filter((line) => line !== undefined).join("\n");
 }
 
 function commissionEmailHtml(order: any, clientName: string) {
@@ -424,7 +424,7 @@ function orderUpdateEmailText(order: any, track: any, eventType: string, message
     "",
     "Malkiaa Studio — Commission support",
     "This is an automatic transactional email about your commission."
-  ].join("\\n");
+  ].join("\n");
 }
 
 function orderUpdateEmailHtml(order: any, track: any, eventType: string, message: string) {
