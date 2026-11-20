@@ -657,6 +657,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .creator-bar-wrap{padding-left:9px;padding-right:9px}
   .latest-grid,.gal{grid-template-columns:minmax(0,1fr)}
 }
+
+/* Track Order — responsive overview only */
+.track-overview{min-width:0;padding:clamp(16px,2.4vw,26px);overflow:hidden}
+.track-overview-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,auto);align-items:start;gap:18px;margin-bottom:18px}
+.track-overview-head>div:first-child{min-width:0}
+.track-overview-head h2{line-height:1.25;overflow-wrap:anywhere}
+.track-overview-head p{line-height:1.5;overflow-wrap:anywhere}
+.track-overview-badges{display:flex;justify-content:flex-end;align-items:flex-start;flex-wrap:wrap;gap:9px;min-width:0;max-width:100%}
+.track-overview-badges .tag{display:inline-flex;align-items:center;justify-content:center;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.45;text-align:center;padding:6px 11px;letter-spacing:.045em}
+.track-overview-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;min-width:0;margin-top:0}
+.track-overview-stages .stage,
+.track-overview-stages .stage:first-child,
+.track-overview-stages .stage:last-child{display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;min-height:68px;height:100%;padding:13px 10px;border:0!important;border-radius:15px!important;overflow-wrap:anywhere;line-height:1.35}
+@media(max-width:1023px){
+ .track-overview-stages{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+ .track-overview-stages .stage:last-child{grid-column:2}
+}
+@media(max-width:767px){
+ .track-overview{padding:18px}
+ .track-overview-head{grid-template-columns:minmax(0,1fr);gap:13px;margin-bottom:16px}
+ .track-overview-badges{justify-content:flex-start;gap:8px}
+ .track-overview-stages{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .track-overview-stages .stage:last-child{grid-column:1/-1;width:calc((100% - 9px)/2);justify-self:center}
+}
+@media(max-width:380px){
+ .track-overview{padding:14px}
+ .track-overview-stages{gap:8px}
+ .track-overview-stages .stage,
+ .track-overview-stages .stage:first-child,
+ .track-overview-stages .stage:last-child{min-height:64px;padding:11px 8px;border-radius:13px!important;font-size:.88rem}
+ .track-overview-stages .stage:last-child{width:calc((100% - 8px)/2)}
+ .track-overview-badges .tag{font-size:.66rem;padding:5px 9px}
+}
+
 </style>
 
 <div id="root"></div>
@@ -3091,12 +3125,12 @@ function Track() {
         {msg && <div className="note bad full" role="alert">{msg}</div>}
       </form>
       {t && <div className="track-layout" style={{ display:"grid", gap:16, marginTop:18 }}>
-        <section className="card" style={{ borderTop:"5px solid var(--cyan)" }}>
-          <div className="card-head" style={{ alignItems:"flex-start", flexWrap:"wrap" }}>
+        <section className="card track-overview" style={{ borderTop:"5px solid var(--cyan)" }}>
+          <div className="card-head track-overview-head">
             <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
-            <div className="meta"><span className="tag">{t.status || "Pending Review"}</span><span className="tag">Payment: {t.payment || "Unpaid"}</span></div>
+            <div className="meta track-overview-badges"><span className="tag">{t.status || "Pending Review"}</span><span className="tag">Payment: {t.payment || "Unpaid"}</span></div>
           </div>
-          <div className="stages" style={{ marginTop:12 }}>{TL.map((a,i)=><div key={a[0]} className="stage" style={i<=idx?{background:"var(--cyan)",color:"var(--on-accent)"}:undefined}>{a[0]}</div>)}</div>
+          <div className="stages track-overview-stages">{TL.map((a,i)=><div key={a[0]} className="stage" style={i<=idx?{background:"var(--cyan)",color:"var(--on-accent)"}:undefined}>{a[0]}</div>)}</div>
           {["Cancelled","Rejected"].includes(t.status) && <div className="note bad" style={{ marginTop:12 }}>This request is {t.status.toLowerCase()}.</div>}
         </section>
 
