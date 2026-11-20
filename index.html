@@ -660,6 +660,127 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .latest-grid,.gal{grid-template-columns:minmax(0,1fr)}
 }
 
+/* Homepage-only mobile layout refinement. Desktop rules remain unchanged. */
+@media (max-width:767px) {
+  .home-dashboard {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    align-items:start;
+    gap:14px;
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+  .home-dashboard > .home-intro-card,
+  .home-dashboard > .featured-section {
+    grid-column:1 / -1 !important;
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    margin:0;
+    box-sizing:border-box;
+  }
+  .home-dashboard > .home-intro-card {
+    min-height:0;
+    padding:clamp(17px,4.5vw,22px);
+    border-radius:20px;
+    background-position:72% center !important;
+    background-size:cover !important;
+  }
+  .home-dashboard > .home-intro-card::before {
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    background:linear-gradient(90deg,
+      rgba(255,255,255,.98) 0%,
+      rgba(255,255,255,.94) 38%,
+      rgba(255,255,255,.76) 62%,
+      rgba(255,255,255,.18) 100%) !important;
+  }
+  .home-dashboard .home-intro-text {
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:11px !important;
+    width:min(100%, 430px);
+    max-width:100%;
+    min-width:0;
+    padding:0;
+  }
+  .home-dashboard .home-intro-text > .tag {
+    max-width:100%;
+    white-space:normal;
+    line-height:1.35;
+    padding:5px 10px;
+    font-size:.66rem;
+  }
+  .home-dashboard .home-intro-text h2 {
+    max-width:100%;
+    font-size:clamp(1.9rem,8vw,2.35rem) !important;
+    line-height:1.02 !important;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+  .home-dashboard .home-intro-text p {
+    max-width:34ch;
+    font-size:.91rem;
+    line-height:1.55;
+    overflow-wrap:break-word;
+  }
+  .home-dashboard .home-intro-text .btns {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    width:min(100%,260px);
+    gap:8px;
+    margin-top:4px !important;
+  }
+  .home-dashboard .home-intro-text .btns > * {
+    width:100%;
+    min-width:0;
+    justify-content:center;
+    white-space:normal;
+    text-align:center;
+  }
+  .home-dashboard > .featured-section {
+    grid-row:auto;
+    padding:16px;
+  }
+  .home-dashboard > .featured-section .feat {
+    min-width:0;
+    width:100%;
+  }
+  .bnav {
+    min-height:62px;
+    align-items:stretch;
+    gap:2px;
+    padding-top:5px;
+    padding-bottom:calc(5px + env(safe-area-inset-bottom,0px));
+  }
+  .bnav button {
+    flex:1 1 0;
+    min-width:0;
+    min-height:50px;
+    gap:3px;
+    padding:5px 1px;
+    white-space:nowrap;
+    overflow:hidden;
+    font-size:clamp(.58rem,2.35vw,.68rem);
+    line-height:1.15;
+    overflow-wrap:normal;
+  }
+  .bnav button svg { width:19px; height:19px; }
+  .text-edit-dock { bottom:calc(72px + env(safe-area-inset-bottom,0px)); }
+  .toast { bottom:calc(72px + env(safe-area-inset-bottom,0px)); }
+}
+@media (max-width:380px) {
+  .home-dashboard { gap:12px; }
+  .home-dashboard > .home-intro-card { padding:14px; }
+  .home-dashboard .home-intro-text { gap:9px !important; }
+  .home-dashboard .home-intro-text p { font-size:.86rem; }
+  .home-dashboard .home-intro-text .btns { width:100%; }
+  .bnav button { font-size:.55rem; }
+}
+
 /* Track Order — responsive overview only */
 .track-overview{min-width:0;padding:clamp(16px,2.4vw,26px);overflow:hidden}
 .track-overview-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,auto);align-items:start;gap:18px;margin-bottom:18px}
@@ -1232,7 +1353,7 @@ function MobileChrome({ route, go, openGate, creatorOn }) {
       </>}
       <nav className="bnav" aria-label="Quick">
         {quick.map((id) => { const p = all.find((x) => x.id === id); return (
-          <button key={id} aria-current={route === id ? "page" : undefined} onClick={() => go(id)}><Icon name={p.icon} />{p.label}</button>
+          <button key={id} aria-current={route === id ? "page" : undefined} onClick={() => go(id)}><Icon name={p.icon} />{id === "services" ? "Services" : p.label}</button>
         ); })}
         <button onClick={() => setOpen(true)}><Icon name="menu" />More</button>
       </nav>
@@ -1269,7 +1390,7 @@ function Home({ go, open }) {
   const banner = safeImg(CONFIG.profile.about.cardImage);
   const introStyle = banner ? { overflow: "hidden", backgroundImage: `url("${banner}")`, backgroundSize: "cover", backgroundPosition: "center" } : { overflow: "visible" };
   return (
-    <div className="grid page">
+    <div className="grid page home-dashboard">
       {w.intro && <section className="card tint span-7 home-intro-card" style={introStyle}>
         <div className="intro-text home-intro-text" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span className="tag" style={{ alignSelf: "flex-start", background: "var(--card)" }}>{CONFIG.profile.title}</span>
