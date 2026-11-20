@@ -2915,7 +2915,7 @@ function OrderFlow({ id, go }) {
   const [step, setStep] = useState(0); const [err, setErr] = useState({}); const [busy, setBusy] = useState(false); const [fail, setFail] = useState(""); const [done, setDone] = useState(null); const [up, setUp] = useState("");
   if (!s) return <div className="page"><PageHead crumb="ORDER" title="Service not found" /><Btn onClick={() => go("services")}>Back to services</Btn></div>;
   const x = X(s), c = calc(s, f), set = (k) => (v) => { setF((p) => ({ ...p, [k]: v })); setErr((e) => ({ ...e, [k]: "" })); };
-  const check = (n) => { const e = {}; if (n === 0) { if (!f.name.trim()) e.name = "Please enter your name."; if (!/^\S+@\S+\.\S+$/.test(f.email.trim())) e.email = "Please enter a valid email address."; } if (n === 1) { if (!f.want) e.want = "Required."; if (!f.tier) e.tier = "Choose a commission type."; } if (n === 3) x.addons.forEach((a) => { if (a.required && !(f.addons[a.id] > 0)) e["a" + a.id] = a.name + " is required."; }); if (n === 6 && !f.display) e.display = "Please choose one option."; if (n === 7 && !f.tos) e.tos = "You must agree to the Terms of Service."; setErr(e); return !Object.keys(e).length; };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(f.email || "").trim())) e.email = "Please enter a valid email address.";
   const next = () => { if (check(step)) { setStep(step + 1); window.scrollTo({ top: 0 }); } };
   const pickFiles = async (e) => {
     const list = [...(e.target.files || [])]; e.target.value = "";
