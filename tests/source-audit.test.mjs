@@ -452,6 +452,6 @@ test("finished art cannot persist browser blob URLs and must use permanent Stora
 });
 
 test("legacy local preview URLs are never exposed as client delivery URLs", () => {
-  assert.match(backend, /if \(!file\?\.path \|\| !\/\^incoming/);
+  assert.match(backend, /file\\.path\\.startsWith\\("incoming\\/"\\)/);
   assert.match(backend, /unavailable: true/);
 });
