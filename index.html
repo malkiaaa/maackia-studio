@@ -2759,7 +2759,7 @@ const Store = {
     }
     return j;
   },
-  async submit(order, track) { return (await this.api("submit", { order, track })).track; },
+  async submit(order, track, idempotencyKey) { return (await this.api("submit", { order, track, idempotencyKey })).track; },
   async lookup(id, email) {
     if (!(await this.client())) { const tr = await this.getTrack(id); return tr && tr.emailHash === (await sha(email.toLowerCase() + "|" + id)) ? tr : null; }
     try {
@@ -2784,7 +2784,18 @@ const Store = {
     const order = { id, created_at: now, createdAt: now, status: "Pending Review", payment: "Unpaid", serviceId: s.id, serviceTitle: s.title, tierName: tier ? tier.name : "", form: f, estimate: est, notes: "", finalPrice: null, extraLines: "" };
     const track = { id, createdAt: now, created_at: now, serviceTitle: s.title, status: "Pending Review", payment: "Unpaid", estimate: est.total, custom: c.custom, emailHash: await sha(f.email.trim().toLowerCase() + "|" + id), proposal: null, updates: [], finalFiles: [] };
     // 1. Save to DB first — commission is never lost even if email fails
-    if (sb) return await Store.submit(order, track);
+    if (sb) {
+      const fingerprint = await sha(JSON.stringify({ serviceId: s.id, form: f }));
+      const storageKey = "mk-submit-idem-" + fingerprint;
+      let idempotencyKey = ss.get(storageKey);
+      if (!idempotencyKey) {
+        idempotencyKey = "idem-" + await sha(fingerprint + "|" + Date.now() + "|" + Math.random());
+        ss.set(storageKey, idempotencyKey);
+      }
+      const result = await Store.submit(order, track, idempotencyKey);
+      ss.del(storageKey);
+      return result;
+    }
     await Store.setOrder(order);
     await Store.setTrack(track);
     return track;
