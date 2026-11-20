@@ -685,11 +685,6 @@ const DEFAULT_SITE = {
   defaultCurrency: "IDR",
   mascot: { image: "" },
   appearance: { accent: "#B9D8F7", banner: "", widgets: { intro: true, featured: true, latest: true, services: true, status: true, quick: true } },
-  homeReviews: [
-    { id: "demo-review-1", name: "Demo Client 01", rating: 5, text: "The illustration captured the character exactly as I imagined. Communication was clear throughout the process.", date: "2026-10-12", sample: true },
-    { id: "demo-review-2", name: "Demo Client 02", rating: 5, text: "Lovely details, thoughtful updates, and a polished final result. I would gladly commission again.", date: "2026-10-18", sample: true },
-    { id: "demo-review-3", name: "Demo Client 03", rating: 4, text: "A smooth experience from sketch to delivery. The colors and expression turned out beautifully.", date: "2026-10-24", sample: true },
-  ],
   socials: [
     { id: "instagram", label: "Instagram", url: "" },
     { id: "facebook", label: "Facebook", url: "" },
@@ -1285,44 +1280,27 @@ function Home({ go, open }) {
 }
 
 function HomeReviews() {
-  const cc = useCreator();
-  const canEdit = !!(cc && cc.editing);
-  const reviews = Array.isArray(CONFIG.homeReviews) ? CONFIG.homeReviews : [];
-  const [remoteReviews, setRemoteReviews] = useState([]);
-  useEffect(() => { let active = true; Store.api("public_reviews", {}).then((result) => { if (active) setRemoteReviews(Array.isArray(result.reviews) ? result.reviews : []); }).catch(() => {}); return () => { active = false; }; }, []);
-  const displayReviews = [...reviews.map((r) => ({ ...r, _local: true })), ...remoteReviews.map((r) => ({ id: "remote-" + r.id, name: r.display_name || "Anonymous", rating: r.rating, text: r.message, date: fmtDate(r.created_at), _remote: true }))];
-  const [editingId, setEditingId] = useState("");
-  const active = reviews.find((r) => r.id === editingId);
-  const patch = (id, key, value) => cc && cc.upd((n) => {
-    n.homeReviews = Array.isArray(n.homeReviews) ? n.homeReviews : [];
-    const item = n.homeReviews.find((r) => r.id === id);
-    if (item) item[key] = value;
-  });
-  const addReview = () => {
-    if (!cc) return;
-    const id = uid("review");
-    cc.upd((n) => {
-      n.homeReviews = Array.isArray(n.homeReviews) ? n.homeReviews : [];
-      n.homeReviews.unshift({ id, name: "New client", rating: 5, text: "Write a short client review…", date: new Date().toISOString().slice(0,10), sample: false });
-    });
-    setEditingId(id);
-  };
-  const removeReview = (id) => {
-    if (!cc || !window.confirm("Delete this review?")) return;
-    cc.upd((n) => { n.homeReviews = (n.homeReviews || []).filter((r) => r.id !== id); });
-    if (editingId === id) setEditingId("");
-  };
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    Store.api("public_reviews", {})
+      .then((result) => { if (active) setReviews(Array.isArray(result.reviews) ? result.reviews : []); })
+      .catch(() => { if (active) setReviews([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
   return (
     <section className="card home-reviews-section">
       <div className="card-head">
-        <div><h2>Client Reviews</h2><p className="muted" style={{fontSize:".82rem"}}>Kind words and feedback</p></div>
-        {canEdit ? <Btn kind="peach" size="sm" onClick={addReview}>+ Add review</Btn> : <Icon name="heart" />}
+        <div><h2>Client Reviews</h2><p className="muted" style={{fontSize:".82rem"}}>Feedback from completed commissions</p></div>
+        <Icon name="heart" />
       </div>
       <div className="home-review-list">
-        {displayReviews.map((r) => {
-          const name = r.name || "Anonymous";
-          const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map((x) => x[0]).join("").toUpperCase() || "?";
-          const rating = Math.max(1,Math.min(5,Number(r.rating)||5));
+        {reviews.map((r) => {
+          const name = r.display_name || "Anonymous";
+          const initials = name.split(/\\s+/).filter(Boolean).slice(0,2).map((x) => x[0]).join("").toUpperCase() || "?";
+          const rating = Math.max(1, Math.min(5, Number(r.rating) || 5));
           return <article className="home-review-card" key={r.id}>
             <div className="home-review-top">
               <div className="home-review-avatar" aria-hidden="true">{initials}</div>
@@ -1330,25 +1308,14 @@ function HomeReviews() {
                 <div className="home-review-name">{name}</div>
                 <div className="home-review-stars" aria-label={rating+" out of 5 stars"}>{"★".repeat(rating)}{"☆".repeat(5-rating)}</div>
               </div>
-              <small className="home-review-date">{r.date || ""}</small>
+              <small className="home-review-date">{fmtDate(r.created_at)}</small>
             </div>
-            <p>“{r.text || ""}”</p>
-            {r.sample && <span className="tag" style={{alignSelf:"flex-start"}}>Sample</span>}
-            {canEdit && !r._remote && <div className="btns" data-no-edit="true">
-              <Btn kind="ghost" size="sm" onClick={() => setEditingId(editingId===r.id?"":r.id)}>{editingId===r.id?"Close":"Edit"}</Btn>
-              <Btn kind="danger" size="sm" onClick={() => removeReview(r.id)}>Delete</Btn>
-            </div>}
+            <p>“{r.message || ""}”</p>
           </article>;
         })}
-        {!displayReviews.length && <p className="muted">No reviews yet. Add the first review in Creator Mode.</p>}
+        {loading && <p className="muted">Loading client reviews...</p>}
+        {!loading && !reviews.length && <p className="muted">No approved client reviews yet.</p>}
       </div>
-      {canEdit && active && <div className="home-review-editor" data-no-edit="true">
-        <label>Client name<input value={active.name||""} onChange={(e)=>patch(active.id,"name",e.target.value)} /></label>
-        <label>Rating<select value={active.rating||5} onChange={(e)=>patch(active.id,"rating",Number(e.target.value))}>{[5,4,3,2,1].map((n)=><option key={n} value={n}>{n} / 5</option>)}</select></label>
-        <label>Date<input type="date" value={active.date||""} onChange={(e)=>patch(active.id,"date",e.target.value)} /></label>
-        <label className="wide">Review text<textarea value={active.text||""} onChange={(e)=>patch(active.id,"text",e.target.value)} /></label>
-        <div className="btns wide"><Btn kind="cyan" size="sm" onClick={()=>setEditingId("")}>Done</Btn></div>
-      </div>}
     </section>
   );
 }
