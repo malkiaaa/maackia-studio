@@ -385,3 +385,51 @@ test("manual email validates client delivery result and reports mail-service acc
   assert.match(backend, /no valid client email address/);
   assert.match(backend, /clientNotification/);
 });
+
+
+test("commission state writes use a server-side atomic path and never upsert private order_tracks from the browser", () => {
+  assert.match(html, /saveCommissionState\(order, track\)/);
+  assert.match(html, /Direct browser writes to order_tracks are disabled/);
+  assert.match(html, /this\.api\("creator_save_commission"/);
+  assert.doesNotMatch(html, /from\("order_tracks"\)\.upsert/);
+  assert.match(backend, /action === "creator_save_commission"/);
+  assert.match(backend, /db\.rpc\("sync_commission_state"/);
+  assert.match(backend, /p_track_patch: patch/);
+});
+
+test("commission sync migration preserves emailHash and synchronizes request, management, and tracking", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/202611200002_commission_state_sync.sql", import.meta.url), "utf8");
+  assert.match(migration, /p_track_patch \? 'emailHash'/);
+  assert.match(migration, /update public\.commission_requests/);
+  assert.match(migration, /insert into public\.commission_management/);
+  assert.match(migration, /update public\.order_tracks/);
+  assert.match(migration, /revoke all on function public\.sync_commission_state/);
+  assert.match(migration, /grant execute on function public\.sync_commission_state[\s\S]*to service_role/);
+});
+
+test("commission payment/status save completes before email and email failures do not undo saved tracking", () => {
+  const saveStart = html.indexOf("const save = async (extra, eventType, eventMessage)");
+  const saveEnd = html.indexOf("const sendProposal", saveStart);
+  const saveBlock = html.slice(saveStart, saveEnd);
+  assert.ok(saveBlock.indexOf("Store.saveCommissionState") < saveBlock.indexOf("await notify"));
+  assert.match(saveBlock, /Changes saved and tracking updated, but the email notification failed/);
+  assert.match(backend, /p_payment: payment/);
+});
+
+test("client proposal response synchronizes all commission state tables", () => {
+  const start = backend.indexOf('if (action === "respond")');
+  const end = backend.indexOf('if (action === "upload")', start);
+  const block = backend.slice(start, end);
+  assert.match(block, /sync_commission_state/);
+  assert.doesNotMatch(block, /from\("order_tracks"\)\s*\.update/);
+});
+
+test("completed commission review is linked to the same tracked commission", () => {
+  const start = html.indexOf("function Track()");
+  const end = html.indexOf("/* ---- creator:", start);
+  const track = html.slice(start, end);
+  assert.match(track, /t\.status==="Completed"/);
+  assert.match(track, /Store\.api\("submit_review"/);
+  assert.match(backend, /track\.status !== "Completed"/);
+  assert.match(backend, /commission_id: id/);
+});
