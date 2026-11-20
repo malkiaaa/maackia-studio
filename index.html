@@ -669,7 +669,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .track-overview-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;min-width:0;margin-top:0}
 .track-overview-stages .stage,
 .track-overview-stages .stage:first-child,
-.track-overview-stages .stage:last-child{display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;min-height:68px;height:100%;padding:13px 10px;border:0!important;border-radius:15px!important;overflow-wrap:anywhere;line-height:1.35}
+.track-overview-stages .stage:last-child{display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;min-height:68px;height:100%;padding:13px 10px;border:0!important;border-radius:15px!important;overflow-wrap:anywhere;line-height:1.35;background:var(--cyan);color:var(--on-accent);transition:background .18s ease,color .18s ease}
+.track-overview-stages .stage.is-active,
+.track-overview-stages .stage.is-active:first-child,
+.track-overview-stages .stage.is-active:last-child{background:var(--gold)!important;color:var(--on-accent)!important}
 @media(max-width:1023px){
  .track-overview-stages{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
  .track-overview-stages .stage:last-child{grid-column:2}
@@ -3130,7 +3133,7 @@ function Track() {
             <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
             <div className="meta track-overview-badges"><span className="tag">{t.status || "Pending Review"}</span><span className="tag">Payment: {t.payment || "Unpaid"}</span></div>
           </div>
-          <div className="stages track-overview-stages">{TL.map((a,i)=><div key={a[0]} className="stage" style={i<=idx?{background:"var(--cyan)",color:"var(--on-accent)"}:undefined}>{a[0]}</div>)}</div>
+          <div className="stages track-overview-stages" aria-label="Commission progress">{TL.map((a,i)=><div key={a[0]} className={"stage" + (i === idx ? " is-active" : "")} aria-current={i === idx ? "step" : undefined}>{a[0]}</div>)}</div>
           {["Cancelled","Rejected"].includes(t.status) && <div className="note bad" style={{ marginTop:12 }}>This request is {t.status.toLowerCase()}.</div>}
         </section>
 
@@ -3227,8 +3230,14 @@ function OrderDetail({ o, onBack, onSaved }) {
   const notify = async (eventType, message) => {
     const eventId = "ev_" + crypto.randomUUID().replace(/-/g, "");
     const result = await Store.api("notify_update", { id: d.id, eventId, eventType, message }, true);
-    const failures = (result.notifications || []).filter((item) => item.status !== "sent");
-    if (failures.length) throw new Error("Order was saved, but " + failures.length + " email(s) could not be sent. Check Email Notifications.");
+    if (!Array.isArray(result.notifications)) throw new Error("The email service returned an invalid response. Check Supabase commission-api logs.");
+    const clientResult = result.notifications.find((item) => String(item.kind || "").startsWith("client_evt_" + eventType + "_"));
+    const artistResult = result.notifications.find((item) => String(item.kind || "").startsWith("artist_evt_" + eventType + "_"));
+    if (!clientResult) throw new Error("No client email was attempted. Check that this commission has a valid client email address.");
+    const failures = result.notifications.filter((item) => item.status !== "sent");
+    if (!artistResult) failures.push({ message: "Creator notification result is missing." });
+    if (failures.length) throw new Error("Email service failed: " + failures.map((item) => item.message || (item.kind + ": " + item.status)).join(" | "));
+    return result.notifications;
   };
   const save = async (extra, eventType, eventMessage) => {
     const n = { ...d };
@@ -3309,7 +3318,7 @@ function OrderDetail({ o, onBack, onSaved }) {
     setBusy("manual");
     try {
       await notify("manual", pub.trim() || ("A new update is available for your commission. Current status: " + d.status + ". Open Track Order to view the latest details."));
-      setMsg("Email update sent to the client and Creator.");
+      setMsg("The mail service accepted the email for the client and Creator. Inbox delivery is not guaranteed; if it is missing, check Spam/Promotions and the recipient address.");
     } catch (x2) { setMsg("Email could not be sent: " + (x2?.message || "Check Email Notifications.")); }
     finally { setBusy(""); }
   };
