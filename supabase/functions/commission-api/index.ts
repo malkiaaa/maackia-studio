@@ -573,7 +573,8 @@ Deno.serve(async (req) => {
           console.error("commission notification failed", error);
           return [];
         });
-      return json({ track: savedTrack, notifications, duplicate: submission.duplicate === true }, submission.duplicate === true ? 200 : 201);
+      const { emailHash: _privateEmailHash, ...publicTrack } = savedTrack;
+      return json({ track: publicTrack, notifications, duplicate: submission.duplicate === true }, submission.duplicate === true ? 200 : 201);
     }
 
     if (action === "public_board") {
