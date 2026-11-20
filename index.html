@@ -2536,7 +2536,7 @@ function MediaPanel() {
     if (!current) return;
     try {
       const url = await storeImage(cropped, 1600);
-      setFeaturedUploaded((items) => items.concat([{id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\\.[^.]+$/,"").slice(0,140),title:""}]));
+      const entry = {id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\\.[^.]+$/,"").slice(0,140),title:""};\n      upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat([entry]).slice(0,10); });
     } catch (error) {
       setFeaturedFailed((items) => items.concat([(current.name||"Image")+": "+(error&&error.message?error.message:"Upload gagal.")]));
     }
