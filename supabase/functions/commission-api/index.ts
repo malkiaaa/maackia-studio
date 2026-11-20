@@ -650,6 +650,57 @@ Deno.serve(async (req) => {
       return json({ track: safeTrack });
     }
 
+    if (action === "creator_save_commission") {
+      const owner = await requireOwner(req, db);
+      if (!owner.ok) return json({ error: owner.error }, owner.status);
+      const id = clean(body?.id, 40).toUpperCase();
+      const orderPatch = body?.order;
+      const trackPatch = body?.track;
+      if (!/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id) ||
+          !orderPatch || typeof orderPatch !== "object" || Array.isArray(orderPatch) ||
+          !trackPatch || typeof trackPatch !== "object" || Array.isArray(trackPatch)) {
+        return json({ error: "Invalid commission save payload." }, 400);
+      }
+      const status = clean(orderPatch.status, 40);
+      const payment = clean(orderPatch.payment, 30);
+      const allowedStatuses = ["Pending Review", "Reviewing", "Proposal Sent", "Awaiting Client Approval", "Awaiting Payment", "Paid", "In Progress", "Waiting for Feedback", "Revision", "Completed", "Cancelled", "Rejected"];
+      const allowedPayments = ["Unpaid", "Invoice sent", "Paid", "Refunded"];
+      if (!allowedStatuses.includes(status) || !allowedPayments.includes(payment)) {
+        return json({ error: "Invalid commission or payment status." }, 400);
+      }
+      const finalPrice = orderPatch.finalPrice == null || orderPatch.finalPrice === "" ? null : Number(orderPatch.finalPrice);
+      if (finalPrice !== null && (!Number.isFinite(finalPrice) || finalPrice < 0)) {
+        return json({ error: "Final price must be a valid non-negative amount." }, 400);
+      }
+      const patch: Record<string, unknown> = {};
+      for (const key of ["proposal", "updates", "finalFiles", "estimate", "custom"]) {
+        if (Object.prototype.hasOwnProperty.call(trackPatch, key)) patch[key] = trackPatch[key];
+      }
+      if (patch.updates !== undefined && !Array.isArray(patch.updates)) return json({ error: "Tracking updates must be an array." }, 400);
+      if (patch.finalFiles !== undefined && !Array.isArray(patch.finalFiles)) return json({ error: "Final artwork files must be an array." }, 400);
+      if (patch.proposal !== undefined && patch.proposal !== null && (typeof patch.proposal !== "object" || Array.isArray(patch.proposal))) {
+        return json({ error: "Proposal data is invalid." }, 400);
+      }
+      if (patch.estimate !== undefined && (!Number.isFinite(Number(patch.estimate)) || Number(patch.estimate) < 0)) {
+        return json({ error: "Tracking estimate is invalid." }, 400);
+      }
+      const { data: savedTrack, error: saveError } = await db.rpc("sync_commission_state", {
+        p_commission_id: id,
+        p_status: status,
+        p_payment: payment,
+        p_notes: clean(orderPatch.notes, 5000),
+        p_final_price: finalPrice,
+        p_extra_lines: String(orderPatch.extraLines || "").slice(0, 5000),
+        p_track_patch: patch,
+      });
+      if (saveError || !savedTrack?.id) {
+        console.error("atomic commission state save failed", { id, error: saveError });
+        return json({ error: "Could not synchronize commission, payment, and tracking data." }, 500);
+      }
+      const { emailHash: _privateHash, ...publicTrack } = savedTrack;
+      return json({ ok: true, track: publicTrack });
+    }
+
     if (action === "public_board") {
       const { data, error } = await db.from("order_tracks")
         .select("id,created_at,client_name,serviceTitle,status")
@@ -860,13 +911,25 @@ Deno.serve(async (req) => {
         text: note || "Client: " + response,
       });
       const status = response === "Accepted" ? "Awaiting Payment" : "Cancelled";
-      const { data: updated, error } = await db.from("order_tracks")
-        .update({ proposal, updates, status }).eq("id", id).select("*").single();
-      if (error) {
-        console.error("client response update failed", error);
-        return json({ error: "Could not save your response." }, 500);
+      const { data: order, error: orderError } = await db.from("commission_requests")
+        .select("notes,finalPrice,extraLines").eq("id", id).maybeSingle();
+      if (orderError || !order) {
+        console.error("client response commission lookup failed", orderError);
+        return json({ error: "Could not load the commission record." }, 500);
       }
-      await db.from("commission_requests").update({ status }).eq("id", id);
+      const { data: updated, error } = await db.rpc("sync_commission_state", {
+        p_commission_id: id,
+        p_status: status,
+        p_payment: track.payment || "Unpaid",
+        p_notes: order.notes || "",
+        p_final_price: order.finalPrice,
+        p_extra_lines: order.extraLines || "",
+        p_track_patch: { proposal, updates },
+      });
+      if (error || !updated?.id) {
+        console.error("client response synchronization failed", error);
+        return json({ error: "Could not synchronize your proposal response." }, 500);
+      }
       const { emailHash: _privateHash, ...publicTrack } = updated;
       return json({ track: publicTrack });
     }
