@@ -439,7 +439,9 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
 async function addSignedFinalFileUrls(db: any, track: any) {
   const files = Array.isArray(track?.finalFiles) ? track.finalFiles : [];
   const signedFiles = await Promise.all(files.map(async (file: any) => {
-    if (!file?.path) return file;
+    if (!file?.path || !/^incoming\\/[A-Za-z0-9-]{20,80}$/.test(file.path)) {
+      return { name: file?.name, type: file?.type, unavailable: true };
+    }
     const { data, error } = await db.storage.from("references").createSignedUrl(file.path, 60 * 60);
     if (error || !data?.signedUrl) {
       console.error("final artwork signed URL failed", { orderId: track.id, path: file.path, error });
@@ -679,6 +681,12 @@ Deno.serve(async (req) => {
       }
       if (patch.updates !== undefined && !Array.isArray(patch.updates)) return json({ error: "Tracking updates must be an array." }, 400);
       if (patch.finalFiles !== undefined && !Array.isArray(patch.finalFiles)) return json({ error: "Final artwork files must be an array." }, 400);
+      if (patch.finalFiles !== undefined && patch.finalFiles.some((file: any) =>
+        !file || typeof file !== "object" || Array.isArray(file) ||
+        typeof file.name !== "string" || !file.name.trim() ||
+        typeof file.path !== "string" || !/^incoming\\/[A-Za-z0-9-]{20,80}$/.test(file.path) ||
+        (file.url && String(file.url).startsWith("blob:"))
+      )) return json({ error: "Every Finished Art file must be uploaded to permanent Storage before saving." }, 422);
       if (patch.proposal !== undefined && patch.proposal !== null && (typeof patch.proposal !== "object" || Array.isArray(patch.proposal))) {
         return json({ error: "Proposal data is invalid." }, 400);
       }
@@ -993,8 +1001,9 @@ Deno.serve(async (req) => {
         db.from("order_tracks").select("*").eq("id", id).maybeSingle(),
       ]);
       if (orderError || trackError || !order || !track) return json({ error: "Commission or tracking record was not found." }, 404);
-      if (eventType === "finished_art" && (!Array.isArray(track.finalFiles) || track.finalFiles.length === 0)) {
-        return json({ error: "Upload Finished Art before sending the delivery email." }, 409);
+      if (eventType === "finished_art" && (!Array.isArray(track.finalFiles) || track.finalFiles.length === 0 ||
+          track.finalFiles.some((file: any) => !file?.path || !/^incoming\\/[A-Za-z0-9-]{20,80}$/.test(file.path)))) {
+        return json({ error: "Upload every Finished Art file to permanent Storage before sending the delivery email." }, 409);
       }
       const defaults: Record<string, string> = {
         proposal: "Your commission proposal is ready. Open Track Order to review the details.",
