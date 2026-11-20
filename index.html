@@ -3336,7 +3336,13 @@ function App() {
     let active=true;
     if (!creatorOn) { setDraftLoaded(false); return; }
     if (!publishedLoaded) return;
-    Store.api("get_draft_site",{},true).then(r=>{ if(!active)return; if(r.site?.builder) setSite(p=>mergeDeep(p,{builder:r.site.builder})); setDraftLoaded(true); }).catch(()=>{ if(active)setDraftLoaded(true); });
+    Store.api("get_draft_site",{},true).then(r=>{
+      if(!active)return;
+      if(r.site && typeof r.site === "object" && !Array.isArray(r.site)) {
+        setSite(p=>mergeDeep(p,r.site));
+      }
+      setDraftLoaded(true);
+    }).catch(()=>{ if(active)setDraftLoaded(true); });
     return ()=>{active=false;};
   },[creatorOn,publishedLoaded]);
   useEffect(() => {
