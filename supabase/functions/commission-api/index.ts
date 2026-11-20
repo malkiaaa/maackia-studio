@@ -486,20 +486,15 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { data: generatedId, error: idError } = await db.rpc("next_commission_id");
-      if (idError || !generatedId) {
-        console.error("commission ID generation failed", idError);
-        return json({ error: "Could not generate a commission number. Please try again." }, 500);
-      }
-      const id = clean(generatedId, 40);
-      if (!/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id)) {
-        return json({ error: "Invalid generated commission number." }, 500);
+
+      const idempotencyKey = clean(body?.idempotencyKey, 180);
+      if (!/^[A-Za-z0-9._:-]{16,180}$/.test(idempotencyKey)) {
+        return json({ error: "A valid submission idempotency key is required. Please refresh the form and try again." }, 400);
       }
 
-      const emailHash = await sha256(email + "|" + id);
+      const emailHash = await sha256(email + "|pending");
       const safeForm = { ...form, email };
       const safeOrder = {
-        id,
         created_at: new Date().toISOString(),
         createdAt: clean(order.createdAt, 50) || new Date().toISOString(),
         status: "Pending Review",
@@ -514,7 +509,6 @@ Deno.serve(async (req) => {
         extraLines: "",
       };
       const safeTrack = {
-        id,
         created_at: new Date().toISOString(),
         createdAt: clean(order.createdAt, 50) || new Date().toISOString(),
         serviceTitle: safeOrder.serviceTitle,
@@ -522,34 +516,43 @@ Deno.serve(async (req) => {
         payment: "Unpaid",
         estimate: pricing.estimate.total,
         custom: pricing.estimate.custom,
-        emailHash,
+        emailHash: await sha256(email + "|pending"),
         client_name: clean(form?.name, 120) || "Client",
         proposal: null,
         updates: [],
         finalFiles: [],
       };
-
-      const { error: orderError } = await db.from("commission_requests").insert(safeOrder);
-      if (orderError) {
-        if (orderError.code === "23505") return json({ error: "Request ID collision. Please submit again." }, 409);
-        console.error("commission insert failed", orderError);
-        return json({ error: "Could not save this commission request." }, 500);
+      const idempotencyHash = await sha256("commission-submit|" + idempotencyKey);
+      const requestHash = await sha256(JSON.stringify({
+        serviceId: safeOrder.serviceId,
+        serviceTitle: safeOrder.serviceTitle,
+        tierName: safeOrder.tierName,
+        form: safeOrder.form,
+        estimate: safeOrder.estimate,
+      }));
+      const { data: submission, error: submitError } = await db.rpc("submit_commission_atomic", {
+        p_idempotency_key_hash: idempotencyHash,
+        p_request_hash: requestHash,
+        p_order: safeOrder,
+        p_track: safeTrack,
+      });
+      if (submitError || !submission?.track?.id) {
+        const message = String(submitError?.message || "");
+        if (message.includes("IDEMPOTENCY_KEY_CONFLICT") || message.includes("IDEMPOTENCY_KEY_RETIRED")) {
+          return json({ error: "This submission key was already used. Please refresh the form before submitting a different request." }, 409);
+        }
+        console.error("atomic commission submission failed", submitError);
+        return json({ error: "Could not save this commission request. Please try again." }, 500);
       }
-      const { error: trackError } = await db.from("order_tracks").insert(safeTrack);
-      if (trackError) {
-        console.error("tracking insert failed; commission request was preserved", { id, error: trackError });
-        return json({
-          error: "The commission was saved, but order tracking could not be initialized. Please contact the studio and do not submit the form again.",
-          commissionId: id,
-        }, 503);
-      }
 
-      const notifications = await sendCommissionEmails(db, safeOrder, safeForm)
+      const savedTrack = submission.track;
+      const savedOrder = { ...safeOrder, id: savedTrack.id };
+      const notifications = submission.duplicate === true ? [] : await sendCommissionEmails(db, savedOrder, safeForm)
         .catch((error) => {
           console.error("commission notification failed", error);
           return [];
         });
-      return json({ track: safeTrack, notifications }, 201);
+      return json({ track: savedTrack, notifications, duplicate: submission.duplicate === true }, submission.duplicate === true ? 200 : 201);
     }
 
     if (action === "public_board") {
@@ -721,20 +724,20 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+
     if (action === "delete_commission") {
       const owner = await requireOwner(req, db);
       if (!owner.ok) return json({ error: owner.error }, owner.status);
       const id = clean(body?.id, 40).toUpperCase();
       if (!/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id)) return json({ error: "Invalid commission ID." }, 400);
-      const { data: existing, error: lookupError } = await db.from("commission_requests").select("id").eq("id", id).maybeSingle();
-      if (lookupError) return json({ error: "Could not verify this commission." }, 500);
-      if (!existing) return json({ error: "Commission request was not found." }, 404);
-      const { error: trackError } = await db.from("order_tracks").delete().eq("id", id);
-      if (trackError) return json({ error: "Could not delete the commission tracking record." }, 500);
-      const { error: managementError } = await db.from("commission_management").delete().eq("id", id);
-      if (managementError) return json({ error: "Could not delete commission management data." }, 500);
-      const { error: orderError } = await db.from("commission_requests").delete().eq("id", id);
-      if (orderError) return json({ error: "Could not delete the commission request." }, 500);
+      const { data: deleted, error } = await db.rpc("delete_commission_atomic", {
+        p_commission_id: id,
+      });
+      if (error) {
+        console.error("atomic commission deletion failed", error);
+        return json({ error: "Could not delete this commission." }, 500);
+      }
+      if (deleted !== true) return json({ error: "Commission request was not found." }, 404);
       return json({ ok: true, id });
     }
 
