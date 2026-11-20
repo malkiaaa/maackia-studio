@@ -1076,40 +1076,10 @@ Deno.serve(async (req) => {
     if (action === "notify_update") {
       const owner = await requireOwner(req, db);
       if (!owner.ok) return json({ error: owner.error }, owner.status);
-      const id = clean(body?.id, 40).toUpperCase();
-      const eventId = clean(body?.eventId, 80);
-      const eventType = clean(body?.eventType, 30);
-      const allowedEvents = ["proposal", "progress", "status", "finished_art", "manual"];
-      if (!/^ev_[A-Za-z0-9]{16,70}$/.test(eventId) || !allowedEvents.includes(eventType)) {
-        return json({ error: "Invalid order notification event." }, 400);
-      }
-      const [{ data: order, error: orderError }, { data: track, error: trackError }] = await Promise.all([
-        db.from("commission_requests").select("*").eq("id", id).maybeSingle(),
-        db.from("order_tracks").select("*").eq("id", id).maybeSingle(),
-      ]);
-      if (orderError || trackError || !order || !track) return json({ error: "Commission or tracking record was not found." }, 404);
-      if (eventType === "finished_art" && (!Array.isArray(track.finalFiles) || track.finalFiles.length === 0 ||
-          track.finalFiles.some((file: any) => !file?.path || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9)))))) {
-        return json({ error: "Upload every Finished Art file to permanent Storage before sending the delivery email." }, 409);
-      }
-      const defaults: Record<string, string> = {
-        proposal: "Your commission proposal is ready. Open Track Order to review the details.",
-        progress: "There is a new progress update for your commission. Open Track Order to view it.",
-        status: "Your commission status has changed. Open Track Order to view the latest status.",
-        finished_art: "Your Finished Art has been delivered. Open Track Order using your Request ID and email address to view and download the final files.",
-        manual: "A new update is available for your commission. Open Track Order to view the latest details.",
-      };
-      const message = clean(body?.message, 1200) || defaults[eventType];
-      const clientEmail = clean(order?.form?.email, 254).toLowerCase();
-      if (!clientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
-        return json({ error: "This commission has no valid client email address. Update the order client email before sending." }, 422);
-      }
-      const notifications = await sendOrderUpdateEmails(db, order, track, eventType, eventId, message);
-      const clientNotification = notifications.find((item: any) => String(item.kind || "").startsWith("client_evt_" + eventType + "_"));
-      if (!clientNotification) {
-        return json({ error: "The client notification was not created. Check the client email and commission record.", notifications }, 502);
-      }
-      return json({ ok: true, notifications });
+      return json({
+        error: "Client update emails are disabled. Commission updates remain available in Track Order.",
+        code: "CLIENT_UPDATE_EMAILS_DISABLED",
+      }, 410);
     }
 
     if (action === "test") {
@@ -1139,9 +1109,7 @@ Deno.serve(async (req) => {
       const config = await getEmailConfig(db);
       const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
       // Only failed client notifications are eligible for retry.
-      const failedClientNotifications = (failed || []).filter((item: any) =>
-        item.kind === "client" || String(item.kind || "").startsWith("client_evt_")
-      );
+      const failedClientNotifications = (failed || []).filter((item: any) => item.kind === "client");
       for (const item of failedClientNotifications) {
         const eventMatch = item.kind.match(/^client_evt_(proposal|progress|status|finished_art|manual)_/);
         const eventType = eventMatch?.[1];
@@ -1155,7 +1123,7 @@ Deno.serve(async (req) => {
           : commissionEmailText(order, clean(order.form?.name, 120));
         results.push(await deliverEmail(db, config, {
           to: clean(item.recipient, 254),
-          subject: "[Malkiaa Studio] Commission Update — " + id,
+          subject: "We received your commission request | " + id,
           html,
           text: plainText,
           orderId: id,
