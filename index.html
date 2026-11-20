@@ -817,6 +817,106 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
  .track-overview-badges .tag{font-size:.66rem;padding:5px 9px}
 }
 
+
+/* ANDROID HOME REFINEMENT — isolated from iOS, tablet and desktop */
+@media (max-width: 767px) {
+  html.is-android body { overflow-x:hidden; }
+  html.is-android .main { margin-left:0 !important; width:100% !important; min-width:0 !important; }
+  html.is-android .main-inner {
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+    padding:16px 16px calc(92px + env(safe-area-inset-bottom,0px)) !important;
+    box-sizing:border-box !important;
+  }
+  html.is-android .home-dashboard {
+    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
+    grid-auto-flow:row !important; gap:16px !important;
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+  }
+  html.is-android .home-dashboard > .home-intro-card,
+  html.is-android .home-dashboard > .featured-section,
+  html.is-android .home-dashboard > .home-work-grid,
+  html.is-android .home-dashboard > section.card {
+    grid-column:1 / -1 !important; grid-row:auto !important;
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+    margin:0 !important; box-sizing:border-box !important;
+  }
+  html.is-android .home-dashboard > .home-intro-card {
+    min-height:0 !important; padding:20px 18px !important;
+    border-radius:22px !important; background-position:72% center !important;
+    background-size:cover !important; overflow:hidden !important;
+  }
+  html.is-android .home-dashboard > .home-intro-card::before {
+    inset:0 !important; width:100% !important; height:100% !important;
+    background:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.94) 43%,rgba(232,249,253,.78) 72%,rgba(200,238,247,.28) 100%) !important;
+  }
+  html.is-android .home-dashboard .home-intro-text {
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+    gap:11px !important; align-items:flex-start !important;
+  }
+  html.is-android .home-dashboard .home-intro-text > .tag {
+    width:max-content !important; max-width:100% !important;
+    white-space:nowrap !important; font-size:clamp(9px,2.5vw,11px) !important;
+    letter-spacing:.025em !important; overflow:hidden; text-overflow:ellipsis;
+  }
+  html.is-android .home-dashboard .home-intro-text h2 {
+    max-width:100% !important; font-size:clamp(30px,8vw,36px) !important;
+    line-height:1.08 !important; overflow-wrap:normal !important; word-break:normal !important;
+  }
+  html.is-android .home-dashboard .home-intro-text p {
+    max-width:36ch !important; font-size:15px !important; line-height:1.55 !important;
+  }
+  html.is-android .home-dashboard .home-intro-text .btns {
+    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
+    width:100% !important; max-width:320px !important; gap:9px !important;
+  }
+  html.is-android .home-dashboard .home-intro-text .btns > .btn {
+    display:flex !important; align-items:center !important; justify-content:center !important;
+    width:100% !important; min-width:0 !important; min-height:50px !important;
+    padding:12px 14px !important; white-space:nowrap !important;
+    text-align:center !important; box-sizing:border-box !important;
+  }
+  html.is-android .home-dashboard > .featured-section { padding:16px !important; }
+  html.is-android .home-dashboard > .featured-section .feat {
+    display:flex !important; flex-direction:column !important;
+    width:100% !important; min-width:0 !important; height:auto !important;
+  }
+  html.is-android .home-dashboard > .featured-section .feat > .art {
+    flex:none !important; width:100% !important; min-width:0 !important;
+    min-height:0 !important; aspect-ratio:4/3 !important;
+  }
+  html.is-android .home-dashboard > .home-work-grid {
+    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
+    gap:16px !important;
+  }
+  html.is-android .home-dashboard .latest-section,
+  html.is-android .home-dashboard .home-reviews-section {
+    width:100% !important; min-width:0 !important; max-width:100% !important;
+  }
+  html.is-android .home-dashboard .home-review-list {
+    display:flex !important; flex-direction:row !important; gap:12px !important;
+    width:100% !important; min-width:0 !important; overflow-x:auto !important;
+    overflow-y:hidden !important; padding:2px 2px 12px !important;
+    scroll-snap-type:x mandatory !important; overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  html.is-android .home-dashboard .home-review-card {
+    flex:0 0 84% !important; min-width:0 !important; scroll-snap-align:start !important;
+  }
+  html.is-android .home-dashboard .card-head h2 { font-size:21px !important; }
+  html.is-android .bnav {
+    left:0 !important; right:0 !important; bottom:0 !important; width:100% !important;
+    padding-bottom:calc(5px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  html.is-android .text-edit-dock,
+  html.is-android .toast { bottom:calc(76px + env(safe-area-inset-bottom,0px)) !important; }
+}
+@media (max-width:380px) {
+  html.is-android .main-inner { padding-left:16px !important; padding-right:16px !important; }
+  html.is-android .home-dashboard > .home-intro-card { padding:16px !important; }
+  html.is-android .home-dashboard .home-intro-text .btns { max-width:100% !important; }
+  html.is-android .home-dashboard .home-review-card { flex-basis:88% !important; }
+}
+
 </style>
 
 <div id="root"></div>
@@ -994,105 +1094,7 @@ function buildDoc(site) {
   const json = JSON.stringify(site).replace(/</g, "\\u003c");
   const S = "<" + "script", E = "<" + "/script>";
   const lib = (u) => S + ' src="' + u + '">' + E;
-  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + String.raw`/* ANDROID HOME REFINEMENT — isolated from iOS, tablet and desktop */
-@media (max-width: 767px) {
-  html.is-android body { overflow-x:hidden; }
-  html.is-android .main { margin-left:0 !important; width:100% !important; min-width:0 !important; }
-  html.is-android .main-inner {
-    width:100% !important; max-width:100% !important; min-width:0 !important;
-    padding:16px 16px calc(92px + env(safe-area-inset-bottom,0px)) !important;
-    box-sizing:border-box !important;
-  }
-  html.is-android .home-dashboard {
-    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
-    grid-auto-flow:row !important; gap:16px !important;
-    width:100% !important; max-width:100% !important; min-width:0 !important;
-  }
-  html.is-android .home-dashboard > .home-intro-card,
-  html.is-android .home-dashboard > .featured-section,
-  html.is-android .home-dashboard > .home-work-grid,
-  html.is-android .home-dashboard > section.card {
-    grid-column:1 / -1 !important; grid-row:auto !important;
-    width:100% !important; max-width:100% !important; min-width:0 !important;
-    margin:0 !important; box-sizing:border-box !important;
-  }
-  html.is-android .home-dashboard > .home-intro-card {
-    min-height:0 !important; padding:20px 18px !important;
-    border-radius:22px !important; background-position:72% center !important;
-    background-size:cover !important; overflow:hidden !important;
-  }
-  html.is-android .home-dashboard > .home-intro-card::before {
-    inset:0 !important; width:100% !important; height:100% !important;
-    background:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.94) 43%,rgba(232,249,253,.78) 72%,rgba(200,238,247,.28) 100%) !important;
-  }
-  html.is-android .home-dashboard .home-intro-text {
-    width:100% !important; max-width:100% !important; min-width:0 !important;
-    gap:11px !important; align-items:flex-start !important;
-  }
-  html.is-android .home-dashboard .home-intro-text > .tag {
-    width:max-content !important; max-width:100% !important;
-    white-space:nowrap !important; font-size:clamp(9px,2.5vw,11px) !important;
-    letter-spacing:.025em !important; overflow:hidden; text-overflow:ellipsis;
-  }
-  html.is-android .home-dashboard .home-intro-text h2 {
-    max-width:100% !important; font-size:clamp(30px,8vw,36px) !important;
-    line-height:1.08 !important; overflow-wrap:normal !important; word-break:normal !important;
-  }
-  html.is-android .home-dashboard .home-intro-text p {
-    max-width:36ch !important; font-size:15px !important; line-height:1.55 !important;
-  }
-  html.is-android .home-dashboard .home-intro-text .btns {
-    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
-    width:100% !important; max-width:320px !important; gap:9px !important;
-  }
-  html.is-android .home-dashboard .home-intro-text .btns > .btn {
-    display:flex !important; align-items:center !important; justify-content:center !important;
-    width:100% !important; min-width:0 !important; min-height:50px !important;
-    padding:12px 14px !important; white-space:nowrap !important;
-    text-align:center !important; box-sizing:border-box !important;
-  }
-  html.is-android .home-dashboard > .featured-section { padding:16px !important; }
-  html.is-android .home-dashboard > .featured-section .feat {
-    display:flex !important; flex-direction:column !important;
-    width:100% !important; min-width:0 !important; height:auto !important;
-  }
-  html.is-android .home-dashboard > .featured-section .feat > .art {
-    flex:none !important; width:100% !important; min-width:0 !important;
-    min-height:0 !important; aspect-ratio:4/3 !important;
-  }
-  html.is-android .home-dashboard > .home-work-grid {
-    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
-    gap:16px !important;
-  }
-  html.is-android .home-dashboard .latest-section,
-  html.is-android .home-dashboard .home-reviews-section {
-    width:100% !important; min-width:0 !important; max-width:100% !important;
-  }
-  html.is-android .home-dashboard .home-review-list {
-    display:flex !important; flex-direction:row !important; gap:12px !important;
-    width:100% !important; min-width:0 !important; overflow-x:auto !important;
-    overflow-y:hidden !important; padding:2px 2px 12px !important;
-    scroll-snap-type:x mandatory !important; overscroll-behavior-x:contain;
-    -webkit-overflow-scrolling:touch;
-  }
-  html.is-android .home-dashboard .home-review-card {
-    flex:0 0 84% !important; min-width:0 !important; scroll-snap-align:start !important;
-  }
-  html.is-android .home-dashboard .card-head h2 { font-size:21px !important; }
-  html.is-android .bnav {
-    left:0 !important; right:0 !important; bottom:0 !important; width:100% !important;
-    padding-bottom:calc(5px + env(safe-area-inset-bottom,0px)) !important;
-  }
-  html.is-android .text-edit-dock,
-  html.is-android .toast { bottom:calc(76px + env(safe-area-inset-bottom,0px)) !important; }
-}
-@media (max-width:380px) {
-  html.is-android .main-inner { padding-left:16px !important; padding-right:16px !important; }
-  html.is-android .home-dashboard > .home-intro-card { padding:16px !important; }
-  html.is-android .home-dashboard .home-intro-text .btns { max-width:100% !important; }
-  html.is-android .home-dashboard .home-review-card { flex-basis:88% !important; }
-}
-` + "</style>" +
+  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + "</style>" +
     '<div id="root"></div>' +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js") +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js") +
