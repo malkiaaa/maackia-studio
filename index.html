@@ -4012,7 +4012,7 @@ function NotifPanel() {
     } catch (e) { setMsg({ err: "Could not load notification history: " + authErr(e) }); setRows([]); }
   };
   useEffect(() => { load(); }, []);
-  const failedIds = [...new Set((rows || []).filter((r) => r.status === "failed" && r.kind !== "test").map((r) => r.order_id))];
+  const failedIds = [...new Set((rows || []).filter((r) => r.status === "failed" && r.kind === "client").map((r) => r.order_id))];
   const retry = async (ids) => {
     setBusy("retry"); setMsg(null); let bad = 0;
     try {
@@ -4030,7 +4030,7 @@ function NotifPanel() {
       {rows === null ? <p className="muted">Loading...</p> : rows.length === 0 ? <p className="muted">No notifications recorded yet.</p> :
         <div className="list">{rows.map((r) => <div key={r.id} className="rowi"><div className="grow"><b>{r.order_id}</b> <span className="tag">{r.kind}</span> <span className="tag" style={{ color: r.status === "sent" ? "var(--ok)" : r.status === "failed" ? "var(--bad)" : "var(--warn)" }}>{r.status === "sent" ? "accepted by Gmail" : r.status}</span>
           <small className="muted" style={{ display: "block" }}>Attempts: {r.attempts}{r.sent_at ? " · " + new Date(r.sent_at).toLocaleString() : ""}{r.message ? " · " + r.message : ""}</small></div>
-          {r.status === "failed" && r.kind !== "test" && <Btn kind="ghost" size="sm" disabled={!!busy} onClick={() => retry([r.order_id])}>Retry</Btn>}</div>)}</div>}
+          {r.status === "failed" && r.kind === "client" && <Btn kind="ghost" size="sm" disabled={!!busy} onClick={() => retry([r.order_id])}>Retry</Btn>}</div>)}</div>}
     </section>
   );
 }
