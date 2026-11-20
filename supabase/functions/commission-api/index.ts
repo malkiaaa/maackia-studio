@@ -70,10 +70,18 @@ function calculateServerEstimate(site, order) {
   if (!service) return { ok: false, error: "Unknown commission service." };
   const tiers = Array.isArray(service.tiers) ? service.tiers : DEFAULT_SERVER_TIERS;
   const addons = Array.isArray(service.addons) ? service.addons : DEFAULT_SERVER_ADDONS;
+  const licenses = Array.isArray(site.licenses) ? site.licenses : [];
+  const validPrice = (value) => Number.isFinite(Number(value)) && Number(value) >= 0;
+  if (tiers.some((item) => !item?.id || !validPrice(item.price)) ||
+      addons.some((item) => !item?.id || !validPrice(item.price) ||
+        !["fixed", "percent", "custom"].includes(item.type)) ||
+      licenses.some((item) => !item?.id || !validPrice(item.value) ||
+        !["fixed", "percent", "custom"].includes(item.type))) {
+    return { ok: false, error: "Invalid server pricing configuration." };
+  }
   const tier = tiers.find((item) => item?.id === form.tier);
   if (!tier) return { ok: false, error: "Unknown commission tier." };
   const base = Number(tier.price);
-  if (!Number.isFinite(base) || base < 0) return { ok: false, error: "Invalid server pricing configuration." };
 
   const rawChars = form.chars === undefined || form.chars === null || form.chars === "" ? 1 : Number(form.chars);
   if (!Number.isInteger(rawChars) || rawChars < 1 || rawChars > 4) {
@@ -105,9 +113,6 @@ function calculateServerEstimate(site, order) {
   let subtotal = base;
   const extraCharacters = rawChars - 1;
   if (extraCharacters > 0) {
-    const characterAddon = addons.find((item) => /additional character/i.test(String(item?.name || "")));
-    const rate = characterAddon && characterAddon.type === "percent" ? Number(characterAddon.price) : 80;
-    if (!Number.isFinite(rate) || rate < 0) return { ok: false, error: "Invalid server pricing configuration." };
     const amount = base * 0.8 * extraCharacters;
     subtotal += amount;
     lines.push(["Additional Character × " + extraCharacters + " (80% each)", amount, ""]);
@@ -131,7 +136,6 @@ function calculateServerEstimate(site, order) {
     lines.push([label, amount, ""]);
   }
 
-  const licenses = Array.isArray(site.licenses) ? site.licenses : [];
   const licenseId = form.license || "personal";
   const license = licenses.find((item) => item?.id === licenseId);
   if (!license) return { ok: false, error: "Unknown license selection." };
