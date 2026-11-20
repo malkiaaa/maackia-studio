@@ -994,8 +994,7 @@ function buildDoc(site) {
   const json = JSON.stringify(site).replace(/</g, "\\u003c");
   const S = "<" + "script", E = "<" + "/script>";
   const lib = (u) => S + ' src="' + u + '">' + E;
-  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + "\n
-/* ANDROID HOME REFINEMENT — isolated from iOS, tablet and desktop */
+  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + "\n\n/* ANDROID HOME REFINEMENT — isolated from iOS, tablet and desktop */
 @media (max-width: 767px) {
   html.is-android body { overflow-x:hidden; }
   html.is-android .main { margin-left:0 !important; width:100% !important; min-width:0 !important; }
