@@ -54,6 +54,12 @@ test("PageBuilderBlocks calls hooks before its conditional early return", () => 
   assert.ok(hooks >= 0 && earlyReturn > hooks, "all hooks must run before the empty non-editing return");
 });
 
+test("Creator draft restoration merges the full saved draft, not only builder blocks", () => {
+  assert.match(html, /if\(r\.site && typeof r\.site === "object" && !Array\.isArray\(r\.site\)\)/);
+  assert.match(html, /setSite\(p=>mergeDeep\(p,r\.site\)\)/);
+  assert.match(html, /save_draft_site/);
+});
+
 test("partial commission-save errors retain the generated Request ID for the client", () => {
   assert.match(html, /if \(j\.commissionId\) error\.commissionId = j\.commissionId/);
   assert.match(html, /Your commission was saved, but order tracking could not be initialized/);
