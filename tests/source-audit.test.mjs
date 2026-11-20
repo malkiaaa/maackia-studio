@@ -551,7 +551,8 @@ test("Featured Artwork manager stores up to ten permanent URLs with ordering and
   assert.match(html, /featuredArtworks: \[\]/);
   assert.match(html, /const featured = Array\.isArray\(site\.featuredArtworks\)/);
   assert.match(html, /files\.slice\(0, remaining\)/);
-  assert.match(html, /storeImage\(file, 1600\)/);
+  assert.match(html, /CropImageModal file=\{featuredQueue\[0\]\}/);
+  assert.match(html, /storeImage\(cropped, 1600\)/);
   assert.match(html, /n\.featuredArtworks = .*\.slice\(0, 10\)/);
   assert.match(html, /n\.featuredArtworks = move\(n\.featuredArtworks, i, -1\)/);
   assert.match(html, /n\.featuredArtworks = move\(n\.featuredArtworks, i, 1\)/);
@@ -571,4 +572,20 @@ test("Home Featured Artwork carousel loops, auto-advances and supports reduced m
   assert.match(html, /aria-label=\{"Go to featured artwork "/);
   assert.match(html, /loading=\{i === \(count > 1 \? 1 : 0\) \? "eager" : "lazy"\}/);
   assert.match(html, /CONFIG\.featuredArtworks\.length > 0 && <FeaturedArtworkCarousel/);
+});
+
+test("all Creator image pickers route uploads through a reusable crop editor", () => {
+  assert.match(html, /function CropImageModal\(/);
+  assert.match(html, /Aspect ratio/);
+  assert.match(html, /value="square"/);
+  assert.match(html, /value="portrait"/);
+  assert.match(html, /value="landscape"/);
+  assert.match(html, /Horizontal position/);
+  assert.match(html, /Vertical position/);
+  assert.match(html, /canvas\.getContext\("2d"\)\.drawImage/);
+  assert.match(html, /canvas\.toBlob/);
+  assert.match(html, /function ImagePicker\([\s\S]*?<CropImageModal file=\{cropFile\}/);
+  assert.match(html, /applyProfileCrop[\s\S]*?storeImage\(cropped, 1200\)/);
+  assert.match(html, /applyFeaturedCrop[\s\S]*?storeImage\(cropped, 1600\)/);
+  assert.match(html, /className="crop-modal-backdrop"/);
 });
