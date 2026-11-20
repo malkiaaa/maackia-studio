@@ -533,3 +533,42 @@ test("Apps Script validates plain text, checks quota and logs privacy-safe send 
   assert.match(gas, /recipientDomain: to\\.split\("@")\\[1\\]/);
   assert.match(gas, /function maskEmail\(/);
 });
+
+
+test("Creator Service Details tab is removed while service pricing and terms remain editable under Services", () => {
+  const tabsStart = html.indexOf("const TABS = [");
+  const tabsEnd = html.indexOf("];", tabsStart);
+  const tabs = html.slice(tabsStart, tabsEnd);
+  assert.doesNotMatch(tabs, /id: "offers"/);
+  assert.doesNotMatch(html, /tab === "offers" && <OffersPanel/);
+  assert.match(html, /t === "offers" \? "services" : t/);
+  assert.match(html, /<ServicePricingEditor service=\{s\} index=\{i\} \/>/);
+  assert.match(html, /function LicensesEditor\(/);
+  assert.match(html, /view\.startsWith\("service-"\) && <ServiceDetail/);
+});
+
+test("Featured Artwork manager stores up to ten permanent URLs with ordering and alt text", () => {
+  assert.match(html, /featuredArtworks: \[\]/);
+  assert.match(html, /const featured = Array\.isArray\(site\.featuredArtworks\)/);
+  assert.match(html, /files\.slice\(0, remaining\)/);
+  assert.match(html, /storeImage\(file, 1600\)/);
+  assert.match(html, /n\.featuredArtworks = .*\.slice\(0, 10\)/);
+  assert.match(html, /n\.featuredArtworks = move\(n\.featuredArtworks, i, -1\)/);
+  assert.match(html, /n\.featuredArtworks = move\(n\.featuredArtworks, i, 1\)/);
+  assert.match(html, /Alt text/);
+  assert.match(html, /Save Featured Artwork/);
+  assert.match(html, /portfolio_upload/);
+  assert.match(html, /"image\/webp", 0\.82/);
+});
+
+test("Home Featured Artwork carousel loops, auto-advances and supports reduced motion, keyboard and swipe", () => {
+  assert.match(html, /function FeaturedArtworkCarousel\(/);
+  assert.match(html, /window\.setInterval\(\(\) => setIndex\(\(current\) => current \+ 1\), 4000\)/);
+  assert.match(html, /prefers-reduced-motion: reduce/);
+  assert.match(html, /visibilitychange/);
+  assert.match(html, /onPointerDown=\{startPointer\}/);
+  assert.match(html, /onKeyDown=\{\(e\) => \{ if \(e\.key === "ArrowRight"/);
+  assert.match(html, /aria-label=\{"Go to featured artwork "/);
+  assert.match(html, /loading=\{i === \(count > 1 \? 1 : 0\) \? "eager" : "lazy"\}/);
+  assert.match(html, /CONFIG\.featuredArtworks\.length > 0 && <FeaturedArtworkCarousel/);
+});
