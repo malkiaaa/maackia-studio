@@ -61,16 +61,16 @@ const DEFAULT_SERVER_ADDONS = [
   { id: "ad4", name: "Animation", type: "custom", price: 0, select: "single" },
 ];
 
-function calculateServerEstimate(site: any, order: any) {
+function calculateServerEstimate(site, order) {
   const form = order?.form;
   if (!site || !Array.isArray(site.services) || !form || typeof form !== "object" || Array.isArray(form)) {
     return { ok: false, error: "Commission pricing configuration is unavailable or invalid." };
   }
-  const service = site.services.find((item: any) => item?.id === order?.serviceId);
+  const service = site.services.find((item) => item?.id === order?.serviceId);
   if (!service) return { ok: false, error: "Unknown commission service." };
   const tiers = Array.isArray(service.tiers) ? service.tiers : DEFAULT_SERVER_TIERS;
   const addons = Array.isArray(service.addons) ? service.addons : DEFAULT_SERVER_ADDONS;
-  const tier = tiers.find((item: any) => item?.id === form.tier);
+  const tier = tiers.find((item) => item?.id === form.tier);
   if (!tier) return { ok: false, error: "Unknown commission tier." };
   const base = Number(tier.price);
   if (!Number.isFinite(base) || base < 0) return { ok: false, error: "Invalid server pricing configuration." };
@@ -83,10 +83,10 @@ function calculateServerEstimate(site: any, order: any) {
   if (!selectedAddons || typeof selectedAddons !== "object" || Array.isArray(selectedAddons)) {
     return { ok: false, error: "Invalid add-on selection." };
   }
-  const knownAddonIds = new Set(addons.map((item: any) => item?.id));
+  const knownAddonIds = new Set(addons.map((item) => item?.id));
   for (const [id, quantityValue] of Object.entries(selectedAddons)) {
     if (!knownAddonIds.has(id)) return { ok: false, error: "Unknown add-on." };
-    const addon = addons.find((item: any) => item?.id === id);
+    const addon = addons.find((item) => item?.id === id);
     if (/additional character/i.test(String(addon?.name || ""))) {
       if (Number(quantityValue) !== 0 && Number(quantityValue) !== 1) return { ok: false, error: "Character add-on is controlled by character count." };
       continue;
@@ -98,14 +98,14 @@ function calculateServerEstimate(site: any, order: any) {
     }
   }
 
-  const lines: any[] = [];
+  const lines = [];
   let custom = false;
   if (base > 0) lines.push([String(tier.name || "Commission"), base, ""]);
   else { custom = true; lines.push([String(tier.name || "Commission"), 0, "Custom quote"]); }
   let subtotal = base;
   const extraCharacters = rawChars - 1;
   if (extraCharacters > 0) {
-    const characterAddon = addons.find((item: any) => /additional character/i.test(String(item?.name || "")));
+    const characterAddon = addons.find((item) => /additional character/i.test(String(item?.name || "")));
     const rate = characterAddon && characterAddon.type === "percent" ? Number(characterAddon.price) : 80;
     if (!Number.isFinite(rate) || rate < 0) return { ok: false, error: "Invalid server pricing configuration." };
     const amount = base * 0.8 * extraCharacters;
@@ -133,7 +133,7 @@ function calculateServerEstimate(site: any, order: any) {
 
   const licenses = Array.isArray(site.licenses) ? site.licenses : [];
   const licenseId = form.license || "personal";
-  const license = licenses.find((item: any) => item?.id === licenseId);
+  const license = licenses.find((item) => item?.id === licenseId);
   if (!license) return { ok: false, error: "Unknown license selection." };
   const licenseValue = Number(license.value);
   if (!Number.isFinite(licenseValue) || licenseValue < 0) return { ok: false, error: "Invalid server pricing configuration." };
