@@ -149,9 +149,9 @@ test("server rejects unknown services and tiers", () => {
   assert.equal(calculate(pricingSite, orderFor({ form: { tier: "not-real", chars: 1, addons: {}, license: "personal" } })).ok, false);
 });
 
-test("server rejects character counts outside 1 through 4", () => {
+test("server rejects character counts outside the existing 1 through 20 form range", () => {
   const calculate = getServerEstimate();
-  for (const chars of [0, 5, -1, 1.5, "many"]) {
+  for (const chars of [0, 21, -1, 1.5, "many"]) {
     assert.equal(calculate(pricingSite, orderFor({ form: { tier: "base", chars, addons: {}, license: "personal" } })).ok, false);
   }
 });
@@ -262,4 +262,10 @@ test("submit response does not expose the tracking email hash", () => {
   const action = backend.slice(start, end);
   assert.match(action, /const \{ emailHash: _privateEmailHash, \.\.\.publicTrack \} = savedTrack/);
   assert.match(action, /json\(\{ track: publicTrack/);
+});
+
+
+test("server character limit matches the commission form maximum", () => {
+  assert.match(html, /max="20"/);
+  assert.match(backend, /rawChars > 20/);
 });
