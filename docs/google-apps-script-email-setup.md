@@ -150,3 +150,6 @@ Client proposal acceptance/decline uses the same transaction so the client respo
 Commission status/payment persistence is completed before notification delivery starts. If Apps Script or email configuration fails, the saved commission state remains committed and the Creator receives a separate email error that can be retried from Notification History.
 
 The client review flow remains attached to commission_id. The Edge Function verifies the same normalized-email hash and requires order_tracks.status = Completed; the client can submit one review per commission, which enters moderation as pending.
+
+
+When the Creator changes the separate payment field to Paid while the commission status is Awaiting Payment, the save endpoint advances the workflow status to Paid as well. This makes the Payment step and payment badge agree on the client tracking page. Later workflow statuses such as In Progress and Completed are preserved.
