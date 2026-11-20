@@ -84,8 +84,8 @@ function calculateServerEstimate(site, order) {
   const base = Number(tier.price);
 
   const rawChars = form.chars === undefined || form.chars === null || form.chars === "" ? 1 : Number(form.chars);
-  if (!Number.isInteger(rawChars) || rawChars < 1 || rawChars > 4) {
-    return { ok: false, error: "Character count must be between 1 and 4." };
+  if (!Number.isInteger(rawChars) || rawChars < 1 || rawChars > 20) {
+    return { ok: false, error: "Character count must be between 1 and 20." };
   }
   const selectedAddons = form.addons === undefined ? {} : form.addons;
   if (!selectedAddons || typeof selectedAddons !== "object" || Array.isArray(selectedAddons)) {
