@@ -2733,9 +2733,10 @@ const Store = {
         for (const key of ["proposal", "updates", "finalFiles", "estimate", "custom"]) {
           if (!Object.prototype.hasOwnProperty.call(track, key)) continue;
           if (key === "finalFiles") {
-            patch.finalFiles = Array.isArray(track.finalFiles) ? track.finalFiles.map((file) => file.path
-              ? { name: file.name, path: file.path, type: file.type }
-              : { name: file.name, url: file.url, type: file.type }) : [];
+            const files = Array.isArray(track.finalFiles) ? track.finalFiles : [];
+            const invalid = files.some((file) => !file?.path || !/^incoming\\/[A-Za-z0-9-]{20,80}$/.test(file.path));
+            if (invalid) throw new Error("One or more Finished Art files are legacy local previews. Re-upload every artwork file before saving or delivering this commission.");
+            patch.finalFiles = files.map((file) => ({ name: file.name, path: file.path, type: file.type }));
           } else patch[key] = track[key];
         }
         return patch;
@@ -3318,9 +3319,9 @@ function OrderDetail({ o, onBack, onSaved }) {
     try {
       const ref = await Store.uploadReference(file, "final-" + d.id);
       const tr = clone(t || {});
-      tr.finalFiles = [...(tr.finalFiles || []), ref.path
-        ? { name: file.name, path: ref.path, type: file.type }
-        : { name: file.name, url: ref.url, type: file.type }];
+      // Discard non-persistent legacy blob previews only when the Creator replaces them.
+      const persistentFiles = (tr.finalFiles || []).filter((item) => item?.path && /^incoming\\/[A-Za-z0-9-]{20,80}$/.test(item.path));
+      tr.finalFiles = [...persistentFiles, { name: file.name, path: ref.path, type: file.type }];
       const saved = await Store.saveCommissionState(d, tr);
       setT(saved.track || tr);
       try {
@@ -3333,6 +3334,10 @@ function OrderDetail({ o, onBack, onSaved }) {
   };
   const sendFinishedArt = async () => {
     if (!t?.finalFiles?.length) { setMsg("Upload at least one Finished Art image before sending."); return; }
+    if (t.finalFiles.some((file) => !file?.path || !/^incoming\\/[A-Za-z0-9-]{20,80}$/.test(file.path))) {
+      setMsg("Some Finished Art previews are not stored permanently. Re-upload every artwork file before delivery.");
+      return;
+    }
     setBusy("finished");
     try {
       const n = { ...d, status: "Completed" };
@@ -3377,7 +3382,7 @@ function OrderDetail({ o, onBack, onSaved }) {
         <TextIn label="Proposal notes" value={pr.notes} onChange={(v) => setPr({ ...pr, notes: v })} multiline className="full" /><TextIn label="Payment instructions" value={pr.paymentInfo} onChange={(v) => setPr({ ...pr, paymentInfo: v })} multiline className="full" /></div>
         <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={() => save()}>Save changes</Btn><Btn onClick={sendProposal} disabled={!d.finalPrice || !!busy}>Send proposal to client</Btn></div>
         <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post} disabled={!!busy}>Post update</Btn></div>
-        <div style={{ marginTop: 12 }}><small className="muted">Upload Finished Art (image preview, max 10 MB)</small><input type="file" accept="image/*" className="in" onChange={finalUp} disabled={!!busy} /></div>
+        <div style={{ marginTop: 12 }}><small className="muted">Upload Finished Art (image preview, max 10 MB per file)</small><input type="file" accept="image/*" className="in" onChange={finalUp} disabled={!!busy} /><small className="muted">Re-upload every artwork file that was previously shown as a local preview. Only files with a permanent Storage path can be delivered to clients.</small></div>
         {t?.finalFiles?.length > 0 && <div style={{ marginTop: 14 }}><h3>Finished Art pre-review</h3><div className="strip">{t.finalFiles.map((fl, i) => <div key={fl.path || fl.url || i} style={{ minWidth: 160, maxWidth: 240 }}><div className="art sq"><img src={fl.url} alt={fl.name || "Finished Art preview"} /></div><small className="muted">{fl.name}</small></div>)}</div><p className="muted" style={{ marginTop: 8 }}>Check every image before sending. The client will be able to view the files from the tracking page after delivery.</p></div>}
         <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={sendFinishedArt} disabled={!t?.finalFiles?.length || !!busy || d.status === "Completed"}>{busy === "finished" ? "Sending Finished Art…" : "Send Finished Art to Client"}</Btn><Btn kind="ghost" onClick={sendClientEmail} disabled={!!busy}>{busy === "manual" ? "Sending Email…" : "Send Email to Client"}</Btn></div>
         {msg && <div className="note info" role="status" style={{ marginTop: 12 }}>{msg}</div>}
