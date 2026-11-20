@@ -455,3 +455,14 @@ test("legacy local preview URLs are never exposed as client delivery URLs", () =
   assert.match(backend, /file\.path\.startsWith\("incoming\/"\)/);
   assert.match(backend, /unavailable: true/);
 });
+
+test("Creator image uploads use authenticated permanent Supabase Storage, not Artifact blobs or base64", () => {
+  assert.match(html, /Store\.api\("portfolio_upload"/);
+  assert.match(html, /return result\.url/);
+  assert.doesNotMatch(html, /async function storeImage\(file, maxDim = 1800\)[\s\S]{0,700}assets\.upload/);
+  assert.match(backend, /if \(action === "portfolio_upload"\)/);
+  assert.match(backend, /await requireOwner\(req, db\)/);
+  assert.match(backend, /createBucket\(bucketName,[\s\S]*?public: true/);
+  assert.match(backend, /getPublicUrl\(path\)/);
+  assert.match(backend, /owner\.user\.id \+ "\/" \+ crypto\.randomUUID\(\)/);
+});
