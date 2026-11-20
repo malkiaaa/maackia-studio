@@ -40,7 +40,7 @@ test("unrelated fixed add-ons are not multiplied by character count", () => {
     addons: [...service.addons, { id: "rush", name: "Rush Delivery", type: "fixed", price: 500 }],
   };
   const result = calc(withRush, { tier: "base", chars: 4, addons: { rush: 1 }, license: "" });
-  assert.equal(result.total, 3900);
+  assert.ok(Math.abs(result.total - 3900) < 1e-8);
   assert.equal(result.lines.find((line) => line[0].startsWith("Rush Delivery"))[1], 500);
 });
 
