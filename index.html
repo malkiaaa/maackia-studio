@@ -1609,7 +1609,7 @@ function FeaturedArtworkCarousel({ items }) {
 
 function Home({ go, open }) {
   const w = CONFIG.appearance.widgets;
-  const latest = CONFIG.artworks.slice(0, 8);
+  const latest = CONFIG.artworks.filter((art) => safeImg(art.image)).slice(0, 8);
   const st = CONFIG.commissionStatus;
   const stMsg = { OPEN: T("st_OPEN"), LIMITED: T("st_LIMITED"), CLOSED: T("st_CLOSED") }[st];
   // One canonical image: the About profile card is also the Home dashboard banner.
