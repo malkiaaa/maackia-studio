@@ -2261,7 +2261,7 @@ function getEmailCfg() { try { return JSON.parse(localStorage.getItem(EMAIL_CFG_
 function setEmailCfgLocal(cfg) { try { localStorage.setItem(EMAIL_CFG_KEY, JSON.stringify(cfg)); } catch (e) {} }
 
 function EmailPanel() {
-  const defaultCfg = { artistEmail: "mmaackia@gmail.com", fromName: "Malkiaa Studio", sendArtist: true, sendClient: true, testResult: "" };
+  const defaultCfg = { artistEmail: "mmaackia@gmail.com", fromName: "Malkiaa Studio", testResult: "" };
   const [cfg, setCfg] = useState(() => ({ ...defaultCfg, ...(getEmailCfg() || {}) }));
   const [msg, setMsg] = useState({ text: "", ok: false });
   const [saving, setSaving] = useState(false);
@@ -2300,8 +2300,6 @@ function EmailPanel() {
         value: {
           artistEmail: cfg.artistEmail.trim(),
           fromName: cfg.fromName.trim() || "Malkiaa Studio",
-          sendArtist: cfg.sendArtist,
-          sendClient: cfg.sendClient,
         },
       }, { onConflict: "key" });
       if (error) throw new Error(error.message);
@@ -2332,8 +2330,6 @@ function EmailPanel() {
         <div className="form">
           <div className="field full"><span>Studio Notification Email</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="mmaackia@gmail.com" /><small className="muted">New commission alerts go here. If left blank, the system uses mmaackia@gmail.com.</small></div>
           <div className="field"><span>From Name</span><input className="in" value={cfg.fromName} onChange={(e) => set("fromName")(e.target.value)} placeholder="Malkiaa Studio" /></div>
-          <label className="switch full"><span>Send artist notification on new request</span><input type="checkbox" checked={cfg.sendArtist} onChange={(e) => set("sendArtist")(e.target.checked)} /></label>
-          <label className="switch full"><span>Send confirmation email to client after submission</span><input type="checkbox" checked={cfg.sendClient} onChange={(e) => set("sendClient")(e.target.checked)} /></label>
         </div>
         <div className="btns" style={{ marginTop: 14 }}>
           <Btn disabled={saving} onClick={save}>{saving ? "Saving…" : "Save Email Settings"}</Btn>
@@ -2345,7 +2341,7 @@ function EmailPanel() {
       <section className="card">
         <h2 style={{ marginBottom: 6 }}>How It Works</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, margin: "12px 0" }}>
-          {[["1. Visitor submits", "Commission is saved to Supabase before email delivery is attempted."],["2. API sends notifications", "The commission-api function reads email preferences from Supabase."],["3. Gmail sends email", "The function calls a protected Google Apps Script Web App. Its URL and shared secret remain server-side."],["4. Delivery is logged", "Studio and optional client email attempts are recorded in Creator Dashboard notifications."]].map(([t,d]) => (
+          {[["1. Visitor submits", "The commission is saved to Supabase first."],["2. Creator and client are notified", "The studio receives a new-request alert and the client receives a tracking confirmation."],["3. Order updates are sent", "Proposal, progress, status and finished-art emails are sent to the client and copied to the Creator."],["4. Delivery is logged", "Every email attempt is recorded in Creator Dashboard notifications."]].map(([t,d]) => (
             <div key={t} style={{ background: "var(--powder)", borderRadius: 16, padding: 14 }}>
               <b style={{ display: "block", fontSize: ".85rem", marginBottom: 4 }}>{t}</b>
               <small style={{ color: "var(--muted)" }}>{d}</small>
@@ -2365,7 +2361,7 @@ function EmailPanel() {
           <li>In Supabase, open <b>Edge Functions → Secrets</b> and add <code>GAS_WEBHOOK_URL</code> and <code>GAS_WEBHOOK_SECRET</code>.</li>
           <li>Never place the webhook URL or shared secret in this website, GitHub source, or browser storage.</li>
         </ol>
-        <p className="muted" style={{ marginTop: 10 }}>The commission-api function handles new-order emails, test emails, and safe retries. No database migration or extra SQL is required for this integration.</p>
+        <p className="muted" style={{ marginTop: 10 }}>The commission-api function handles Creator and client notifications, order-update emails, test emails, and safe retries. No database migration or extra SQL is required for this integration.</p>
       </section>
     </div>
   );
@@ -2670,9 +2666,8 @@ const Store = {
   async getTrack(id) {
     const sb = await this.client();
     if (sb) {
-      const { data, error } = await sb.from("order_tracks").select("*").eq("id", id).single();
-      if (error && error.code !== "PGRST116") throw error;
-      return data || null;
+      const result = await this.api("creator_track", { id }, true);
+      return result.track || null;
     }
     return lsGet("mk-tracks")[id] || null;
   },
@@ -3143,24 +3138,102 @@ function OffersPanel() {
   );
 }
 function OrderDetail({ o, onBack, onSaved }) {
-  const [d, setD] = useState(o); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [pub, setPub] = useState(""); const [pr, setPr] = useState({ delivery: "", notes: "", revision: "", paymentInfo: "" });
+  const [d, setD] = useState(o);
+  const [t, setT] = useState(null);
+  const [msg, setMsg] = useState("");
+  const [pub, setPub] = useState("");
+  const [busy, setBusy] = useState("");
+  const [pr, setPr] = useState({ delivery: "", notes: "", revision: "", paymentInfo: "" });
   useEffect(() => { Store.getTrack(o.id).then(setT).catch(() => setMsg("Could not load the client tracking record.")); }, [o.id]);
   const f = d.form, set = (k) => (v) => setD((p) => ({ ...p, [k]: v }));
-  const save = async (extra) => { const n = { ...d }; const tr = clone(t || {}); tr.status = n.status; tr.payment = n.payment; if (extra) extra(tr, n); try { await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines }); await Store.setTrack(tr); setD(n); setT(tr); onSaved(n); setMsg("Saved."); } catch (x2) { setMsg("Could not save. Nothing was changed for the client."); } };
-  const sendProposal = () => save((tr, n) => { const fp = Number(n.finalPrice); const extra = (n.extraLines || "").split("\n").map((l) => l.split("|")).filter((a) => a[0] && a[0].trim()).map((a) => [a[0].trim(), Number(a[1]) || 0, ""]); tr.proposal = { sentAt: new Date().toISOString(), finalPrice: fp || 0, lines: (n.estimate.lines || []).concat(extra), ...pr, response: null }; n.status = "Proposal Sent"; tr.status = n.status; tr.estimate = fp || tr.estimate; tr.updates.push({ at: new Date().toISOString(), from: "artist", text: "A proposal has been sent. Please review it." }); });
-  const post = () => pub.trim() && save((tr) => { tr.updates.push({ at: new Date().toISOString(), from: "artist", text: pub.trim() }); }).then(() => setPub(""));
+  const notify = async (eventType, message) => {
+    const eventId = "ev_" + crypto.randomUUID().replace(/-/g, "");
+    const result = await Store.api("notify_update", { id: d.id, eventId, eventType, message }, true);
+    const failures = (result.notifications || []).filter((item) => item.status !== "sent");
+    if (failures.length) throw new Error("Order was saved, but " + failures.length + " email(s) could not be sent. Check Email Notifications.");
+  };
+  const save = async (extra, eventType, eventMessage) => {
+    const n = { ...d };
+    const tr = clone(t || {});
+    const statusChanged = n.status !== d.status;
+    tr.status = n.status;
+    tr.payment = n.payment;
+    if (extra) extra(tr, n);
+    try {
+      await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines });
+      await Store.setTrack(tr);
+      setD(n);
+      const fresh = await Store.getTrack(n.id);
+      setT(fresh || tr);
+      onSaved(n);
+      if (eventType || statusChanged) {
+        await notify(eventType || "status", eventMessage || ("Order status updated to " + n.status + "."));
+        setMsg("Saved. Email notifications were accepted by the mail service.");
+      } else setMsg("Saved.");
+      return true;
+    } catch (x2) {
+      setMsg("Order data was saved if the save completed, but an email or tracking step failed: " + (x2?.message || "Please check the order and notification history."));
+      return false;
+    }
+  };
+  const sendProposal = () => save((tr, n) => {
+    const fp = Number(n.finalPrice);
+    const extra = (n.extraLines || "").split("\n").map((l) => l.split("|")).filter((a) => a[0] && a[0].trim()).map((a) => [a[0].trim(), Number(a[1]) || 0, ""]);
+    tr.proposal = { sentAt: new Date().toISOString(), finalPrice: fp || 0, lines: (n.estimate.lines || []).concat(extra), ...pr, response: null };
+    n.status = "Proposal Sent";
+    tr.status = n.status;
+    tr.estimate = fp || tr.estimate;
+    tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "A proposal has been sent. Please review it." }];
+  }, "proposal", "Your commission proposal is ready. Please open Track Order to review the price, delivery estimate and payment instructions.");
+  const post = async () => {
+    if (!pub.trim()) return;
+    const message = pub.trim();
+    const ok = await save((tr) => { tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: message }]; }, "progress", message);
+    if (ok) setPub("");
+  };
   const finalUp = async (e) => {
     const file = e.target.files[0]; e.target.value = "";
     if (!file) return;
+    if (!file.type.startsWith("image/")) { setMsg("Finished Art preview accepts image files only."); return; }
+    if (file.size > 10 * 1024 * 1024) { setMsg("Finished Art image must be 10 MB or smaller."); return; }
+    setBusy("upload");
     try {
       const ref = await Store.uploadReference(file, "final-" + d.id);
-      save((tr) => { tr.finalFiles.push({ name: file.name, url: ref.url }); });
-    } catch (x2) {
-      // fallback to artifact assets if Supabase storage fails
-      const as = await cap("assets");
-      if (!as) { setMsg("Upload failed: " + (x2 && x2.message || "unavailable")); return; }
-      try { const r = await as.upload(file); save((tr) => { tr.finalFiles.push({ name: file.name, url: "/_blob/" + r.id }); }); } catch { setMsg("Upload failed."); }
-    }
+      const tr = clone(t || {});
+      tr.finalFiles = [...(tr.finalFiles || []), ref.path
+        ? { name: file.name, path: ref.path, type: file.type }
+        : { name: file.name, url: ref.url, type: file.type }];
+      await Store.setTrack(tr);
+      const fresh = await Store.getTrack(d.id);
+      setT(fresh || tr);
+      setMsg("Finished Art uploaded. Review the preview below, then send it to the client.");
+    } catch (x2) { setMsg("Upload failed: " + (x2?.message || "unavailable")); }
+    finally { setBusy(""); }
+  };
+  const sendFinishedArt = async () => {
+    if (!t?.finalFiles?.length) { setMsg("Upload at least one Finished Art image before sending."); return; }
+    setBusy("finished");
+    try {
+      const n = { ...d, status: "Completed" };
+      const tr = clone(t);
+      tr.status = "Completed";
+      tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "Finished Art has been delivered. Your order is marked completed." }];
+      await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines });
+      await Store.setTrack(tr);
+      setD(n); onSaved(n);
+      await notify("finished_art", "Your Finished Art has been uploaded and delivered. Open Track Order using your Request ID and email address to view the final artwork and download the files.");
+      setT(await Store.getTrack(n.id));
+      setMsg("Finished Art sent. The client and Creator have been emailed with tracking instructions.");
+    } catch (x2) { setMsg("Finished Art was saved, but email delivery failed: " + (x2?.message || "Check Email Notifications.")); }
+    finally { setBusy(""); }
+  };
+  const sendClientEmail = async () => {
+    setBusy("manual");
+    try {
+      await notify("manual", pub.trim() || ("A new update is available for your commission. Current status: " + d.status + ". Open Track Order to view the latest details."));
+      setMsg("Email update sent to the client and Creator.");
+    } catch (x2) { setMsg("Email could not be sent: " + (x2?.message || "Check Email Notifications.")); }
+    finally { setBusy(""); }
   };
   const E = d.estimate;
   return (
@@ -3178,11 +3251,13 @@ function OrderDetail({ o, onBack, onSaved }) {
         <TextIn label="Custom add-ons (one per line: name | amount)" value={d.extraLines} onChange={set("extraLines")} multiline className="full" />
         <TextIn label="Estimated delivery" value={pr.delivery} onChange={(v) => setPr({ ...pr, delivery: v })} /><TextIn label="Revision policy" value={pr.revision} onChange={(v) => setPr({ ...pr, revision: v })} />
         <TextIn label="Proposal notes" value={pr.notes} onChange={(v) => setPr({ ...pr, notes: v })} multiline className="full" /><TextIn label="Payment instructions" value={pr.paymentInfo} onChange={(v) => setPr({ ...pr, paymentInfo: v })} multiline className="full" /></div>
-        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={() => save()}>Save changes</Btn><Btn onClick={sendProposal} disabled={!d.finalPrice}>Send proposal to client</Btn></div>
-        <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post}>Post update</Btn></div>
-        <div style={{ marginTop: 12 }}><small className="muted">Upload final file for the client</small><input type="file" className="in" onChange={finalUp} /></div>
-        {msg && <div className="note info" style={{ marginTop: 12 }}>{msg}</div>}
-        {t && t.proposal && <p className="muted" style={{ marginTop: 10 }}>Proposal response: {t.proposal.response || "waiting"}</p>}{t && t.updates.filter((u) => u.from === "client").map((u, i) => <p key={i} className="note info" style={{ marginTop: 6 }}>{u.text}</p>)}</section>
+        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={() => save()}>Save changes</Btn><Btn onClick={sendProposal} disabled={!d.finalPrice || !!busy}>Send proposal to client</Btn></div>
+        <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post} disabled={!!busy}>Post update</Btn></div>
+        <div style={{ marginTop: 12 }}><small className="muted">Upload Finished Art (image preview, max 10 MB)</small><input type="file" accept="image/*" className="in" onChange={finalUp} disabled={!!busy} /></div>
+        {t?.finalFiles?.length > 0 && <div style={{ marginTop: 14 }}><h3>Finished Art pre-review</h3><div className="strip">{t.finalFiles.map((fl, i) => <div key={fl.path || fl.url || i} style={{ minWidth: 160, maxWidth: 240 }}><div className="art sq"><img src={fl.url} alt={fl.name || "Finished Art preview"} /></div><small className="muted">{fl.name}</small></div>)}</div><p className="muted" style={{ marginTop: 8 }}>Check every image before sending. The client will be able to view the files from the tracking page after delivery.</p></div>}
+        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={sendFinishedArt} disabled={!t?.finalFiles?.length || !!busy}>{busy === "finished" ? "Sending Finished Art…" : "Send Finished Art to Client"}</Btn><Btn kind="ghost" onClick={sendClientEmail} disabled={!!busy}>{busy === "manual" ? "Sending Email…" : "Send Email to Client"}</Btn></div>
+        {msg && <div className="note info" role="status" style={{ marginTop: 12 }}>{msg}</div>}
+        {t && t.proposal && <p className="muted" style={{ marginTop: 10 }}>Proposal response: {t.proposal.response || "waiting"}</p>}{t && (t.updates || []).filter((u) => u.from === "client").map((u, i) => <p key={i} className="note info" style={{ marginTop: 6 }}>{u.text}</p>)}</section>
     </div>
   );
 }
