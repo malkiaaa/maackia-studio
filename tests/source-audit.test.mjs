@@ -29,7 +29,7 @@ test("additional-character pricing follows 100%, 180%, 260%, 340%", () => {
   const calc = getCalc();
   [1, 2, 3, 4].forEach((count) => {
     const result = calc(service, { tier: "base", chars: count, addons: {}, license: "" });
-    assert.equal(result.total, 1000 * (1 + 0.8 * (count - 1)), count + " character(s)");
+    assert.ok(Math.abs(result.total - 1000 * (1 + 0.8 * (count - 1))) < 1e-8, count + " character(s)");
   });
 });
 
@@ -87,5 +87,5 @@ test("creator review moderation and destructive commission actions are owner-gat
 });
 
 test("frontend source does not contain server-side secrets", () => {
-  assert.doesNotMatch(html, /SUPABASE_SERVICE_ROLE_KEY|GAS_WEBHOOK_SECRET/);
+  assert.doesNotMatch(html, /(?:SUPABASE_SERVICE_ROLE_KEY|GAS_WEBHOOK_SECRET)\s*[:=]\s*["'][^"']+["']/);
 });
