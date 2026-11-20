@@ -1181,7 +1181,8 @@ function buildDoc(site) {
 @media(max-width:767px){
   .home-dashboard{grid-template-columns:minmax(0,1fr);width:100%;max-width:100%;min-width:0}
   .home-dashboard>.home-intro-card,
-  .home-dashboard>.featured-section{
+  .home-dashboard>.featured-section,
+  .home-dashboard>.featured-artwork-home{
     grid-column:1/-1!important;
     width:100%!important;
     max-width:100%!important;
@@ -1217,11 +1218,16 @@ function buildDoc(site) {
     justify-content:center;
     text-align:center;
   }
-  .home-dashboard>.featured-section{
+  .home-dashboard>.featured-section,
+  .home-dashboard>.featured-artwork-home{
     grid-row:auto;
-    padding:14px;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    padding:14px!important;
     max-height:380px;
     overflow:hidden;
+    box-sizing:border-box;
   }
   .featured-artwork-home .card-head{
     align-items:center;
@@ -1269,7 +1275,8 @@ function buildDoc(site) {
   .home-dashboard .home-intro-text .btns{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .home-dashboard .home-intro-text .btns>.btn,
   .home-dashboard .home-intro-text .btns>a{padding:8px 5px;font-size:.68rem}
-  .home-dashboard>.featured-section{padding:14px}
+  .home-dashboard>.featured-section,
+  .home-dashboard>.featured-artwork-home{padding:14px!important}
 }
 
 </style>" +
