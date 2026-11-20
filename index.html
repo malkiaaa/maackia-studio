@@ -51,8 +51,9 @@
 }
 *{box-sizing:border-box}
 [data-ed]{cursor:text;border-radius:8px;transition:outline-color .15s}[data-ed]:hover{outline:2px dashed var(--cyan);outline-offset:3px}[data-ed]:focus{outline:2px solid var(--cyan);outline-offset:3px;background:color-mix(in srgb,var(--cyan) 14%,transparent)}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
-body{background-image:radial-gradient(circle at 12% 8%,var(--powder) 0,transparent 38%),radial-gradient(circle at 88% 92%,color-mix(in srgb,var(--cyan) 38%,transparent) 0,transparent 40%);background-attachment:fixed}
+body{position:relative;background:#fff;color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,rgba(234,249,253,.58) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,#fff 0%,#fbfeff 54%,#f4fcff 100%);background-repeat:no-repeat}
+.shell,.main,.main-inner{background:transparent}
 h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:.01em;text-wrap:balance}
 p{margin:0}
 button{font:inherit;color:inherit}
@@ -145,15 +146,29 @@ button.art:hover img{transform:scale(1.05)}
 .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}
 .strip>*{scroll-snap-align:start}
-.latest-section{grid-column:span 7;grid-row:span 2;min-width:0}
+.home-work-grid{grid-column:span 12;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:18px;align-items:stretch;min-width:0}
+.latest-section{min-width:0}
+.home-reviews-section{min-width:0;background:linear-gradient(145deg,#F3FCFF 0%,#FFFFFF 62%,#FFFBEF 100%);border-color:rgba(155,231,250,.32)}
+.home-review-list{display:flex;flex-direction:column;gap:12px}
+.home-review-card{padding:14px;border-radius:18px;background:rgba(255,255,255,.88);border:1px solid rgba(155,231,250,.3);box-shadow:0 8px 22px -17px rgba(47,79,94,.35);display:flex;flex-direction:column;gap:8px;min-width:0}
+.home-review-top{display:flex;align-items:center;gap:10px;min-width:0}
+.home-review-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:linear-gradient(145deg,var(--cyan),#FFF0B8);color:var(--ink);font-weight:900}
+.home-review-name{font-weight:900;line-height:1.15}
+.home-review-stars{color:#E5AD24;letter-spacing:2px;font-size:.92rem;white-space:nowrap}
+.home-review-date{font-size:.75rem;color:var(--muted)}
+.home-review-editor{margin-top:12px;padding:12px;border:1px dashed rgba(91,157,177,.4);border-radius:16px;background:rgba(255,255,255,.78);display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.home-review-editor label{display:flex;flex-direction:column;gap:4px;font-size:.76rem;font-weight:800;color:var(--muted)}
+.home-review-editor input,.home-review-editor textarea,.home-review-editor select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff;color:var(--ink);font:inherit;font-size:.86rem}
+.home-review-editor textarea{min-height:72px;resize:vertical;grid-column:1/-1}
+.home-review-editor .wide{grid-column:1/-1}
 .latest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .latest-grid .art{width:100%;aspect-ratio:1/1;min-height:0}
 .featured-section{grid-column:span 5;grid-row:span 2;min-width:0}
 .featured-section .feat{min-height:100%}
 .featured-section .feat>.art{min-height:0;flex:1;aspect-ratio:auto}
 @media(min-width:1100px){.latest-grid{gap:14px}.latest-grid .art{max-height:220px}}
-@media(max-width:1023px){.featured-section,.latest-section{grid-column:span 6;grid-row:auto}.featured-section .feat>.art{aspect-ratio:4/5;min-height:180px}.latest-grid .art{max-height:none}}
-@media(max-width:767px){.featured-section,.latest-section{grid-column:span 12}.latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.latest-grid .art{aspect-ratio:1/1;min-height:0}.featured-section .feat>.art{aspect-ratio:4/5;min-height:220px}}
+@media(max-width:1023px){.featured-section{grid-column:span 6;grid-row:auto}.home-work-grid{grid-template-columns:minmax(0,1fr) minmax(260px,.9fr)}.featured-section .feat>.art{aspect-ratio:4/5;min-height:180px}.latest-grid .art{max-height:none}}
+@media(max-width:767px){.featured-section{grid-column:span 12}.home-work-grid{grid-template-columns:minmax(0,1fr);gap:14px}.home-review-editor{grid-template-columns:1fr}.home-review-editor textarea,.home-review-editor .wide{grid-column:auto}.latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.latest-grid .art{aspect-ratio:1/1;min-height:0}.featured-section .feat>.art{aspect-ratio:4/5;min-height:220px}}
 
 .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .svc{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--powder);border:0;border-radius:22px;padding:16px;cursor:pointer;transition:transform .2s,background .2s}
@@ -670,6 +685,11 @@ const DEFAULT_SITE = {
   defaultCurrency: "IDR",
   mascot: { image: "" },
   appearance: { accent: "#B9D8F7", banner: "", widgets: { intro: true, featured: true, latest: true, services: true, status: true, quick: true } },
+  homeReviews: [
+    { id: "demo-review-1", name: "Demo Client 01", rating: 5, text: "The illustration captured the character exactly as I imagined. Communication was clear throughout the process.", date: "2026-10-12", sample: true },
+    { id: "demo-review-2", name: "Demo Client 02", rating: 5, text: "Lovely details, thoughtful updates, and a polished final result. I would gladly commission again.", date: "2026-10-18", sample: true },
+    { id: "demo-review-3", name: "Demo Client 03", rating: 4, text: "A smooth experience from sketch to delivery. The colors and expression turned out beautifully.", date: "2026-10-24", sample: true },
+  ],
   socials: [
     { id: "instagram", label: "Instagram", url: "" },
     { id: "facebook", label: "Facebook", url: "" },
@@ -1222,12 +1242,13 @@ function Home({ go, open }) {
         </div>
       </section>}
 
-      {w.latest && <section className="card span-7 row-2 latest-section">
-        <div className="card-head"><h2>{T("sec_latest")}</h2><Btn kind="ghost" size="sm" onClick={() => go("gallery")}>See all</Btn></div>
-        {latest.length ? <div className="latest-grid">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
-      </section>}
-
-      <ReviewsCarousel />
+      {(w.latest || true) && <div className="home-work-grid">
+        {w.latest && <section className="card latest-section">
+          <div className="card-head"><h2>{T("sec_latest")}</h2><Btn kind="ghost" size="sm" onClick={() => go("gallery")}>See all</Btn></div>
+          {latest.length ? <div className="latest-grid">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
+        </section>}
+        <HomeReviews />
+      </div>}
 
       {w.services && <section className="card span-12">
         <div className="card-head"><h2>{T("sec_services")}</h2><Btn kind="ghost" size="sm" onClick={() => go("services")}>All details</Btn></div>
@@ -1263,28 +1284,67 @@ function Home({ go, open }) {
   );
 }
 
-function ReviewsCarousel() {
-  const [reviews, setReviews] = useState([]);
-  const [message, setMessage] = useState("");
-  useEffect(() => {
-    let active = true;
-    Store.api("public_reviews", {}).then((result) => {
-      if (active) setReviews(Array.isArray(result.reviews) ? result.reviews : []);
-    }).catch(() => { if (active) setMessage("Client reviews are temporarily unavailable."); });
-    return () => { active = false; };
-  }, []);
-  if (!reviews.length && !message) return null;
+function HomeReviews() {
+  const cc = useCreator();
+  const canEdit = !!(cc && cc.editing);
+  const reviews = Array.isArray(CONFIG.homeReviews) ? CONFIG.homeReviews : [];
+  const [editingId, setEditingId] = useState("");
+  const active = reviews.find((r) => r.id === editingId);
+  const patch = (id, key, value) => cc && cc.upd((n) => {
+    n.homeReviews = Array.isArray(n.homeReviews) ? n.homeReviews : [];
+    const item = n.homeReviews.find((r) => r.id === id);
+    if (item) item[key] = value;
+  });
+  const addReview = () => {
+    if (!cc) return;
+    const id = uid("review");
+    cc.upd((n) => {
+      n.homeReviews = Array.isArray(n.homeReviews) ? n.homeReviews : [];
+      n.homeReviews.unshift({ id, name: "New client", rating: 5, text: "Write a short client review…", date: new Date().toISOString().slice(0,10), sample: false });
+    });
+    setEditingId(id);
+  };
+  const removeReview = (id) => {
+    if (!cc || !window.confirm("Delete this review?")) return;
+    cc.upd((n) => { n.homeReviews = (n.homeReviews || []).filter((r) => r.id !== id); });
+    if (editingId === id) setEditingId("");
+  };
   return (
-    <section className="card span-12">
-      <div className="card-head"><div><h2>Kind Words from Clients</h2><p className="muted">A few words from people I've worked with.</p></div><Icon name="heart" /></div>
-      {message ? <p className="muted">{message}</p> : <div className="review-window" aria-label="Client reviews, slowly scrolling">
-        <div className="review-track">
-          {[...reviews, ...reviews].map((r, i) => <article className="review-card" key={r.id + "-" + i} aria-hidden={i >= reviews.length}>
-            <div className="review-stars" aria-label={r.rating + " out of 5 stars"}>{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>
-            <p>“{r.message}”</p><b>{r.display_name || "Anonymous"}</b>
-            <small className="muted">{fmtDate(r.created_at)}</small>
-          </article>)}
-        </div>
+    <section className="card home-reviews-section">
+      <div className="card-head">
+        <div><h2>Client Reviews</h2><p className="muted" style={{fontSize:".82rem"}}>Kind words and feedback</p></div>
+        {canEdit ? <Btn kind="peach" size="sm" onClick={addReview}>+ Add review</Btn> : <Icon name="heart" />}
+      </div>
+      <div className="home-review-list">
+        {reviews.map((r) => {
+          const name = r.name || "Anonymous";
+          const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map((x) => x[0]).join("").toUpperCase() || "?";
+          const rating = Math.max(1,Math.min(5,Number(r.rating)||5));
+          return <article className="home-review-card" key={r.id}>
+            <div className="home-review-top">
+              <div className="home-review-avatar" aria-hidden="true">{initials}</div>
+              <div style={{minWidth:0,flex:1}}>
+                <div className="home-review-name">{name}</div>
+                <div className="home-review-stars" aria-label={rating+" out of 5 stars"}>{"★".repeat(rating)}{"☆".repeat(5-rating)}</div>
+              </div>
+              <small className="home-review-date">{r.date || ""}</small>
+            </div>
+            <p>“{r.text || ""}”</p>
+            {r.sample && <span className="tag" style={{alignSelf:"flex-start"}}>Sample</span>}
+            {canEdit && <div className="btns" data-no-edit="true">
+              <Btn kind="ghost" size="sm" onClick={() => setEditingId(editingId===r.id?"":r.id)}>{editingId===r.id?"Close":"Edit"}</Btn>
+              <Btn kind="danger" size="sm" onClick={() => removeReview(r.id)}>Delete</Btn>
+            </div>}
+          </article>;
+        })}
+        {!reviews.length && <p className="muted">No reviews yet. Add the first review in Creator Mode.</p>}
+      </div>
+      {canEdit && active && <div className="home-review-editor" data-no-edit="true">
+        <label>Client name<input value={active.name||""} onChange={(e)=>patch(active.id,"name",e.target.value)} /></label>
+        <label>Rating<select value={active.rating||5} onChange={(e)=>patch(active.id,"rating",Number(e.target.value))}>{[5,4,3,2,1].map((n)=><option key={n} value={n}>{n} / 5</option>)}</select></label>
+        <label>Date<input type="date" value={active.date||""} onChange={(e)=>patch(active.id,"date",e.target.value)} /></label>
+        <label className="wide">Review text<textarea value={active.text||""} onChange={(e)=>patch(active.id,"text",e.target.value)} /></label>
+        <div className="btns wide"><Btn kind="cyan" size="sm" onClick={()=>setEditingId("")}>Done</Btn></div>
       </div>}
     </section>
   );
