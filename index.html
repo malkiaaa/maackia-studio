@@ -1288,6 +1288,9 @@ function HomeReviews() {
   const cc = useCreator();
   const canEdit = !!(cc && cc.editing);
   const reviews = Array.isArray(CONFIG.homeReviews) ? CONFIG.homeReviews : [];
+  const [remoteReviews, setRemoteReviews] = useState([]);
+  useEffect(() => { let active = true; Store.api("public_reviews", {}).then((result) => { if (active) setRemoteReviews(Array.isArray(result.reviews) ? result.reviews : []); }).catch(() => {}); return () => { active = false; }; }, []);
+  const displayReviews = [...reviews.map((r) => ({ ...r, _local: true })), ...remoteReviews.map((r) => ({ id: "remote-" + r.id, name: r.display_name || "Anonymous", rating: r.rating, text: r.message, date: fmtDate(r.created_at), _remote: true }))];
   const [editingId, setEditingId] = useState("");
   const active = reviews.find((r) => r.id === editingId);
   const patch = (id, key, value) => cc && cc.upd((n) => {
@@ -1316,7 +1319,7 @@ function HomeReviews() {
         {canEdit ? <Btn kind="peach" size="sm" onClick={addReview}>+ Add review</Btn> : <Icon name="heart" />}
       </div>
       <div className="home-review-list">
-        {reviews.map((r) => {
+        {displayReviews.map((r) => {
           const name = r.name || "Anonymous";
           const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map((x) => x[0]).join("").toUpperCase() || "?";
           const rating = Math.max(1,Math.min(5,Number(r.rating)||5));
@@ -1331,7 +1334,7 @@ function HomeReviews() {
             </div>
             <p>“{r.text || ""}”</p>
             {r.sample && <span className="tag" style={{alignSelf:"flex-start"}}>Sample</span>}
-            {canEdit && <div className="btns" data-no-edit="true">
+            {canEdit && !r._remote && <div className="btns" data-no-edit="true">
               <Btn kind="ghost" size="sm" onClick={() => setEditingId(editingId===r.id?"":r.id)}>{editingId===r.id?"Close":"Edit"}</Btn>
               <Btn kind="danger" size="sm" onClick={() => removeReview(r.id)}>Delete</Btn>
             </div>}
