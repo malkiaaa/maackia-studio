@@ -41,10 +41,7 @@ const allowedTypes = new Set([
 ]);
 
 type EmailConfig = {
-  artistEmail?: string;
   fromName?: string;
-  sendArtist?: boolean;
-  sendClient?: boolean;
 };
 
 
@@ -335,7 +332,7 @@ async function deliverEmail(
   return { id, status, message, attempts, recipient, kind: input.kind };
 }
 
-function commissionEmailHtml(order: any, clientName: string, isClient: boolean) {
+function commissionEmailHtml(order: any, clientName: string) {
   const id = escapeHtml(order.id);
   const name = escapeHtml(clientName || "Client");
   const service = escapeHtml(order.serviceTitle || "Commission");
@@ -343,12 +340,8 @@ function commissionEmailHtml(order: any, clientName: string, isClient: boolean) 
   const estimate = Number(order?.estimate?.total) || 0;
   const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
     (order?.estimate?.custom ? " + custom quote" : "");
-  const greeting = isClient
-    ? "Thank you, " + name + ". Your commission request has been received and is waiting for review."
-    : "A new commission request has been submitted.";
-  const extra = isClient
-    ? "<p>Keep this email. Use your Request ID and email address to track your order on the website. No payment has been taken; you will receive a proposal before payment is requested.</p>"
-    : "<p>Open the Creator Dashboard to review the request and prepare a proposal.</p>";
+  const greeting = "Thank you, " + name + ". Your commission request has been received and is waiting for review.";
+  const extra = "<p>Keep this email. Use your Request ID and email address to track your order on the website. No payment has been taken; you will receive a proposal before payment is requested.</p>";
   return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'>" +
     "<h2>Malkiaa Studio</h2><p>" + greeting + "</p>" +
     "<table style='border-collapse:collapse;width:100%'>" +
@@ -369,7 +362,7 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
       subject: "[Malkiaa Studio] Commission Request Received — " + order.id,
-      html: commissionEmailHtml(order, clientName, true),
+      html: commissionEmailHtml(order, clientName),
       orderId: order.id,
       kind: "client",
     }));
@@ -379,7 +372,7 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
 
 
 
-function orderUpdateEmailHtml(order: any, track: any, eventType: string, message: string, forClient: boolean) {
+function orderUpdateEmailHtml(order: any, track: any, eventType: string, message: string) {
   const id = escapeHtml(order.id);
   const name = escapeHtml(clean(order.form?.name, 120) || "Client");
   const service = escapeHtml(order.serviceTitle || "Commission");
@@ -390,9 +383,7 @@ function orderUpdateEmailHtml(order: any, track: any, eventType: string, message
     : eventType === "proposal"
       ? "Your commission proposal is ready to review."
       : "There is a new update to your commission.";
-  const body = forClient
-    ? "<p>Hello " + name + ",</p><p>" + clientIntro + "</p><p>" + safeMessage + "</p><p><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Current status:</b> " + status + "</p><p>To track your order, open the Malkiaa Studio website and choose <b>Track Order</b>. Enter the Request ID above and the same email address used when submitting your commission. You can review proposal details, progress updates and delivered files there.</p><p>Please keep this email for your records.</p>"
-    : "<p>A commission update was recorded.</p><p><b>Client:</b> " + name + "<br><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Status:</b> " + status + "</p><p>" + safeMessage + "</p><p>Open Creator Dashboard to review the order and email delivery history.</p>";
+  const body = "<p>Hello " + name + ",</p><p>" + clientIntro + "</p><p>" + safeMessage + "</p><p><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Current status:</b> " + status + "</p><p>To track your order, open the Malkiaa Studio website and choose <b>Track Order</b>. Enter the Request ID above and the same email address used when submitting your commission. You can review proposal details, progress updates and delivered files there.</p><p>Please keep this email for your records.</p>";
   return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'><h2>Malkiaa Studio</h2>" + body + "</body></html>";
 }
 
@@ -409,7 +400,7 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
       subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
-      html: orderUpdateEmailHtml(order, track, eventType, message, true),
+      html: orderUpdateEmailHtml(order, track, eventType, message),
       orderId: order.id,
       kind: "client_evt_" + eventType + "_" + eventId,
       idempotencyKey: order.id + ":client:" + eventId,
@@ -1083,19 +1074,18 @@ Deno.serve(async (req) => {
       const results = [];
       const config = await getEmailConfig(db);
       const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
-      // Legacy failed Creator notifications are intentionally not retried.
+      // Only failed client notifications are eligible for retry.
       const failedClientNotifications = (failed || []).filter((item: any) =>
         item.kind === "client" || String(item.kind || "").startsWith("client_evt_")
       );
       for (const item of failedClientNotifications) {
-        const isClient = item.kind === "client" || item.kind.startsWith("client_evt_");
-        const eventMatch = item.kind.match(/^(?:client|artist)_evt_(proposal|progress|status|finished_art|manual)_/);
+        const eventMatch = item.kind.match(/^client_evt_(proposal|progress|status|finished_art|manual)_/);
         const eventType = eventMatch?.[1];
         const latestUpdate = Array.isArray(track?.updates) ? [...track.updates].reverse().find((u: any) => u.from === "artist") : null;
         const message = clean(latestUpdate?.text, 1200) || "A new update is available for your commission. Open Track Order to view the latest details.";
         const html = eventType
-          ? orderUpdateEmailHtml(order, track, eventType, message, isClient)
-          : commissionEmailHtml(order, clean(order.form?.name, 120), isClient);
+          ? orderUpdateEmailHtml(order, track, eventType, message)
+          : commissionEmailHtml(order, clean(order.form?.name, 120));
         const subjectLabel = eventType === "finished_art" ? "Finished Art Delivered"
           : eventType === "proposal" ? "Proposal Ready"
           : eventType === "progress" ? "Progress Update"
@@ -1105,8 +1095,7 @@ Deno.serve(async (req) => {
           to: clean(item.recipient, 254),
           subject: eventType
             ? "[Malkiaa Studio] " + subjectLabel + " — " + id
-            : isClient ? "[Malkiaa Studio] Commission Request Received — " + id
-            : "[Malkiaa Studio] New Commission Request " + id,
+            : "[Malkiaa Studio] Commission Request Received — " + id,
           html,
           orderId: id,
           kind: item.kind,
