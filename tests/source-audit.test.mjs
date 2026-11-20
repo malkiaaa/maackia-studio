@@ -366,3 +366,22 @@ test("Track Order overview uses responsive non-overlapping status layout", () =>
   assert.match(html, /\.track-overview-badges \.tag\{display:inline-flex/);
   assert.match(html, /\.track-overview-stages \.stage:last-child\{grid-column:1\/-1;width:calc/);
 });
+
+
+test("Track Order highlights only the active commission step in gold", () => {
+  const start = html.indexOf("ORDER OVERVIEW");
+  const end = html.indexOf("01 · PRICE & PROPOSAL", start);
+  const overview = html.slice(start, end);
+  assert.match(overview, /i === idx \? " is-active" : ""/);
+  assert.match(html, /\.track-overview-stages \.stage\.is-active[\s\S]*?background:var\(--gold\)/);
+  assert.match(html, /\.track-overview-stages \.stage,[\s\S]*?background:var\(--cyan\)/);
+  assert.doesNotMatch(overview, /i\s*<=\s*idx/);
+});
+
+test("manual email validates client delivery result and reports mail-service acceptance accurately", () => {
+  assert.match(html, /clientResult = result\.notifications\.find/);
+  assert.match(html, /if \(!clientResult\) throw new Error/);
+  assert.match(html, /Inbox delivery is not guaranteed/);
+  assert.match(backend, /no valid client email address/);
+  assert.match(backend, /clientNotification/);
+});
