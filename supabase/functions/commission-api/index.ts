@@ -411,20 +411,19 @@ function orderUpdateEmailText(order: any, track: any, eventType: string, message
     status: "Your commission status has changed.",
     manual: "There is a new update to your commission.",
   };
+  const update = clean(message, 1200) || labels[eventType] || "There is an update to your commission.";
   return [
     "Malkiaa Studio",
     "",
     "Hello " + (clean(order?.form?.name, 120) || "there") + ",",
-    labels[eventType] || "There is an update to your commission.",
-    "",
-    clean(message, 1200) || "A new update is available.",
+    update,
     "",
     "Request details",
     "Request ID: " + clean(order.id, 40),
     "Service: " + clean(order.serviceTitle, 160),
     "Current status: " + clean(track?.status || order.status || "Updated", 80),
     "",
-    "You can review the latest details in Track Order on the Malkiaa Studio website. Please use the same email address you used for your request.",
+    "View your latest commission details in Track Order on the Malkiaa Studio website.",
     "If you have a question, reply directly to this email.",
     "",
     "Malkiaa Studio",
@@ -437,16 +436,18 @@ function orderUpdateEmailHtml(order: any, track: any, eventType: string, message
   const name = escapeHtml(clean(order.form?.name, 120) || "Client");
   const service = escapeHtml(order.serviceTitle || "Commission");
   const status = escapeHtml(track?.status || order.status || "Updated");
-  const safeMessage = escapeHtml(message || "A new update is available.").replace(/\n/g, "<br>");
-  const clientIntro = eventType === "finished_art"
-    ? "Your finished artwork has been delivered."
-    : eventType === "proposal"
-      ? "Your commission proposal is ready to review."
-      : "There is a new update to your commission.";
-  const body = "<p>Hello " + name + ",</p><p>" + clientIntro + "</p><p>" + safeMessage + "</p>" +
+  const labels: Record<string, string> = {
+    finished_art: "Your finished artwork has been delivered.",
+    proposal: "Your commission proposal is ready to review.",
+    progress: "There is a new progress update for your commission.",
+    status: "Your commission status has changed.",
+    manual: "There is a new update to your commission.",
+  };
+  const update = escapeHtml(clean(message, 1200) || labels[eventType] || "There is an update to your commission.").replace(/\n/g, "<br>");
+  const body = "<p>Hello " + name + ",</p><p>" + update + "</p>" +
     "<p style='margin:24px 0 8px;font-weight:700'>Request details</p>" +
     "<p><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Current status:</b> " + status + "</p>" +
-    "<p>You can review the latest details in Track Order on the Malkiaa Studio website. Please use the same email address you used for your request.</p>" +
+    "<p>View your latest commission details in Track Order on the Malkiaa Studio website.</p>" +
     "<p>If you have a question, reply directly to this email.</p>";
   return "<!doctype html><html><body style='margin:0;padding:24px;background:#ffffff;color:#303943;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6'><div style='max-width:600px;margin:0 auto'>" +
     "<p style='margin:0 0 20px;font-size:20px;font-weight:700;color:#263f50'>Malkiaa Studio</p>" + body +
@@ -457,16 +458,11 @@ function orderUpdateEmailHtml(order: any, track: any, eventType: string, message
 async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType: string, eventId: string, message: string) {
   const config = await getEmailConfig(db);
   const clientEmail = clean(order?.form?.email, 254).toLowerCase();
-  const subjectLabel = eventType === "finished_art" ? "Finished Art Delivered"
-    : eventType === "proposal" ? "Proposal Ready"
-    : eventType === "progress" ? "Progress Update"
-    : eventType === "status" ? "Order Status Updated"
-    : "Commission Update";
   const results: any[] = [];
   if (clientEmail) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
-      subject: subjectLabel + " for your commission | " + order.id,
+      subject: "[Malkiaa Studio] Commission Update — " + order.id,
       html: orderUpdateEmailHtml(order, track, eventType, message),
       text: orderUpdateEmailText(order, track, eventType, message),
       orderId: order.id,
@@ -1164,9 +1160,7 @@ Deno.serve(async (req) => {
           : eventType === "manual" ? "Commission Update" : "";
         results.push(await deliverEmail(db, config, {
           to: clean(item.recipient, 254),
-          subject: eventType
-            ? subjectLabel + " for your commission | " + id
-            : "We received your commission request | " + id,
+          subject: "[Malkiaa Studio] Commission Update — " + id,
           html,
           text: plainText,
           orderId: id,
