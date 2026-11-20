@@ -661,8 +661,9 @@ Deno.serve(async (req) => {
           !trackPatch || typeof trackPatch !== "object" || Array.isArray(trackPatch)) {
         return json({ error: "Invalid commission save payload." }, 400);
       }
-      const status = clean(orderPatch.status, 40);
+      const requestedStatus = clean(orderPatch.status, 40);
       const payment = clean(orderPatch.payment, 30);
+      const status = payment === "Paid" && requestedStatus === "Awaiting Payment" ? "Paid" : requestedStatus;
       const allowedStatuses = ["Pending Review", "Reviewing", "Proposal Sent", "Awaiting Client Approval", "Awaiting Payment", "Paid", "In Progress", "Waiting for Feedback", "Revision", "Completed", "Cancelled", "Rejected"];
       const allowedPayments = ["Unpaid", "Invoice sent", "Paid", "Refunded"];
       if (!allowedStatuses.includes(status) || !allowedPayments.includes(payment)) {
