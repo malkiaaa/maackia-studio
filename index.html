@@ -1099,6 +1099,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .home-dashboard>.featured-section,
   .home-dashboard>.featured-artwork-home{padding:14px!important}
 }
+/* Desktop only: place Hero and Featured Artwork side by side */
+@media (min-width:1024px){
+  .home-dashboard-featured-pair>.home-intro-card{grid-column:span 7;min-width:0}
+  .home-dashboard-featured-pair>.featured-artwork-home{grid-column:span 5;min-width:0;align-self:stretch}
+}
+
 </style>
 
 <div id="root"></div>
@@ -1771,7 +1777,7 @@ function Home({ go, open }) {
   const banner = safeImg(CONFIG.profile.about.cardImage);
   const introStyle = banner ? { overflow: "hidden", backgroundImage: `url("${banner}")`, backgroundSize: "cover", backgroundPosition: "center" } : { overflow: "visible" };
   return (
-    <div className="grid page home-dashboard">
+    <div className={`grid page home-dashboard${w.intro && w.featured && Array.isArray(CONFIG.featuredArtworks) && CONFIG.featuredArtworks.length > 0 ? " home-dashboard-featured-pair" : ""}`}>
       {w.intro && <section className="card tint span-7 home-intro-card" style={introStyle}>
         <div className="intro-text home-intro-text" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span className="tag" style={{ alignSelf: "flex-start", background: "var(--card)" }}>{CONFIG.profile.title}</span>
