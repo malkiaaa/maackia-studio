@@ -52,8 +52,8 @@
 *{box-sizing:border-box}
 [data-ed]{cursor:text;border-radius:8px;transition:outline-color .15s}[data-ed]:hover{outline:2px dashed var(--cyan);outline-offset:3px}[data-ed]:focus{outline:2px solid var(--cyan);outline-offset:3px;background:color-mix(in srgb,var(--cyan) 14%,transparent)}
 body{position:relative;background:#fff;color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,rgba(234,249,253,.58) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,#fff 0%,#fbfeff 54%,#f4fcff 100%);background-repeat:no-repeat}
-.shell,.main,.main-inner{background:transparent}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,rgba(234,249,253,.58) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,#fff 0%,#fbfeff 54%,#f4fcff 100%);background-repeat:no-repeat}
+.shell{position:relative;z-index:1;background:transparent}.main,.main-inner{background:transparent}
 h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:.01em;text-wrap:balance}
 p{margin:0}
 button{font:inherit;color:inherit}
@@ -1242,13 +1242,13 @@ function Home({ go, open }) {
         </div>
       </section>}
 
-      {(w.latest || true) && <div className="home-work-grid">
+      <div className="home-work-grid">
         {w.latest && <section className="card latest-section">
           <div className="card-head"><h2>{T("sec_latest")}</h2><Btn kind="ghost" size="sm" onClick={() => go("gallery")}>See all</Btn></div>
           {latest.length ? <div className="latest-grid">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
         </section>}
         <HomeReviews />
-      </div>}
+      </div>
 
       {w.services && <section className="card span-12">
         <div className="card-head"><h2>{T("sec_services")}</h2><Btn kind="ghost" size="sm" onClick={() => go("services")}>All details</Btn></div>
