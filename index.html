@@ -2485,29 +2485,18 @@ function EmailPanel() {
     setSaving(false);
   };
 
-  const sendTest = async () => {
-    setTesting(true); setMsg({ text: "", ok: false });
-    try {
-      const r = await Store.api("test", {}, true);
-      setMsg(r.status === "sent"
-        ? { text: "Google Apps Script accepted the test email for the configured studio address. Check your inbox to confirm it arrived.", ok: true }
-        : { text: "Attempts: " + (r.attempts || 1) + " · " + (r.message || "Email delivery failed."), ok: false });
-    } catch (e) { setMsg({ text: authErr(e), ok: false }); }
-    setTesting(false);
-  };
-
   return (
     <div className="panel">
       <section className="card">
         <div className="card-head"><h2>Email Notification Settings</h2><span style={{ fontSize: ".8rem", fontWeight: 800, color: "var(--muted)" }}>Gmail · Google Apps Script</span></div>
         <p className="muted" style={{ marginBottom: 16 }}>Email notifications are sent by commission-api through Google Apps Script after a request is saved. The webhook URL and shared secret stay in Supabase Edge Function secrets and are never exposed in this browser.</p>
         <div className="form">
-          <div className="field full"><span>Studio Notification Email</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="mmaackia@gmail.com" /><small className="muted">New commission alerts go here. If left blank, the system uses mmaackia@gmail.com.</small></div>
+          
           <div className="field"><span>From Name</span><input className="in" value={cfg.fromName} onChange={(e) => set("fromName")(e.target.value)} placeholder="Malkiaa Studio" /></div>
         </div>
         <div className="btns" style={{ marginTop: 14 }}>
           <Btn disabled={saving} onClick={save}>{saving ? "Saving…" : "Save Email Settings"}</Btn>
-          <Btn kind="ghost" size="sm" disabled={testing} onClick={sendTest}>{testing ? "Sending…" : "Send Test Email"}</Btn>
+          
         </div>
         {msg.text && <div className={"note " + (msg.ok ? "ok" : "bad")} style={{ marginTop: 12 }}>{msg.text}</div>}
       </section>
@@ -2535,7 +2524,7 @@ function EmailPanel() {
           <li>In Supabase, open <b>Edge Functions → Secrets</b> and add <code>GAS_WEBHOOK_URL</code> and <code>GAS_WEBHOOK_SECRET</code>.</li>
           <li>Never place the webhook URL or shared secret in this website, GitHub source, or browser storage.</li>
         </ol>
-        <p className="muted" style={{ marginTop: 10 }}>The commission-api function handles Creator and client notifications, order-update emails, test emails, and safe retries. No database migration or extra SQL is required for this integration.</p>
+        <p className="muted" style={{ marginTop: 10 }}>The commission-api function sends commission confirmations and order updates only to clients. Creator email notifications and standalone test emails are disabled. Failed client notifications can be retried. No database migration or extra SQL is required for this integration.</p>
       </section>
     </div>
   );
@@ -3569,16 +3558,10 @@ function NotifPanel() {
     } catch (e) { setMsg({ err: authErr(e) }); }
     setBusy(""); load();
   };
-  const test = async () => {
-    setBusy("test"); setMsg(null);
-    try { const r = await Store.api("test", {}, true); setMsg(r.status === "sent" ? { ok: "Google Apps Script accepted the test email. Check your inbox to confirm it arrived." } : { err: "The test email failed. See the history below." }); }
-    catch (e) { setMsg({ err: authErr(e) }); }
-    setBusy(""); load();
-  };
   return (
     <section className="card" style={{ marginBottom: 18 }}>
       <div className="card-head"><h2>Email notifications {failedIds.length > 0 && <span className="tag" style={{ color: "var(--bad)" }}>{failedIds.length} failed</span>}</h2>
-        <div className="btns"><Btn kind="ghost" size="sm" disabled={!!busy} onClick={test}>{busy === "test" ? "Sending..." : "Send test email"}</Btn>
+        <div className="btns">
           <Btn kind="cyan" size="sm" disabled={!!busy || !failedIds.length} onClick={() => retry(failedIds)}>{busy === "retry" ? "Retrying..." : "Retry failed (" + failedIds.length + ")"}</Btn></div></div>
       {msg && <div className={"note " + (msg.err ? "bad" : "ok")} role="status" style={{ marginBottom: 10 }}>{msg.err || msg.ok}</div>}
       {rows === null ? <p className="muted">Loading...</p> : rows.length === 0 ? <p className="muted">No notifications recorded yet.</p> :
