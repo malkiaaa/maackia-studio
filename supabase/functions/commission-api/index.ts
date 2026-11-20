@@ -492,8 +492,19 @@ Deno.serve(async (req) => {
         return json({ error: "A valid submission idempotency key is required. Please refresh the form and try again." }, 400);
       }
 
+      const { data: generatedId, error: idError } = await db.rpc("next_commission_id");
+      if (idError || !generatedId) {
+        console.error("commission ID generation failed", idError);
+        return json({ error: "Could not generate a commission number. Please try again." }, 500);
+      }
+      const id = clean(generatedId, 40);
+      if (!/^COMMISSION-[0-9]{4}-[0-9]{4,}$/.test(id)) {
+        return json({ error: "Invalid generated commission number." }, 500);
+      }
+
       const safeForm = { ...form, email };
       const safeOrder = {
+        id,
         created_at: new Date().toISOString(),
         createdAt: clean(order.createdAt, 50) || new Date().toISOString(),
         status: "Pending Review",
@@ -508,6 +519,7 @@ Deno.serve(async (req) => {
         extraLines: "",
       };
       const safeTrack = {
+        id,
         created_at: new Date().toISOString(),
         createdAt: clean(order.createdAt, 50) || new Date().toISOString(),
         serviceTitle: safeOrder.serviceTitle,
@@ -515,6 +527,7 @@ Deno.serve(async (req) => {
         payment: "Unpaid",
         estimate: pricing.estimate.total,
         custom: pricing.estimate.custom,
+        emailHash: await sha256(email + "|" + id),
         client_name: clean(form?.name, 120) || "Client",
         proposal: null,
         updates: [],
