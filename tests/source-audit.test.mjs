@@ -173,6 +173,26 @@ test("server rejects unknown add-ons, invalid quantities and unknown licenses", 
   assert.equal(calculate(pricingSite, orderFor({ form: { tier: "base", chars: 1, addons: {}, license: "injected" } })).ok, false);
 });
 
+test("commission submit accepts normal email addresses and rejects malformed ones", () => {
+  const start = backend.indexOf('if (action === "submit") {');
+  const end = backend.indexOf('if (action === "public_board") {', start);
+  const action = backend.slice(start, end);
+  assert.ok(action.includes(String.raw`if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {`));
+  assert.doesNotMatch(action, String.raw`/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/`);
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  assert.equal(emailPattern.test("client@example.com"), true);
+  assert.equal(emailPattern.test("client.name+art@example.co.id"), true);
+  assert.equal(emailPattern.test("client example.com"), false);
+});
+
+test("commission form allows direct step navigation and validates all required fields before submit", () => {
+  assert.match(html, /className="step-scrubber"/);
+  assert.match(html, /onChange=\{\(e\) => setStep\(Number\(e\.target\.value\)\)\}/);
+  assert.match(html, /const validateAll = \(\) =>/);
+  assert.match(html, /if \(!validateAll\(\)\) return/);
+  assert.doesNotMatch(html, /disabled=\{i > step\}/);
+});
+
 test("submit persists only the server-calculated estimate", () => {
   const start = backend.indexOf('if (action === "submit") {');
   const end = backend.indexOf('if (action === "public_board") {', start);
