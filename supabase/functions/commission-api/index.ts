@@ -364,9 +364,7 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
   const clientName = clean(form?.name, 120) || "Client";
   const clientEmail = clean(form?.email, 254).toLowerCase();
 
-  const artistEmail = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
-
-  // Every new request notifies both the client and the Creator. This is not user-configurable.
+  // Commission confirmation is sent only to the client.
   if (clientEmail) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
@@ -376,13 +374,6 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
       kind: "client",
     }));
   }
-  results.push(await deliverEmail(db, config, {
-    to: artistEmail,
-    subject: "[Malkiaa Studio] New Commission Request " + order.id,
-    html: commissionEmailHtml(order, clientName, false),
-    orderId: order.id,
-    kind: "artist",
-  }));
   return results;
 }
 
@@ -408,7 +399,6 @@ function orderUpdateEmailHtml(order: any, track: any, eventType: string, message
 async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType: string, eventId: string, message: string) {
   const config = await getEmailConfig(db);
   const clientEmail = clean(order?.form?.email, 254).toLowerCase();
-  const artistEmail = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
   const subjectLabel = eventType === "finished_art" ? "Finished Art Delivered"
     : eventType === "proposal" ? "Proposal Ready"
     : eventType === "progress" ? "Progress Update"
@@ -425,14 +415,6 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
       idempotencyKey: order.id + ":client:" + eventId,
     }));
   }
-  results.push(await deliverEmail(db, config, {
-    to: artistEmail,
-    subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
-    html: orderUpdateEmailHtml(order, track, eventType, message, false),
-    orderId: order.id,
-    kind: "artist_evt_" + eventType + "_" + eventId,
-    idempotencyKey: order.id + ":artist:" + eventId,
-  }));
   return results;
 }
 
@@ -1078,17 +1060,10 @@ Deno.serve(async (req) => {
     if (action === "test") {
       const owner = await requireOwner(req, db);
       if (!owner.ok) return json({ error: owner.error }, owner.status);
-      const config = await getEmailConfig(db);
-      const recipient = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
-      const result = await deliverEmail(db, config, {
-        to: recipient,
-        subject: "[Malkiaa Studio] Test notification",
-        html: "<p>This is a test email from Malkiaa Studio. If you received it, Google Apps Script MailApp is working.</p>",
-        orderId: "TEST",
-        kind: "test",
-        idempotencyKey: "TEST:" + crypto.randomUUID(),
-      });
-      return json({ status: result.status, message: result.message, attempts: result.attempts });
+      return json({
+        status: "disabled",
+        message: "Standalone test emails are disabled. Verify email delivery with a test commission addressed to a client test inbox.",
+      }, 409);
     }
 
     if (action === "retry") {
@@ -1108,7 +1083,11 @@ Deno.serve(async (req) => {
       const results = [];
       const config = await getEmailConfig(db);
       const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
-      for (const item of failed || []) {
+      // Legacy failed Creator notifications are intentionally not retried.
+      const failedClientNotifications = (failed || []).filter((item: any) =>
+        item.kind === "client" || String(item.kind || "").startsWith("client_evt_")
+      );
+      for (const item of failedClientNotifications) {
         const isClient = item.kind === "client" || item.kind.startsWith("client_evt_");
         const eventMatch = item.kind.match(/^(?:client|artist)_evt_(proposal|progress|status|finished_art|manual)_/);
         const eventType = eventMatch?.[1];
