@@ -781,6 +781,38 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .bnav button { font-size:.55rem; }
 }
 
+/* Featured Artwork carousel */
+.featured-artwork-home{min-width:0;overflow:hidden}
+.featured-artwork-viewport{width:100%;overflow:hidden;border-radius:16px;touch-action:pan-y;cursor:grab;outline-offset:4px}
+.featured-artwork-viewport:active{cursor:grabbing}
+.featured-artwork-track{display:flex;width:100%;transition:transform .55s cubic-bezier(.22,.7,.25,1);will-change:transform}
+.featured-artwork-slide{position:relative;flex:0 0 100%;width:100%;min-width:0;aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:var(--bg)}
+.featured-artwork-slide img{display:block;width:100%;height:100%;object-fit:cover;user-select:none}
+.featured-artwork-caption{position:absolute;left:14px;right:14px;bottom:14px;padding:9px 13px;border-radius:12px;background:rgba(30,54,64,.72);color:#fff;font-weight:800;backdrop-filter:blur(8px)}
+.featured-artwork-controls{display:flex;gap:8px}
+.featured-artwork-dots{display:flex;justify-content:center;align-items:center;gap:8px;padding-top:14px}
+.featured-artwork-dots button{width:9px;height:9px;border:0;border-radius:50%;padding:0;background:var(--primary);opacity:.55;cursor:pointer}
+.featured-artwork-dots button.is-active{width:24px;border-radius:8px;background:var(--gold);opacity:1}
+.featured-artwork-manager .featured-upload-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px 16px;border:2px dashed var(--primary);border-radius:16px;background:var(--bg);text-align:center;transition:border-color .2s,background .2s}
+.featured-upload-drop.is-dragging{border-color:var(--cyan);background:color-mix(in srgb,var(--cyan) 12%,var(--bg))}
+.featured-artwork-list{display:grid;gap:12px;margin-top:16px}
+.featured-artwork-row{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid var(--line);border-radius:14px;min-width:0}
+.featured-artwork-thumb{width:104px;aspect-ratio:1/1;flex:0 0 104px;overflow:hidden;border-radius:11px;background:var(--bg);display:grid;place-items:center}
+.featured-artwork-thumb img{width:100%;height:100%;object-fit:cover}
+.featured-artwork-fields{flex:1;min-width:0}
+.featured-artwork-actions{display:flex;flex-direction:column;gap:6px}
+@media(max-width:640px){
+ .featured-artwork-slide{aspect-ratio:4/3}
+ .featured-artwork-row{align-items:flex-start;flex-wrap:wrap}
+ .featured-artwork-thumb{width:82px;flex-basis:82px}
+ .featured-artwork-fields{flex:1 1 calc(100% - 100px)}
+ .featured-artwork-actions{flex-direction:row;width:100%;justify-content:flex-end}
+}
+@media(prefers-reduced-motion:reduce){
+ .featured-artwork-track{transition:none!important}
+ .featured-artwork-dots button{transition:none!important}
+}
+
 /* Track Order — responsive overview only */
 .track-overview{min-width:0;padding:clamp(16px,2.4vw,26px);overflow:hidden}
 .track-overview-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,auto);align-items:start;gap:18px;margin-bottom:18px}
@@ -968,6 +1000,7 @@ const DEFAULT_SITE = {
     { id: "personal", label: "Personal Artwork" },
   ],
   featuredId: "a1",
+  featuredArtworks: [],
   artworks: [
     { id: "a1", title: "Featured artwork slot", category: "character", year: "", image: "", description: "", tools: "", notes: "" },
     { id: "a2", title: "VTuber slot", category: "vtuber", year: "", image: "", description: "", tools: "", notes: "" },
@@ -1149,7 +1182,7 @@ function downscale(file, maxDim) {
       const k = Math.min(1, maxDim / Math.max(img.width, img.height));
       const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-      c.toBlob((b) => (b ? resolve(b) : reject(new Error("encode"))), "image/webp", 0.86);
+      c.toBlob((b) => (b && b.type === "image/webp" ? resolve(b) : reject(new Error("This browser could not encode WebP. Please use a browser with WebP support."))), "image/webp", 0.82);
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
     img.src = url;
@@ -1480,9 +1513,104 @@ function TopBar({ route, go, query, setQuery }) {
 }
 
 /* ============================================================ visitor pages (read-only) */
+function FeaturedArtworkCarousel({ items }) {
+  const slides = (Array.isArray(items) ? items : []).filter((item) => safeImg(item.url));
+  const count = slides.length;
+  const [index, setIndex] = useState(1);
+  const [paused, setPaused] = useState(false);
+  const [visible, setVisible] = useState(!document.hidden);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [instant, setInstant] = useState(false);
+  const pointerStart = useRef(null);
+
+  useEffect(() => {
+    setIndex(count > 1 ? 1 : 0);
+  }, [count]);
+
+  useEffect(() => {
+    const media = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setReducedMotion(!!(media && media.matches));
+    const updateVisibility = () => setVisible(!document.hidden);
+    updateMotion();
+    if (media) {
+      if (media.addEventListener) media.addEventListener("change", updateMotion);
+      else if (media.addListener) media.addListener(updateMotion);
+    }
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => {
+      if (media) {
+        if (media.removeEventListener) media.removeEventListener("change", updateMotion);
+        else if (media.removeListener) media.removeListener(updateMotion);
+      }
+      document.removeEventListener("visibilitychange", updateVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (count < 2 || paused || !visible || reducedMotion) return;
+    const timer = window.setInterval(() => setIndex((current) => current + 1), 4000);
+    return () => window.clearInterval(timer);
+  }, [count, paused, visible, reducedMotion]);
+
+  const next = () => { if (count > 1) setIndex((current) => current + 1); };
+  const previous = () => { if (count > 1) setIndex((current) => current - 1); };
+  const active = count > 1 ? (index - 1 + count) % count : 0;
+  const trackItems = count > 1 ? [slides[count - 1], ...slides, slides[0]] : slides;
+
+  const finishTransition = () => {
+    if (count < 2) return;
+    if (index === count + 1 || index === 0) {
+      setInstant(true);
+      setIndex(index === count + 1 ? 1 : count);
+      window.requestAnimationFrame(() => setInstant(false));
+    }
+  };
+  const startPointer = (e) => {
+    pointerStart.current = e.clientX;
+    setPaused(true);
+  };
+  const endPointer = (e) => {
+    if (pointerStart.current !== null) {
+      const delta = e.clientX - pointerStart.current;
+      if (Math.abs(delta) > 45) delta < 0 ? next() : previous();
+    }
+    pointerStart.current = null;
+    setPaused(false);
+  };
+
+  if (!count) return null;
+  return (
+    <section className="card span-12 featured-artwork-home" aria-roledescription="carousel" aria-label="Featured Artwork">
+      <div className="card-head">
+        <div><h2>{T("sec_featured")}</h2><small className="muted">{count} featured {count === 1 ? "artwork" : "artworks"}</small></div>
+        {count > 1 && <div className="featured-artwork-controls">
+          <button className="ib" type="button" onClick={previous} aria-label="Previous featured artwork"><Icon name="left" /></button>
+          <button className="ib" type="button" onClick={next} aria-label="Next featured artwork"><Icon name="right" /></button>
+        </div>}
+      </div>
+      <div className="featured-artwork-viewport"
+        onPointerEnter={() => setPaused(true)}
+        onPointerLeave={() => { pointerStart.current = null; setPaused(false); }}
+        onPointerDown={startPointer}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
+        onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); next(); } else if (e.key === "ArrowLeft") { e.preventDefault(); previous(); } }}>
+        <div className="featured-artwork-track" style={{ transform: "translateX(-" + (count > 1 ? index * 100 : 0) + "%)", transition: instant || count < 2 ? "none" : undefined }} onTransitionEnd={finishTransition}>
+          {trackItems.map((item, i) => <div className="featured-artwork-slide" key={(item.id || item.url) + "-" + i}>
+            <img src={safeImg(item.url)} alt={item.alt || item.title || "Featured artwork " + (((i - 1 + count) % count) + 1)} loading={i === (count > 1 ? 1 : 0) ? "eager" : "lazy"} decoding="async" draggable="false" />
+            {(item.title || item.alt) && <div className="featured-artwork-caption">{item.title || item.alt}</div>}
+          </div>)}
+        </div>
+      </div>
+      {count > 1 && <div className="featured-artwork-dots" role="group" aria-label="Choose featured artwork">
+        {slides.map((item, i) => <button key={item.id || item.url} type="button" className={i === active ? "is-active" : ""} onClick={() => setIndex(i + 1)} aria-label={"Go to featured artwork " + (i + 1)} aria-pressed={i === active} />)}
+      </div>}
+    </section>
+  );
+}
+
 function Home({ go, open }) {
   const w = CONFIG.appearance.widgets;
-  const feat = CONFIG.artworks.find((a) => a.id === CONFIG.featuredId) || CONFIG.artworks[0];
   const latest = CONFIG.artworks.slice(0, 8);
   const st = CONFIG.commissionStatus;
   const stMsg = { OPEN: T("st_OPEN"), LIMITED: T("st_LIMITED"), CLOSED: T("st_CLOSED") }[st];
@@ -1503,17 +1631,7 @@ function Home({ go, open }) {
         </div>
       </section>}
 
-      {w.featured && feat && <section className="card span-5 row-2 lift featured-section">
-        <div className="feat">
-          <div className="card-head" style={{ marginBottom: 0 }}><h2>{T("sec_featured")}</h2><Icon name="star" /></div>
-          <Art art={feat} i={0} onOpen={open} />
-          <div>
-            <h3>{feat.title}</h3>
-            <div className="meta" style={{ marginTop: 6 }}><span className="tag">{catLabel(feat.category)}</span><span className="muted">{feat.year || "Year not set"}</span></div>
-          </div>
-          <Btn kind="cyan" onClick={() => open(feat.id)}>View Details</Btn>
-        </div>
-      </section>}
+      {w.featured && Array.isArray(CONFIG.featuredArtworks) && CONFIG.featuredArtworks.length > 0 && <FeaturedArtworkCarousel items={CONFIG.featuredArtworks} />}
 
       <div className="home-work-grid">
         {w.latest && <section className="card latest-section">
@@ -1923,7 +2041,6 @@ const TABS = [
   { id: "overview", label: "Overview", icon: "grid" },
   { id: "orders", label: "Client Orders", icon: "mail" },
   { id: "reviews", label: "Client Reviews", icon: "star" },
-  { id: "offers", label: "Service details", icon: "sparkles" },
   { id: "profile", label: "Edit Profile", icon: "user" },
   { id: "media", label: "All images", icon: "image" },
   { id: "gallery", label: "Gallery", icon: "image" },
@@ -2248,6 +2365,7 @@ function ServicesPanel() {
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
   return (
     <div className="panel">
+      <div className="note info">Manage each service, its public gallery, pricing, availability and order terms in one place.</div>
       {site.services.map((s, i) => (
         <section key={s.id} className="card">
           <div className="form">
@@ -2260,14 +2378,16 @@ function ServicesPanel() {
             <TextIn label="External booking URL (optional)" value={s.orderUrl || ""} onChange={sets(["services", i, "orderUrl"])} placeholder="https://..." className="full" hint="If set, Request Commission opens this link. Otherwise it opens the built-in request form." />
             <Field label={"Detail gallery (" + (s.gallery || []).length + " images)"} className="full"><div className="list">{(s.gallery || []).map((url, gi) => <div className="rowi" key={url + gi}><div className="thumb">{safeImg(url) ? <img src={safeImg(url)} alt="" /> : <Icon name="image" />}</div><div className="grow"><small className="muted">Gallery image {gi + 1}</small></div><ConfirmDelete onYes={() => upd((n) => { n.services[i].gallery = (n.services[i].gallery || []).filter((_, j) => j !== gi); })} label="Remove gallery image" /></div>)}</div><ImagePicker label="Add gallery image" value="" onChange={(url) => { if (url) upd((n) => { const a = n.services[i].gallery || (n.services[i].gallery = []); a.push(url); }); }} maxDim={1800} /><small className="muted">Upload images one by one. They appear in the swipeable detail gallery, not on the service card.</small></Field>
           </div>
+          <ServicePricingEditor service={s} index={i} />
           <div className="btns" style={{ marginTop: 12, justifyContent: "flex-end" }}>
-            <button className="ib" disabled={i === 0} onClick={() => upd((n) => { n.services = move(n.services, i, -1); })} aria-label="Move up"><Icon name="up" /></button>
-            <button className="ib" disabled={i === site.services.length - 1} onClick={() => upd((n) => { n.services = move(n.services, i, 1); })} aria-label="Move down"><Icon name="down" /></button>
+            <button className="ib" disabled={i === 0} onClick={() => upd((n) => { n.services = move(n.services, i, -1); })} aria-label="Move service up"><Icon name="up" /></button>
+            <button className="ib" disabled={i === site.services.length - 1} onClick={() => upd((n) => { n.services = move(n.services, i, 1); })} aria-label="Move service down"><Icon name="down" /></button>
             <ConfirmDelete onYes={() => upd((n) => { n.services.splice(i, 1); })} label="Delete service" />
           </div>
         </section>
       ))}
       <Btn icon="plus" onClick={() => upd((n) => { n.services.push({ id: uid("s"), icon: "sparkles", title: "New service", short: "", detail: "", category: (n.categories[0] || {}).id || "", image: "", gallery: [], orderUrl: "", ...clone(SVC_DEF) }); })}>Add service</Btn>
+      <LicensesEditor />
     </div>
   );
 }
@@ -2370,8 +2490,13 @@ function AppearancePanel() {
 }
 
 function MediaPanel() {
-  const { site, upd } = useCreator();
+  const { site, upd, save, saving } = useCreator();
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
+  const [featuredBusy, setFeaturedBusy] = useState(false);
+  const [featuredMessage, setFeaturedMessage] = useState("");
+  const [draggingFeatured, setDraggingFeatured] = useState(false);
+  const featuredInput = useRef(null);
+  const featured = Array.isArray(site.featuredArtworks) ? site.featuredArtworks : [];
   const addArtwork = () => upd((n) => {
     n.artworks.unshift({ id:uid("a"), title:"New artwork", category:(n.categories[0]||{}).id||"", year:"", image:"", description:"", tools:"", notes:"" });
   });
@@ -2379,6 +2504,30 @@ function MediaPanel() {
     n.artworks = n.artworks.filter((a) => a.id !== id);
     if (n.featuredId === id) n.featuredId = (n.artworks[0]||{}).id||"";
   });
+  const uploadFeatured = async (fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    const remaining = Math.max(0, 10 - featured.length);
+    if (!remaining) { setFeaturedMessage("Featured Artwork sudah mencapai batas 10 gambar."); return; }
+    setFeaturedBusy(true); setFeaturedMessage("");
+    const uploaded = [], failed = [];
+    for (const file of files.slice(0, remaining)) {
+      try {
+        const url = await storeImage(file, 1600);
+        uploaded.push({ id: uid("fa"), url, alt: (file.name || "Featured artwork").replace(/\.[^.]+$/, "").slice(0, 140), title: "" });
+      } catch (error) {
+        failed.push((file.name || "Image") + ": " + (error && error.message ? error.message : "Upload gagal."));
+      }
+    }
+    if (uploaded.length) upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat(uploaded).slice(0, 10); });
+    if (files.length > remaining) failed.push("Maksimal 10 gambar. " + (files.length - remaining) + " file tidak diproses.");
+    setFeaturedMessage([
+      uploaded.length ? uploaded.length + " gambar berhasil diunggah. Klik Publish changes untuk menyimpan perubahan." : "",
+      failed.join(" ")
+    ].filter(Boolean).join(" "));
+    setFeaturedBusy(false);
+    if (featuredInput.current) featuredInput.current.value = "";
+  };
   const groups = [
     ["Site images", [["Profile picture", ["profile", "avatar"], 600, true], ["About Me ID card", ["profile","about","cardImage"], 1200], ["Mascot", ["mascot", "image"], 1400], ["Home banner", ["appearance", "banner"], 1800]]],
     ["Services", site.services.map((x, i) => [x.title, ["services", i, "image"], 1400])],
@@ -2393,6 +2542,40 @@ function MediaPanel() {
           <div className="form">{items.map(([l, pth, m, r]) => <ImagePicker key={pth.join(".")} label={l} value={getPath(site, pth) || ""} onChange={sets(pth)} maxDim={m} round={r} />)}</div>
         </section>
       ))}
+      <section className="card featured-artwork-manager">
+        <div className="card-head"><div><h2>Featured Artwork</h2><small className="muted">{featured.length}/10 images</small></div></div>
+        <p className="muted" style={{ marginBottom: 12 }}>Images appear in the Home carousel. Files are resized to a maximum 1600px and uploaded to permanent Storage as WebP URLs.</p>
+        <div className={"featured-upload-drop" + (draggingFeatured ? " is-dragging" : "")}
+          onDragOver={(e) => { e.preventDefault(); setDraggingFeatured(true); }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDraggingFeatured(false); }}
+          onDrop={(e) => { e.preventDefault(); setDraggingFeatured(false); uploadFeatured(e.dataTransfer.files); }}>
+          <Icon name="upload" />
+          <b>Drop images here</b>
+          <small className="muted">PNG, JPG, WebP or GIF · up to 10 images · WebP optimized</small>
+          <input ref={featuredInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden onChange={(e) => uploadFeatured(e.target.files)} />
+          <Btn kind="cyan" size="sm" icon="plus" disabled={featuredBusy || featured.length >= 10} onClick={() => featuredInput.current && featuredInput.current.click()}>{featuredBusy ? "Uploading…" : "Choose images"}</Btn>
+        </div>
+        {featuredMessage && <div className="note info" role="status" style={{ marginTop: 12 }}>{featuredMessage}</div>}
+        <div className="featured-artwork-list">
+          {featured.map((item, i) => <div className="featured-artwork-row" key={item.id || item.url}>
+            <div className="featured-artwork-thumb">{safeImg(item.url) ? <img src={safeImg(item.url)} alt={item.alt || item.title || "Featured artwork " + (i + 1)} /> : <Icon name="image" />}</div>
+            <div className="featured-artwork-fields">
+              <small className="muted">Image {i + 1} of {featured.length}</small>
+              <TextIn label="Alt text" value={item.alt || ""} onChange={(v) => upd((n) => { n.featuredArtworks[i].alt = v; })} placeholder="Describe the artwork" />
+              <TextIn label="Title (optional)" value={item.title || ""} onChange={(v) => upd((n) => { n.featuredArtworks[i].title = v; })} placeholder="Artwork title" />
+            </div>
+            <div className="featured-artwork-actions">
+              <button className="ib" disabled={i === 0} onClick={() => upd((n) => { n.featuredArtworks = move(n.featuredArtworks, i, -1); })} aria-label={"Move " + (item.title || "image " + (i + 1)) + " up"} title="Move up"><Icon name="up" /></button>
+              <button className="ib" disabled={i === featured.length - 1} onClick={() => upd((n) => { n.featuredArtworks = move(n.featuredArtworks, i, 1); })} aria-label={"Move " + (item.title || "image " + (i + 1)) + " down"} title="Move down"><Icon name="down" /></button>
+              <ConfirmDelete onYes={() => upd((n) => { n.featuredArtworks.splice(i, 1); })} label="Delete featured artwork" />
+            </div>
+          </div>)}
+          {!featured.length && <p className="muted">Belum ada Featured Artwork. Upload hingga 10 gambar untuk menampilkannya di Home.</p>}
+        </div>
+        <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
+          <Btn kind="cyan" icon="save" disabled={saving || !featured.length && !site.featuredArtworks?.length} onClick={save}>{saving ? "Saving…" : "Save Featured Artwork"}</Btn>
+        </div>
+      </section>
       <section className="card">
         <div className="card-head"><h2>Portfolio images ({site.artworks.length})</h2><Btn size="sm" icon="plus" onClick={addArtwork}>Add image</Btn></div>
         <p className="muted" style={{marginBottom:12}}>Add creates a new portfolio item. You can edit each image title and upload, replace, or remove its image directly here. Edit additional artwork details in Creator Dashboard → Gallery.</p>
@@ -2406,7 +2589,7 @@ function MediaPanel() {
             <div style={{minWidth:180,flex:"1 1 220px"}}><ImagePicker label="Image" value={a.image||""} onChange={sets(["artworks",i,"image"])} maxDim={1800}/></div>
             <ConfirmDelete onYes={() => removeArtwork(a.id)} label="Delete image" />
           </div>)}
-          {!site.artworks.length && <p className="muted">No portfolio images yet. Add one to begin.</p>}
+          {!site.artworks.length && <p className="muted">No portfolio images yet.</p>}
         </div>
       </section>
     </div>
@@ -2646,8 +2829,8 @@ function SupabasePanel() {
 }
 
 function CreatorPage() {
-  const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t; });
-  const pick = (t) => { setTab(t); ss.set("mk-tab", t); window.scrollTo({ top: 0 }); };
+  const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t==="offers"?"services":t; });
+  const pick = (t) => { const next = t === "offers" ? "services" : t; setTab(next); ss.set("mk-tab", next); window.scrollTo({ top: 0 }); };
   return (
     <div className="page">
       <PageHead crumb="CREATOR" title="Creator Dashboard">Manage your portfolio. Changes preview instantly and go live when you save.</PageHead>
@@ -2659,7 +2842,6 @@ function CreatorPage() {
       {tab === "profile" && <ProfilePanel />}
       {tab === "orders" && <OrdersPanel />}
       {tab === "reviews" && <ReviewsPanel />}
-      {tab === "offers" && <OffersPanel />}
       {tab === "media" && <MediaPanel />}
       {tab === "contact" && <ContactPanel />}
       {tab === "texts" && <TextsPanel />}
@@ -3460,35 +3642,69 @@ function Track() {
   );
 }
 
-/* ---- creator: services detail editor, orders */
-function OffersPanel() {
-  const { site, upd } = useCreator(); const sets = (p) => (v) => upd((n) => setPath(n, p, v));
-  const ens = (n, i) => { n.services[i] = { ...SVC_DEF, ...n.services[i] }; return n.services[i]; };
+function ServicePricingEditor({ service, index }) {
+  const { upd } = useCreator();
+  const x = X(service);
+  const ens = (n) => { n.services[index] = { ...SVC_DEF, ...n.services[index] }; return n.services[index]; };
+  const mut = (fn) => upd((n) => { fn(ens(n)); });
   const list = (title, items, onChange, ph) => <ChipEditor label={title} items={items} onChange={onChange} placeholder={ph} />;
   return (
-    <div className="panel"><div className="note info">Set status, prices, includes, add-ons and notes for each service. Add or delete services in the Services tab.</div>
-      {site.services.map((sv, i) => { const x = X(sv); const P = (k) => ["services", i, k]; const mut = (fn) => upd((n) => { fn(ens(n, i)); }); return (
-        <section key={sv.id} className="card"><h2 style={{ marginBottom: 12 }}>{sv.title}</h2>
-          <div className="form">
-            <Field label="Availability"><select className="in" value={x.status} onChange={(e) => mut((s2) => { s2.status = e.target.value; })}>{SVC_STATUS.map((o) => <option key={o}>{o}</option>)}</select></Field>
-            <TextIn label="License info (shown on card)" value={x.license} onChange={(v) => mut((s2) => { s2.license = v; })} />
-            <TextIn label="Estimated turnaround time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} /><TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
-            <TextIn label="Usage / license terms for this service" value={x.usageTerms || ""} onChange={(v) => mut((s2) => { s2.usageTerms = v; })} multiline className="full" placeholder="Personal use, commercial use, redistribution, credit..." />
-            <TextIn label="Additional service terms" value={x.serviceTerms || ""} onChange={(v) => mut((s2) => { s2.serviceTerms = v; })} multiline className="full" placeholder="What clients should know before ordering..." />
-            {list("Deliverables / What the client receives", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add a deliverable")}{list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
-            <Field label="Base prices (0 = custom quote)" className="full"><div className="list">{x.tiers.map((t, ti) => <div key={t.id} className="rowi"><input className="in" value={t.name} onChange={(e) => mut((s2) => { s2.tiers[ti].name = e.target.value; })} aria-label="Name" /><input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers[ti].price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} /><ConfirmDelete onYes={() => mut((s2) => { s2.tiers.splice(ti, 1); })} label="Delete" /></div>)}</div><Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.tiers.push({ id: uid("t"), name: "New type", price: 0 }); })}>Add base price</Btn></Field>
-            <Field label="Add-ons" className="full"><div className="list">{x.addons.map((a, ai) => <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}><div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}><input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons[ai].name = e.target.value; })} aria-label="Name" /><input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons[ai].desc = e.target.value; })} placeholder="Description" aria-label="Description" /></div>
-              <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons[ai].type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
-              <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={a.price} disabled={a.type === "custom"} onChange={(e) => mut((s2) => { s2.addons[ai].price = Number(e.target.value) || 0; })} aria-label="Price" />
-              <select className="in" style={{ maxWidth: 130 }} value={a.select} onChange={(e) => mut((s2) => { s2.addons[ai].select = e.target.value; })} aria-label="Selection"><option value="single">Single</option><option value="multiple">Multiple</option></select>
-              <label className="switch"><span>Required</span><input type="checkbox" checked={!!a.required} onChange={(e) => mut((s2) => { s2.addons[ai].required = e.target.checked; })} /></label><ConfirmDelete onYes={() => mut((s2) => { s2.addons.splice(ai, 1); })} label="Delete add-on" /></div>)}</div>
-              <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.addons.push({ id: uid("ad"), name: "New add-on", desc: "", type: "fixed", price: 0, select: "single", required: false }); })}>Add add-on</Btn></Field>
-          </div></section>); })}
-      <section className="card"><h2 style={{ marginBottom: 6 }}>Usage licenses</h2><p className="muted" style={{ marginBottom: 12 }}>Shown in the request form. Percentage is added to the subtotal.</p>
-        <div className="list">{(site.licenses || []).map((l, i) => <div key={l.id} className="rowi" style={{ flexWrap: "wrap" }}><div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}><input className="in" value={l.label} onChange={(e) => sets(["licenses", i, "label"])(e.target.value)} aria-label="Name" /><input className="in" value={l.terms || ""} onChange={(e) => sets(["licenses", i, "terms"])(e.target.value)} placeholder="Terms" aria-label="Terms" /></div>
-          <select className="in" style={{ maxWidth: 140 }} value={l.type} onChange={(e) => sets(["licenses", i, "type"])(e.target.value)}><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select><input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={l.value} disabled={l.type === "custom"} onChange={(e) => sets(["licenses", i, "value"])(Number(e.target.value) || 0)} aria-label="Value" /><ConfirmDelete onYes={() => upd((n) => { n.licenses.splice(i, 1); })} label="Delete license" /></div>)}</div>
-        <Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { n.licenses.push({ id: uid("l"), label: "New license", type: "fixed", value: 0, terms: "" }); })}>Add license</Btn></section>
-    </div>
+    <section className="card service-pricing-editor" style={{ marginTop: 14, background: "var(--bg)", boxShadow: "none" }}>
+      <h3 style={{ marginBottom: 12 }}>Pricing & order details</h3>
+      <div className="form">
+        <Field label="Availability"><select className="in" value={x.status} onChange={(e) => mut((s2) => { s2.status = e.target.value; })}>{SVC_STATUS.map((o) => <option key={o}>{o}</option>)}</select></Field>
+        <TextIn label="License info (shown on card)" value={x.license} onChange={(v) => mut((s2) => { s2.license = v; })} />
+        <TextIn label="Estimated turnaround time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} />
+        <TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
+        <TextIn label="Usage / license terms for this service" value={x.usageTerms || ""} onChange={(v) => mut((s2) => { s2.usageTerms = v; })} multiline className="full" placeholder="Personal use, commercial use, redistribution, credit..." />
+        <TextIn label="Additional service terms" value={x.serviceTerms || ""} onChange={(v) => mut((s2) => { s2.serviceTerms = v; })} multiline className="full" placeholder="What clients should know before ordering..." />
+        {list("Deliverables / What the client receives", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add a deliverable")}
+        {list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
+        <Field label="Base prices (0 = custom quote)" className="full">
+          <div className="list">{x.tiers.map((t, ti) => <div key={t.id} className="rowi">
+            <input className="in" value={t.name} onChange={(e) => mut((s2) => { s2.tiers[ti].name = e.target.value; })} aria-label="Name" />
+            <input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers[ti].price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} />
+            <ConfirmDelete onYes={() => mut((s2) => { s2.tiers.splice(ti, 1); })} label="Delete base price" />
+          </div>)}</div>
+          <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.tiers.push({ id: uid("t"), name: "New type", price: 0 }); })}>Add base price</Btn>
+        </Field>
+        <Field label="Add-ons" className="full">
+          <div className="list">{x.addons.map((a, ai) => <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}>
+            <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
+              <input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons[ai].name = e.target.value; })} aria-label="Name" />
+              <input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons[ai].desc = e.target.value; })} placeholder="Description" aria-label="Description" />
+            </div>
+            <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons[ai].type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
+            <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={a.price} disabled={a.type === "custom"} onChange={(e) => mut((s2) => { s2.addons[ai].price = Number(e.target.value) || 0; })} aria-label="Price" />
+            <select className="in" style={{ maxWidth: 130 }} value={a.select} onChange={(e) => mut((s2) => { s2.addons[ai].select = e.target.value; })} aria-label="Selection"><option value="single">Single</option><option value="multiple">Multiple</option></select>
+            <label className="switch"><span>Required</span><input type="checkbox" checked={!!a.required} onChange={(e) => mut((s2) => { s2.addons[ai].required = e.target.checked; })} /></label>
+            <ConfirmDelete onYes={() => mut((s2) => { s2.addons.splice(ai, 1); })} label="Delete add-on" />
+          </div>)}</div>
+          <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.addons.push({ id: uid("ad"), name: "New add-on", desc: "", type: "fixed", price: 0, select: "single", required: false }); })}>Add add-on</Btn>
+        </Field>
+      </div>
+    </section>
+  );
+}
+
+function LicensesEditor() {
+  const { site, upd } = useCreator();
+  const sets = (p) => (v) => upd((n) => setPath(n, p, v));
+  return (
+    <section className="card">
+      <h2 style={{ marginBottom: 6 }}>Usage licenses</h2>
+      <p className="muted" style={{ marginBottom: 12 }}>Shown in the request form. Percentage is added to the subtotal.</p>
+      <div className="list">{(site.licenses || []).map((l, i) => <div key={l.id} className="rowi" style={{ flexWrap: "wrap" }}>
+        <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
+          <input className="in" value={l.label} onChange={(e) => sets(["licenses", i, "label"])(e.target.value)} aria-label="Name" />
+          <input className="in" value={l.terms || ""} onChange={(e) => sets(["licenses", i, "terms"])(e.target.value)} placeholder="Terms" aria-label="Terms" />
+        </div>
+        <select className="in" style={{ maxWidth: 140 }} value={l.type} onChange={(e) => sets(["licenses", i, "type"])(e.target.value)}><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
+        <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={l.value} disabled={l.type === "custom"} onChange={(e) => sets(["licenses", i, "value"])(Number(e.target.value) || 0)} aria-label="Value" />
+        <ConfirmDelete onYes={() => upd((n) => { n.licenses.splice(i, 1); })} label="Delete license" />
+      </div>)}</div>
+      <Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { n.licenses.push({ id: uid("l"), label: "New license", type: "fixed", value: 0, terms: "" }); })}>Add license</Btn>
+    </section>
   );
 }
 function OrderDetail({ o, onBack, onSaved }) {
