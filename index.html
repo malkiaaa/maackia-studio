@@ -933,12 +933,24 @@ function downscale(file, maxDim) {
   });
 }
 const blobToDataUrl = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result || "").split(",")[1] || "");
+  reader.onerror = () => reject(new Error("Could not read the image."));
+  reader.readAsDataURL(blob);
+});
 async function storeImage(file, maxDim = 1800) {
-  if (!file || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) throw new Error("type");
+  if (!file || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) throw new Error("Use a PNG, JPG, WebP or GIF image.");
   const blob = await downscale(file, maxDim);
-  const assets = await cap("assets");
-  if (assets) { try { const r = await assets.upload(blob, { type: blob.type || "image/webp" }); return "/_blob/" + r.id; } catch (e) {} }
-  return blobToDataUrl(blob);
+  if (!blob || blob.size > 4 * 1024 * 1024) throw new Error("Image is too large after compression. Use a smaller image.");
+  const base64 = await blobToBase64(blob);
+  const result = await Store.api("portfolio_upload", {
+    base64,
+    contentType: blob.type || "image/webp",
+    fileName: (file.name || "portfolio-image").slice(0, 100)
+  }, true);
+  if (!result || !result.url || !result.path) throw new Error("Upload completed without a permanent file URL.");
+  return result.url;
 }
 
 /* ============================================================ constants & icons */
@@ -1735,7 +1747,7 @@ function ImagePicker({ label, value, onChange, maxDim = 1800, round }) {
     const f = e.target.files && e.target.files[0]; e.target.value = "";
     if (!f) return;
     setBusy(true); setErr("");
-    try { onChange(await storeImage(f, maxDim)); } catch (x) { setErr(x.message === "type" ? "Use a PNG, JPG, WebP or GIF image." : "Could not upload this image."); }
+    try { onChange(await storeImage(f, maxDim)); } catch (x) { setErr(x && x.message ? x.message : "Could not upload this image."); }
     setBusy(false);
   };
   const src = safeImg(value);
@@ -2149,7 +2161,7 @@ function MediaPanel() {
   ];
   return (
     <div className="panel">
-      <div className="note info">Manage images used across the website. Use Remove on an image picker to clear it. Add or delete portfolio images below; all changes are saved with Creator Mode.</div>
+      <div className="note info">Upload images directly to permanent Supabase Storage from this dashboard. New uploads are saved in the studio media bucket; website content stores only the public file URL. Remove unlinks an image from the page but keeps the stored file as a safety copy.</div>
       {groups.map(([t, items]) => (
         <section key={t} className="card">
           <h2 style={{ marginBottom: 14 }}>{t}</h2>
