@@ -3155,13 +3155,13 @@ function OrderDetail({ o, onBack, onSaved }) {
   const save = async (extra, eventType, eventMessage) => {
     const n = { ...d };
     const tr = clone(t || {});
-    const statusChanged = n.status !== d.status;
+    const statusChanged = n.status !== (t?.status || d.status);
     tr.status = n.status;
     tr.payment = n.payment;
     if (extra) extra(tr, n);
     try {
       await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines });
-      await Store.setTrack(tr);
+      await Store.setTrack({ ...tr, finalFiles: (tr.finalFiles || []).map((file) => file.path ? { name: file.name, path: file.path, type: file.type } : file) });
       setD(n);
       const fresh = await Store.getTrack(n.id);
       setT(fresh || tr);
@@ -3219,7 +3219,7 @@ function OrderDetail({ o, onBack, onSaved }) {
       tr.status = "Completed";
       tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "Finished Art has been delivered. Your order is marked completed." }];
       await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines });
-      await Store.setTrack(tr);
+      await Store.setTrack({ ...tr, finalFiles: (tr.finalFiles || []).map((file) => file.path ? { name: file.name, path: file.path, type: file.type } : file) });
       setD(n); onSaved(n);
       await notify("finished_art", "Your Finished Art has been uploaded and delivered. Open Track Order using your Request ID and email address to view the final artwork and download the files.");
       setT(await Store.getTrack(n.id));
@@ -3255,7 +3255,7 @@ function OrderDetail({ o, onBack, onSaved }) {
         <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post} disabled={!!busy}>Post update</Btn></div>
         <div style={{ marginTop: 12 }}><small className="muted">Upload Finished Art (image preview, max 10 MB)</small><input type="file" accept="image/*" className="in" onChange={finalUp} disabled={!!busy} /></div>
         {t?.finalFiles?.length > 0 && <div style={{ marginTop: 14 }}><h3>Finished Art pre-review</h3><div className="strip">{t.finalFiles.map((fl, i) => <div key={fl.path || fl.url || i} style={{ minWidth: 160, maxWidth: 240 }}><div className="art sq"><img src={fl.url} alt={fl.name || "Finished Art preview"} /></div><small className="muted">{fl.name}</small></div>)}</div><p className="muted" style={{ marginTop: 8 }}>Check every image before sending. The client will be able to view the files from the tracking page after delivery.</p></div>}
-        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={sendFinishedArt} disabled={!t?.finalFiles?.length || !!busy}>{busy === "finished" ? "Sending Finished Art…" : "Send Finished Art to Client"}</Btn><Btn kind="ghost" onClick={sendClientEmail} disabled={!!busy}>{busy === "manual" ? "Sending Email…" : "Send Email to Client"}</Btn></div>
+        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={sendFinishedArt} disabled={!t?.finalFiles?.length || !!busy || d.status === "Completed"}>{busy === "finished" ? "Sending Finished Art…" : "Send Finished Art to Client"}</Btn><Btn kind="ghost" onClick={sendClientEmail} disabled={!!busy}>{busy === "manual" ? "Sending Email…" : "Send Email to Client"}</Btn></div>
         {msg && <div className="note info" role="status" style={{ marginTop: 12 }}>{msg}</div>}
         {t && t.proposal && <p className="muted" style={{ marginTop: 10 }}>Proposal response: {t.proposal.response || "waiting"}</p>}{t && (t.updates || []).filter((u) => u.from === "client").map((u, i) => <p key={i} className="note info" style={{ marginTop: 6 }}>{u.text}</p>)}</section>
     </div>
