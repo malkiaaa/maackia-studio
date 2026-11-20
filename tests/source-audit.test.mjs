@@ -327,3 +327,27 @@ test("manual client email and lifecycle update actions are owner-authorized", ()
 test("payment status changes also trigger client and Creator email notifications", () => {
   assert.match(html, /n\.payment !== \(t\?\.payment \|\| d\.payment\)/);
 });
+
+
+test("Creator request list exposes per-client email and delete actions", () => {
+  const start = html.indexOf("function OrdersPanel()");
+  const end = html.indexOf("function ReviewsPanel()", start);
+  const panel = html.slice(start, end);
+  assert.match(panel, /emailClient\(o\)/);
+  assert.match(panel, /"Send email"/);
+  assert.match(panel, /deleteClientOrder\(o\)/);
+  assert.match(panel, /"Delete"/);
+  assert.match(panel, /notify_update/);
+  assert.match(panel, /window\.confirm/);
+});
+
+test("client tracking separates proposal, payment, messages, and final delivery", () => {
+  const start = html.indexOf("function Track()");
+  const end = html.indexOf("/* ---- creator:", start);
+  const track = html.slice(start, end);
+  for (const section of ["01 · PRICE & PROPOSAL", "02 · PAYMENT", "03 · COMMUNICATION", "04 · DELIVERY"]) {
+    assert.ok(track.includes(section), "missing tracking section: " + section);
+  }
+  assert.match(track, /updates\.slice\(\)\.sort/);
+  assert.match(track, /Final artwork and download links will appear here/);
+});
