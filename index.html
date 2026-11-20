@@ -2435,7 +2435,7 @@ function getEmailCfg() { try { return JSON.parse(localStorage.getItem(EMAIL_CFG_
 function setEmailCfgLocal(cfg) { try { localStorage.setItem(EMAIL_CFG_KEY, JSON.stringify(cfg)); } catch (e) {} }
 
 function EmailPanel() {
-  const defaultCfg = { artistEmail: "mmaackia@gmail.com", fromName: "Malkiaa Studio", testResult: "" };
+  const defaultCfg = { fromName: "Malkiaa Studio" };
   const [cfg, setCfg] = useState(() => ({ ...defaultCfg, ...(getEmailCfg() || {}) }));
   const [msg, setMsg] = useState({ text: "", ok: false });
   const [saving, setSaving] = useState(false);
@@ -2472,7 +2472,6 @@ function EmailPanel() {
       const { error } = await sb.from("app_settings").upsert({
         key: "email_config",
         value: {
-          artistEmail: cfg.artistEmail.trim(),
           fromName: cfg.fromName.trim() || "Malkiaa Studio",
         },
       }, { onConflict: "key" });
@@ -2504,7 +2503,7 @@ function EmailPanel() {
       <section className="card">
         <h2 style={{ marginBottom: 6 }}>How It Works</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, margin: "12px 0" }}>
-          {[["1. Visitor submits", "The commission is saved to Supabase first."],["2. Creator and client are notified", "The studio receives a new-request alert and the client receives a tracking confirmation."],["3. Order updates are sent", "Proposal, progress, status and finished-art emails are sent to the client and copied to the Creator."],["4. Delivery is logged", "Every email attempt is recorded in Creator Dashboard notifications."]].map(([t,d]) => (
+          {[["1. Visitor submits", "The commission is saved to Supabase first."],["2. Client receives confirmation", "A request confirmation and tracking details are sent to the client email address."],["3. Client receives updates", "Proposal, progress, status and finished-art notifications are sent only to the client."],["4. Delivery is logged", "Every client email attempt is recorded in Creator Dashboard notifications."]].map(([t,d]) => (
             <div key={t} style={{ background: "var(--powder)", borderRadius: 16, padding: 14 }}>
               <b style={{ display: "block", fontSize: ".85rem", marginBottom: 4 }}>{t}</b>
               <small style={{ color: "var(--muted)" }}>{d}</small>
@@ -3507,7 +3506,7 @@ function OrderDetail({ o, onBack, onSaved }) {
     setBusy("manual");
     try {
       await notify("manual", pub.trim() || ("A new update is available for your commission. Current status: " + d.status + ". Open Track Order to view the latest details."));
-      setMsg("The mail service accepted the email for the client and Creator. Inbox delivery is not guaranteed; if it is missing, check Spam/Promotions and the recipient address.");
+      setMsg("The mail service accepted the email for the client only. Inbox delivery is not guaranteed; if it is missing, check Spam/Promotions and the recipient address.");
     } catch (x2) { setMsg("Email could not be sent: " + (x2?.message || "Check Email Notifications.")); }
     finally { setBusy(""); }
   };
