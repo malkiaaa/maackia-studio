@@ -492,7 +492,6 @@ Deno.serve(async (req) => {
         return json({ error: "A valid submission idempotency key is required. Please refresh the form and try again." }, 400);
       }
 
-      const emailHash = await sha256(email + "|pending");
       const safeForm = { ...form, email };
       const safeOrder = {
         created_at: new Date().toISOString(),
@@ -516,7 +515,6 @@ Deno.serve(async (req) => {
         payment: "Unpaid",
         estimate: pricing.estimate.total,
         custom: pricing.estimate.custom,
-        emailHash: await sha256(email + "|pending"),
         client_name: clean(form?.name, 120) || "Client",
         proposal: null,
         updates: [],
