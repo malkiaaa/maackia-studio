@@ -366,15 +366,7 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
 
   const artistEmail = clean(config.artistEmail, 254) || "mmaackia@gmail.com";
 
-  if (config.sendArtist !== false) {
-    results.push(await deliverEmail(db, config, {
-      to: artistEmail,
-      subject: "[Malkiaa Studio] New Commission Request " + order.id,
-      html: commissionEmailHtml(order, clientName, false),
-      orderId: order.id,
-      kind: "artist",
-    }));
-  }
+  // Send the customer confirmation first; notify the studio owner afterward.
   if (config.sendClient !== false && clientEmail) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
@@ -382,6 +374,15 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
       html: commissionEmailHtml(order, clientName, true),
       orderId: order.id,
       kind: "client",
+    }));
+  }
+  if (config.sendArtist !== false) {
+    results.push(await deliverEmail(db, config, {
+      to: artistEmail,
+      subject: "[Malkiaa Studio] New Commission Request " + order.id,
+      html: commissionEmailHtml(order, clientName, false),
+      orderId: order.id,
+      kind: "artist",
     }));
   }
   return results;
