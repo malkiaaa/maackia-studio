@@ -291,22 +291,25 @@ test("server character limit matches the commission form maximum", () => {
 });
 
 
-test("Creator order updates send emails to both the client and Creator", () => {
-  assert.match(backend, /async function sendOrderUpdateEmails/);
-  assert.match(backend, /kind: "client_evt_" \+ eventType/);
-  assert.match(backend, /kind: "artist_evt_" \+ eventType/);
-  assert.match(backend, /if \(action === "notify_update"\)/);
-  assert.match(backend, /requireOwner\(req, db\)/);
-});
+test("commission and order-update emails are sent only to clients", () => {
+  const updateStart = backend.indexOf("async function sendOrderUpdateEmails");
+  const updateEnd = backend.indexOf("async function addSignedFinalFileUrls", updateStart);
+  const updateAction = backend.slice(updateStart, updateEnd);
+  assert.match(updateAction, /kind: "client_evt_" \+ eventType/);
+  assert.doesNotMatch(updateAction, /artistEmail|artist_evt_/);
 
-test("new commission emails are sent to both recipients without a client opt-out toggle", () => {
   const start = backend.indexOf("async function sendCommissionEmails");
   const end = backend.indexOf("async function addSignedFinalFileUrls", start);
   const action = backend.slice(start, end);
   assert.match(action, /to: clientEmail/);
-  assert.match(action, /to: artistEmail/);
-  assert.doesNotMatch(action, /config\.sendClient/);
+  assert.doesNotMatch(action, /artistEmail|kind: "artist"/);
   assert.doesNotMatch(html, /Send confirmation email to client after submission/);
+});
+
+test("standalone test email is disabled and failed retries are client-only", () => {
+  assert.match(backend, /Standalone test emails are disabled/);
+  assert.match(backend, /failedClientNotifications/);
+  assert.match(backend, /startsWith\("client_evt_"\)/);
 });
 
 test("Finished Art is previewed before delivery and private files are signed for tracking", () => {
