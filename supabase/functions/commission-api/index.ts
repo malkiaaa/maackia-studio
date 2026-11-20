@@ -439,7 +439,7 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
 async function addSignedFinalFileUrls(db: any, track: any) {
   const files = Array.isArray(track?.finalFiles) ? track.finalFiles : [];
   const signedFiles = await Promise.all(files.map(async (file: any) => {
-    if (!file?.path || !/^[A-Za-z0-9-]{20,80}$/.test(file.path)) {
+    if (!file?.path || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9)))) {
       return { name: file?.name, type: file?.type, unavailable: true };
     }
     const { data, error } = await db.storage.from("references").createSignedUrl(file.path, 60 * 60);
@@ -684,7 +684,7 @@ Deno.serve(async (req) => {
       if (patch.finalFiles !== undefined && patch.finalFiles.some((file: any) =>
         !file || typeof file !== "object" || Array.isArray(file) ||
         typeof file.name !== "string" || !file.name.trim() ||
-        typeof file.path !== "string" || !/^[A-Za-z0-9-]{20,80}$/.test(file.path) ||
+        typeof file.path !== "string" || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9))) ||
         (file.url && String(file.url).startsWith("blob:"))
       )) return json({ error: "Every Finished Art file must be uploaded to permanent Storage before saving." }, 422);
       if (patch.proposal !== undefined && patch.proposal !== null && (typeof patch.proposal !== "object" || Array.isArray(patch.proposal))) {
@@ -1002,7 +1002,7 @@ Deno.serve(async (req) => {
       ]);
       if (orderError || trackError || !order || !track) return json({ error: "Commission or tracking record was not found." }, 404);
       if (eventType === "finished_art" && (!Array.isArray(track.finalFiles) || track.finalFiles.length === 0 ||
-          track.finalFiles.some((file: any) => !file?.path || !/^[A-Za-z0-9-]{20,80}$/.test(file.path)))) {
+          track.finalFiles.some((file: any) => !file?.path || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9)))))) {
         return json({ error: "Upload every Finished Art file to permanent Storage before sending the delivery email." }, 409);
       }
       const defaults: Record<string, string> = {
