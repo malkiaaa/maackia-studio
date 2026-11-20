@@ -597,3 +597,14 @@ test("desktop Home places Featured Artwork beside the hero without changing mobi
   assert.match(html, /@media \(min-width:1024px\)[\s\S]*?home-dashboard-featured-pair>\.featured-artwork-home\{grid-column:span 5/);
   assert.match(html, /@media\(max-width:767px\)\{[\s\S]*?\.home-dashboard\{grid-template-columns:minmax\(0,1fr\)/);
 });
+
+
+test("client email sender identity and transactional copy are consistent and replyable", () => {
+  const gas = readFileSync(new URL("../supabase/apps-script/Code.gs", import.meta.url), "utf8");
+  assert.match(gas, /name: fromName,\\s*replyTo: "mmaackia@gmail\\.com"/);
+  assert.match(backend, /subject: "We received your commission request \\| " \+ order\.id/);
+  assert.match(backend, /subjectLabel \+ " for your commission \\| " \+ order\.id/);
+  assert.match(backend, /Commission support · mmaackia@gmail\\.com/);
+  assert.match(backend, /reply directly to this email/);
+  assert.doesNotMatch(backend, /This is an automatic transactional email/);
+});
