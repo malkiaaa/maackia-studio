@@ -244,3 +244,22 @@ test("browser keeps the idempotency key on retry and clears it only after succes
   assert.match(html, /const result = await Store\.submit\(order, track, idempotencyKey\)/);
   assert.match(html, /ss\.del\(storageKey\)/);
 });
+
+
+test("server pricing rejects negative add-on and license configuration even when unselected", () => {
+  const calculate = getServerEstimate();
+  const negativeAddon = structuredClone(pricingSite);
+  negativeAddon.services[0].addons[0].price = -1;
+  assert.equal(calculate(negativeAddon, orderFor()).ok, false);
+  const negativeLicense = structuredClone(pricingSite);
+  negativeLicense.licenses[0].value = -1;
+  assert.equal(calculate(negativeLicense, orderFor()).ok, false);
+});
+
+test("submit response does not expose the tracking email hash", () => {
+  const start = backend.indexOf('if (action === "submit") {');
+  const end = backend.indexOf('if (action === "public_board") {', start);
+  const action = backend.slice(start, end);
+  assert.match(action, /const \{ emailHash: _privateEmailHash, \.\.\.publicTrack \} = savedTrack/);
+  assert.match(action, /json\(\{ track: publicTrack/);
+});
