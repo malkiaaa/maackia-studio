@@ -2506,6 +2506,9 @@ function MediaPanel() {
   const { site, upd, save, saving, dirty } = useCreator();
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
   const [featuredBusy, setFeaturedBusy] = useState(false);
+  const [featuredQueue, setFeaturedQueue] = useState([]);
+  const [featuredUploaded, setFeaturedUploaded] = useState([]);
+  const [featuredFailed, setFeaturedFailed] = useState([]);
   const [featuredMessage, setFeaturedMessage] = useState("");
   const [draggingFeatured, setDraggingFeatured] = useState(false);
   const featuredInput = useRef(null);
@@ -2517,37 +2520,41 @@ function MediaPanel() {
     n.artworks = n.artworks.filter((a) => a.id !== id);
     if (n.featuredId === id) n.featuredId = (n.artworks[0]||{}).id||"";
   });
-  const uploadFeatured = async (fileList) => {
-    const files = Array.from(fileList || []);
+  const uploadFeatured = (fileList) => {
+    const files = Array.from(fileList || []).filter((f) => /^image\\/(png|jpeg|webp|gif)$/.test(f.type));
     if (!files.length) return;
     const remaining = Math.max(0, 10 - featured.length);
     if (!remaining) { setFeaturedMessage("Featured Artwork sudah mencapai batas 10 gambar."); return; }
-    setFeaturedBusy(true); setFeaturedMessage("");
-    const uploaded = [], failed = [];
-    for (const file of files.slice(0, remaining)) {
-      try {
-        const url = await storeImage(file, 1600);
-        uploaded.push({ id: uid("fa"), url, alt: (file.name || "Featured artwork").replace(/\.[^.]+$/, "").slice(0, 140), title: "" });
-      } catch (error) {
-        failed.push((file.name || "Image") + ": " + (error && error.message ? error.message : "Upload gagal."));
-      }
-    }
-    if (uploaded.length) upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat(uploaded).slice(0, 10); });
-    if (files.length > remaining) failed.push("Maksimal 10 gambar. " + (files.length - remaining) + " file tidak diproses.");
-    setFeaturedMessage([
-      uploaded.length ? uploaded.length + " gambar berhasil diunggah. Klik Publish changes untuk menyimpan perubahan." : "",
-      failed.join(" ")
-    ].filter(Boolean).join(" "));
-    setFeaturedBusy(false);
-    if (featuredInput.current) featuredInput.current.value = "";
+    setFeaturedFailed(files.length > remaining ? ["Maksimal 10 gambar. " + (files.length - remaining) + " file tidak diproses."] : []);
+    setFeaturedUploaded([]);
+    setFeaturedQueue(files.slice(0, remaining));
+    setFeaturedMessage("");
+    setFeaturedBusy(true);
   };
+  const applyFeaturedCrop = async (cropped) => {
+    const current = featuredQueue[0];
+    if (!current) return;
+    try {
+      const url = await storeImage(cropped, 1600);
+      setFeaturedUploaded((items) => items.concat([{id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\\.[^.]+$/,"").slice(0,140),title:""}]));
+    } catch (error) {
+      setFeaturedFailed((items) => items.concat([(current.name||"Image")+": "+(error&&error.message?error.message:"Upload gagal.")]));
+    }
+    const next = featuredQueue.slice(1);
+    setFeaturedQueue(next);
+    if (!next.length) {
+      setFeaturedBusy(false);
+      setFeaturedMessage("Selesai memproses gambar. Periksa urutan dan alt text, lalu klik Publish changes untuk menyimpan.");
+    }
+  };
+  const cancelFeaturedQueue = () => { setFeaturedQueue([]); setFeaturedBusy(false); setFeaturedMessage("Sisa upload dibatalkan."); if(featuredInput.current)featuredInput.current.value=""; };
   const groups = [
     ["Site images", [["Profile picture", ["profile", "avatar"], 600, true], ["About Me ID card", ["profile","about","cardImage"], 1200], ["Mascot", ["mascot", "image"], 1400], ["Home banner", ["appearance", "banner"], 1800]]],
     ["Services", site.services.map((x, i) => [x.title, ["services", i, "image"], 1400])],
     ["Price examples", site.pricing.flatMap((g, gi) => g.items.map((it, ii) => [g.title + ": " + it.name, ["pricing", gi, "items", ii, "image"], 1400]))],
   ];
   return (
-    <div className="panel">
+    <div className="panel">\n      {featuredQueue.length > 0 && <CropImageModal key={featuredQueue[0].name + featuredQueue.length} file={featuredQueue[0]} onCancel={cancelFeaturedQueue} onApply={applyFeaturedCrop} />}
       <div className="note info">Upload images directly to permanent Supabase Storage from this dashboard. New uploads are saved in the studio media bucket; website content stores only the public file URL. Remove unlinks an image from the page but keeps the stored file as a safety copy.</div>
       {groups.map(([t, items]) => (
         <section key={t} className="card">
@@ -2555,7 +2562,7 @@ function MediaPanel() {
           <div className="form">{items.map(([l, pth, m, r]) => <ImagePicker key={pth.join(".")} label={l} value={getPath(site, pth) || ""} onChange={sets(pth)} maxDim={m} round={r} />)}</div>
         </section>
       ))}
-      <section className="card featured-artwork-manager">
+      {featuredFailed.length > 0 && <div className="note info" role="status">{featuredFailed.join(" ")}</div>}\n      <section className="card featured-artwork-manager">
         <div className="card-head"><div><h2>Featured Artwork</h2><small className="muted">{featured.length}/10 images</small></div></div>
         <p className="muted" style={{ marginBottom: 12 }}>Images appear in the Home carousel. Files are resized to a maximum 1600px and uploaded to permanent Storage as WebP URLs.</p>
         <div className={"featured-upload-drop" + (draggingFeatured ? " is-dragging" : "")}
@@ -2566,7 +2573,7 @@ function MediaPanel() {
           <b>Drop images here</b>
           <small className="muted">PNG, JPG, WebP or GIF · up to 10 images · WebP optimized</small>
           <input ref={featuredInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden onChange={(e) => uploadFeatured(e.target.files)} />
-          <Btn kind="cyan" size="sm" icon="plus" disabled={featuredBusy || featured.length >= 10} onClick={() => featuredInput.current && featuredInput.current.click()}>{featuredBusy ? "Uploading…" : "Choose images"}</Btn>
+          <Btn kind="cyan" size="sm" icon="plus" disabled={featuredBusy || featured.length >= 10} onClick={() => featuredInput.current && featuredInput.current.click()}>{featuredBusy ? "Crop in progress…" : "Choose images"}</Btn>
         </div>
         {featuredMessage && <div className="note info" role="status" style={{ marginTop: 12 }}>{featuredMessage}</div>}
         <div className="featured-artwork-list">
