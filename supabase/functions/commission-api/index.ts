@@ -225,6 +225,7 @@ async function deliverEmail(
     to: string;
     subject: string;
     html: string;
+    text: string;
     orderId: string | null;
     kind: string;
     existingId?: string;
@@ -278,7 +279,7 @@ async function deliverEmail(
           to: recipient,
           subject: clean(input.subject, 240),
           html: input.html,
-          text: "Malkiaa Studio notification: " + clean(input.subject, 240),
+          text: clean(input.text, 20000),
           fromName,
         }),
       });
@@ -332,6 +333,30 @@ async function deliverEmail(
   return { id, status, message, attempts, recipient, kind: input.kind };
 }
 
+function commissionEmailText(order: any, clientName: string) {
+  const estimate = Number(order?.estimate?.total) || 0;
+  const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
+    (order?.estimate?.custom ? " + custom quote" : "");
+  return [
+    "MALKIAA STUDIO",
+    "",
+    "Hello " + (clean(clientName, 120) || "Client") + ",",
+    "Thank you. Your commission request has been received and is waiting for review.",
+    "",
+    "REQUEST DETAILS",
+    "Request ID: " + clean(order.id, 40),
+    "Service: " + clean(order.serviceTitle, 160),
+    "Tier: " + clean(order.tierName, 120),
+    "Estimate: " + price,
+    "",
+    "No payment has been taken. You will receive a proposal before payment is requested.",
+    "Keep this email. To track your order, open the Malkiaa Studio website and enter the Request ID above with the same email address used for your request.",
+    "",
+    "Malkiaa Studio — Commission support",
+    "This is an automatic transactional email about a commission request you submitted."
+  ].filter((line) => line !== undefined).join("\\n");
+}
+
 function commissionEmailHtml(order: any, clientName: string) {
   const id = escapeHtml(order.id);
   const name = escapeHtml(clientName || "Client");
@@ -363,6 +388,7 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
       to: clientEmail,
       subject: "[Malkiaa Studio] Commission Request Received — " + order.id,
       html: commissionEmailHtml(order, clientName),
+      text: commissionEmailText(order, clientName),
       orderId: order.id,
       kind: "client",
     }));
@@ -371,6 +397,35 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
 }
 
 
+
+function orderUpdateEmailText(order: any, track: any, eventType: string, message: string) {
+  const labels: Record<string, string> = {
+    finished_art: "Your finished artwork has been delivered.",
+    proposal: "Your commission proposal is ready to review.",
+    progress: "There is a new progress update for your commission.",
+    status: "Your commission status has changed.",
+    manual: "There is a new update to your commission.",
+  };
+  return [
+    "MALKIAA STUDIO",
+    "",
+    "Hello " + (clean(order?.form?.name, 120) || "Client") + ",",
+    labels[eventType] || "There is a new update to your commission.",
+    "",
+    clean(message, 1200) || "A new update is available.",
+    "",
+    "REQUEST DETAILS",
+    "Request ID: " + clean(order.id, 40),
+    "Service: " + clean(order.serviceTitle, 160),
+    "Current status: " + clean(track?.status || order.status || "Updated", 80),
+    "",
+    "To track your order, open the Malkiaa Studio website and choose Track Order. Enter the Request ID above and the same email address used when submitting your commission.",
+    "Please keep this email for your records.",
+    "",
+    "Malkiaa Studio — Commission support",
+    "This is an automatic transactional email about your commission."
+  ].join("\\n");
+}
 
 function orderUpdateEmailHtml(order: any, track: any, eventType: string, message: string) {
   const id = escapeHtml(order.id);
@@ -401,6 +456,7 @@ async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType:
       to: clientEmail,
       subject: "[Malkiaa Studio] " + subjectLabel + " — " + order.id,
       html: orderUpdateEmailHtml(order, track, eventType, message),
+      text: orderUpdateEmailText(order, track, eventType, message),
       orderId: order.id,
       kind: "client_evt_" + eventType + "_" + eventId,
       idempotencyKey: order.id + ":client:" + eventId,
@@ -1086,6 +1142,9 @@ Deno.serve(async (req) => {
         const html = eventType
           ? orderUpdateEmailHtml(order, track, eventType, message)
           : commissionEmailHtml(order, clean(order.form?.name, 120));
+        const plainText = eventType
+          ? orderUpdateEmailText(order, track, eventType, message)
+          : commissionEmailText(order, clean(order.form?.name, 120));
         const subjectLabel = eventType === "finished_art" ? "Finished Art Delivered"
           : eventType === "proposal" ? "Proposal Ready"
           : eventType === "progress" ? "Progress Update"
@@ -1097,6 +1156,7 @@ Deno.serve(async (req) => {
             ? "[Malkiaa Studio] " + subjectLabel + " — " + id
             : "[Malkiaa Studio] Commission Request Received — " + id,
           html,
+          text: plainText,
           orderId: id,
           kind: item.kind,
           existingId: item.id,
