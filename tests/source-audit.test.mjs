@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const backend = readFileSync(new URL("../supabase/functions/commission-api/index.ts", import.meta.url), "utf8");
 const reviewMigration = readFileSync(new URL("../supabase/migrations/202611190001_client_reviews.sql", import.meta.url), "utf8");
+const rateMigration = readFileSync(new URL("../supabase/migrations/202611200001_track_attempt_rate_limit.sql", import.meta.url), "utf8");
 
 function getServerEstimate() {
   const start = backend.indexOf("function calculateServerEstimate(");
@@ -180,4 +181,26 @@ test("submit persists only the server-calculated estimate", () => {
   assert.match(action, /estimate: pricing\.estimate/);
   assert.match(action, /estimate: pricing\.estimate\.total/);
   assert.doesNotMatch(action, /estimate: order\.estimate/);
+});
+
+
+test("tracking endpoint calls the atomic rate-limit RPC before lookup and returns neutral 429", () => {
+  const start = backend.indexOf('if (action === "track")');
+  const end = backend.indexOf('if (action === "submit_review")', start);
+  const action = backend.slice(start, end);
+  assert.ok(action.indexOf('db.rpc("record_track_attempt"') < action.indexOf('db.from("order_tracks")'));
+  assert.match(action, /rateResult\.allowed !== true/);
+  assert.match(action, /json\(\{ error: "No order matches that Request ID and email\." \}, 429\)/);
+  assert.match(action, /db\.rpc\("mark_track_attempt_success"/);
+  assert.match(action, /sha256\("track-ip\|"/);
+  assert.match(action, /sha256\("track-email\|"/);
+});
+
+test("tracking rate-limit SQL serializes each key and blocks after five failures", () => {
+  assert.match(rateMigration, /pg_advisory_xact_lock/);
+  assert.match(rateMigration, /created_at >= now\(\) - interval '15 minutes'/);
+  assert.match(rateMigration, /v_allowed := v_failed_count < 5/);
+  assert.match(rateMigration, /insert into public\.track_attempts \(ip_hash, email_hash, request_id, succeeded\)/i);
+  assert.match(rateMigration, /created_at < now\(\) - interval '30 days'/);
+  assert.match(rateMigration, /grant execute on function public\.record_track_attempt.*service_role/i);
 });
