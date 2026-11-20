@@ -298,6 +298,12 @@ test("commission and order-update emails are sent only to clients", () => {
   assert.match(updateAction, /kind: "client_evt_" \+ eventType/);
   assert.doesNotMatch(updateAction, /artistEmail|artist_evt_/);
 
+  const notifyStart = html.indexOf("const notify = async (eventType, message) =>");
+  const notifyEnd = html.indexOf("const save = async", notifyStart);
+  const notify = html.slice(notifyStart, notifyEnd);
+  assert.match(notify, /client_evt_/);
+  assert.doesNotMatch(notify, /artistResult|artist_evt_|Creator notification result is missing/);
+
   const start = backend.indexOf("async function sendCommissionEmails");
   const end = backend.indexOf("async function addSignedFinalFileUrls", start);
   const action = backend.slice(start, end);
