@@ -218,7 +218,13 @@ button.art:hover img{transform:scale(1.05)}
 .seg button[aria-pressed="true"]{background:var(--cyan);color:var(--on-accent)}
 
 .terms{display:flex;flex-direction:column;gap:14px}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.steps{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.step-progress-head{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:.86rem}
+.step-scrubber{width:100%;height:30px;margin:0;accent-color:var(--cyan);cursor:grab;touch-action:pan-y}
+.step-scrubber:active{cursor:grabbing}
+.step-jumps{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 7px;scrollbar-width:thin}
+.step-jumps .chip{flex:0 0 auto;white-space:nowrap}
+.step-jumps .chip[aria-pressed="true"]{background:var(--peach);color:#1E3640}
 .step{display:flex;flex-direction:column;gap:8px}
 .step .n{width:44px;height:44px;border-radius:16px;background:var(--peach);color:#1E3640;display:grid;place-items:center;font-family:var(--font-display);font-size:1.3rem}
 .stages{display:flex;gap:0;flex-wrap:wrap;margin-top:12px}
@@ -2924,8 +2930,26 @@ function OrderFlow({ id, go }) {
       } catch (x2) { setUp("Could not upload " + file.name + ": " + (x2 && x2.message || "unknown error")); }
     }
   };
+  const validateAll = () => {
+    const e = {};
+    if (!String(f.name || "").trim()) e.name = "Please enter your name.";
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(f.email || "").trim())) e.email = "Please enter a valid email address.";
+    if (!f.want) e.want = "Required.";
+    if (!f.tier) e.tier = "Choose a commission type.";
+    x.addons.forEach((a) => { if (a.required && !(Number(f.addons?.[a.id]) > 0)) e["a" + a.id] = a.name + " is required."; });
+    if (!f.display) e.display = "Please choose one option.";
+    if (!f.tos) e.tos = "You must agree to the Terms of Service.";
+    setErr(e);
+    if (Object.keys(e).length) {
+      const firstStep = e.name || e.email ? 0 : e.want || e.tier ? 1 : Object.keys(e).some((k) => k.startsWith("a")) ? 3 : e.display ? 6 : 7;
+      setStep(firstStep);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return false;
+    }
+    return true;
+  };
   const submit = async () => {
-    if (!check(7)) return;
+    if (!validateAll()) return;
     setBusy(true); setFail("");
     try {
       setDone(await Store.create(f, s, c));
@@ -2984,7 +3008,11 @@ function OrderFlow({ id, go }) {
   return (
     <div className="page">
       <PageHead crumb={"REQUEST / " + s.title.toUpperCase()} title={"Request: " + s.title}>Fill in the steps below. No payment is taken when you submit. You receive a custom proposal first.</PageHead>
-      <div className="steps" role="list">{STEPS.map((t, i) => <button key={t} role="listitem" className="chip" aria-pressed={i === step} disabled={i > step} onClick={() => setStep(i)}>{i + 1}. {t}</button>)}</div>
+      <div className="steps" aria-label="Commission form progress">
+        <div className="step-progress-head"><b>{step + 1} / {STEPS.length} · {STEPS[step]}</b><span>{Math.round(((step + 1) / STEPS.length) * 100)}%</span></div>
+        <input className="step-scrubber" type="range" min="0" max="7" step="1" value={step} onChange={(e) => setStep(Number(e.target.value))} aria-label="Slide to jump to a form step" />
+        <div className="step-jumps">{STEPS.map((t, i) => <button type="button" key={t} className="chip" aria-pressed={i === step} onClick={() => setStep(i)}>{i + 1}. {t}</button>)}</div>
+      </div>
       <div className="olay"><section className="card"><h2 style={{ marginBottom: 14 }}>{STEPS[step]}</h2>{body[step]}
         <div className="btns" style={{ marginTop: 18, justifyContent: "space-between" }}><Btn kind="ghost" onClick={() => (step ? setStep(step - 1) : go("service-" + s.id))}>Back</Btn>{step < 7 ? <Btn onClick={next}>Next</Btn> : <Btn disabled={busy} onClick={submit}>{busy ? "Sending..." : "Submit commission request"}</Btn>}</div></section>
         <aside><details className="osd" open><summary>Price estimate</summary><Sum s={s} sel={f} /></details></aside></div>
