@@ -1552,8 +1552,8 @@ function FeaturedArtworkCarousel({ items }) {
     return () => window.clearInterval(timer);
   }, [count, paused, visible, reducedMotion]);
 
-  const next = () => { if (count > 1) setIndex((current) => current + 1); };
-  const previous = () => { if (count > 1) setIndex((current) => current - 1); };
+  const next = () => { if (count > 1) setIndex((current) => Math.min(count + 1, current + 1)); };
+  const previous = () => { if (count > 1) setIndex((current) => Math.max(0, current - 1)); };
   const active = count > 1 ? (index - 1 + count) % count : 0;
   const trackItems = count > 1 ? [slides[count - 1], ...slides, slides[0]] : slides;
 
@@ -1576,12 +1576,11 @@ function FeaturedArtworkCarousel({ items }) {
       if (Math.abs(delta) > 45) delta < 0 ? next() : previous();
     }
     pointerStart.current = null;
-    setPaused(false);
   };
 
   if (!count) return null;
   return (
-    <section className="card span-12 featured-artwork-home" aria-roledescription="carousel" aria-label="Featured Artwork">
+    <section className="card span-12 featured-artwork-home" aria-roledescription="carousel" aria-label="Featured Artwork" onPointerEnter={() => setPaused(true)} onPointerLeave={() => { pointerStart.current = null; setPaused(false); }}>
       <div className="card-head">
         <div><h2>{T("sec_featured")}</h2><small className="muted">{count} featured {count === 1 ? "artwork" : "artworks"}</small></div>
         {count > 1 && <div className="featured-artwork-controls">
@@ -1590,8 +1589,6 @@ function FeaturedArtworkCarousel({ items }) {
         </div>}
       </div>
       <div className="featured-artwork-viewport"
-        onPointerEnter={() => setPaused(true)}
-        onPointerLeave={() => { pointerStart.current = null; setPaused(false); }}
         onPointerDown={startPointer}
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
