@@ -2713,11 +2713,32 @@ const Store = {
     t = plain(t);
     const sb = await this.client();
     if (sb) {
-      const { error } = await sb.from("order_tracks").upsert(t, { onConflict: "id" });
-      if (error) throw new Error("Could not save tracking data: " + error.message);
-      return;
+      throw new Error("Direct browser writes to order_tracks are disabled. Use the authenticated commission save endpoint so the private emailHash is preserved.");
     }
     const m = lsGet("mk-tracks"); m[t.id] = t; lsSet("mk-tracks", m);
+  },
+
+  async saveCommissionState(order, track) {
+    const payload = {
+      id: order.id,
+      order: {
+        status: order.status,
+        payment: order.payment,
+        notes: order.notes || "",
+        finalPrice: order.finalPrice == null || order.finalPrice === "" ? null : Number(order.finalPrice),
+        extraLines: order.extraLines || ""
+      },
+      track: {
+        proposal: track.proposal ?? null,
+        updates: Array.isArray(track.updates) ? track.updates : [],
+        finalFiles: Array.isArray(track.finalFiles) ? track.finalFiles.map((file) => file.path
+          ? { name: file.name, path: file.path, type: file.type }
+          : { name: file.name, url: file.url, type: file.type }) : [],
+        estimate: track.estimate,
+        custom: Boolean(track.custom)
+      }
+    };
+    return this.api("creator_save_commission", payload, true);
   },
 
   async setOrder(o) {
@@ -3247,21 +3268,23 @@ function OrderDetail({ o, onBack, onSaved }) {
     tr.payment = n.payment;
     if (extra) extra(tr, n);
     try {
-      await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines });
-      await Store.setTrack({ ...tr, finalFiles: (tr.finalFiles || []).map((file) => file.path ? { name: file.name, path: file.path, type: file.type } : file) });
+      const saved = await Store.saveCommissionState(n, tr);
       setD(n);
-      const fresh = await Store.getTrack(n.id);
-      setT(fresh || tr);
+      setT(saved.track || tr);
       onSaved(n);
-      if (eventType || statusChanged) {
-        await notify(eventType || "status", eventMessage || ("Order status updated to " + n.status + "."));
-        setMsg("Saved. Email notifications were accepted by the mail service.");
-      } else setMsg("Saved.");
-      return true;
     } catch (x2) {
-      setMsg("Order data was saved if the save completed, but an email or tracking step failed: " + (x2?.message || "Please check the order and notification history."));
+      setMsg("Could not save commission and tracking data: " + (x2?.message || "Please try again."));
       return false;
     }
+    if (eventType || statusChanged) {
+      try {
+        await notify(eventType || "status", eventMessage || ("Order status updated to " + n.status + ". Payment status: " + n.payment + "."));
+        setMsg("Changes saved and email accepted by the mail service. Inbox delivery is not guaranteed.");
+      } catch (mailError) {
+        setMsg("Changes saved and tracking updated, but the email notification failed: " + (mailError?.message || "Check Email Notifications and retry."));
+      }
+    } else setMsg("Changes saved and tracking synchronized.");
+    return true;
   };
   const sendProposal = () => save((tr, n) => {
     const fp = Number(n.finalPrice);
@@ -3290,10 +3313,13 @@ function OrderDetail({ o, onBack, onSaved }) {
       tr.finalFiles = [...(tr.finalFiles || []), ref.path
         ? { name: file.name, path: ref.path, type: file.type }
         : { name: file.name, url: ref.url, type: file.type }];
-      await Store.setTrack(tr);
-      const fresh = await Store.getTrack(d.id);
-      setT(fresh || tr);
-      setMsg("Finished Art uploaded. Review the preview below, then send it to the client.");
+      const saved = await Store.saveCommissionState(d, tr);
+      setT(saved.track || tr);
+      try {
+        const fresh = await Store.getTrack(d.id);
+        if (fresh) setT(fresh);
+      } catch (_) {}
+      setMsg("Finished Art uploaded and tracking saved. Review the preview below, then send it to the client.");
     } catch (x2) { setMsg("Upload failed: " + (x2?.message || "unavailable")); }
     finally { setBusy(""); }
   };
@@ -3305,13 +3331,16 @@ function OrderDetail({ o, onBack, onSaved }) {
       const tr = clone(t);
       tr.status = "Completed";
       tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "Finished Art has been delivered. Your order is marked completed." }];
-      await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines });
-      await Store.setTrack({ ...tr, finalFiles: (tr.finalFiles || []).map((file) => file.path ? { name: file.name, path: file.path, type: file.type } : file) });
-      setD(n); onSaved(n);
-      await notify("finished_art", "Your Finished Art has been uploaded and delivered. Open Track Order using your Request ID and email address to view the final artwork and download the files.");
-      setT(await Store.getTrack(n.id));
-      setMsg("Finished Art sent. The client and Creator have been emailed with tracking instructions.");
-    } catch (x2) { setMsg("Finished Art was saved, but email delivery failed: " + (x2?.message || "Check Email Notifications.")); }
+      const saved = await Store.saveCommissionState(n, tr);
+      setD(n); setT(saved.track || tr); onSaved(n);
+      try {
+        await notify("finished_art", "Your Finished Art has been uploaded and delivered. Open Track Order using your Request ID and email address to view the final artwork and download the files.");
+        setMsg("Finished Art delivered. Commission status and tracking are Completed; email was accepted by the mail service.");
+      } catch (mailError) {
+        setMsg("Finished Art delivered and commission marked Completed, but email notification failed: " + (mailError?.message || "Check Email Notifications and retry."));
+      }
+      try { const fresh = await Store.getTrack(n.id); if (fresh) setT(fresh); } catch (_) {}
+    } catch (x2) { setMsg("Could not save Finished Art or synchronize commission status: " + (x2?.message || "Please try again.")); }
     finally { setBusy(""); }
   };
   const sendClientEmail = async () => {
