@@ -204,3 +204,43 @@ test("tracking rate-limit SQL serializes each key and blocks after five failures
   assert.match(rateMigration, /created_at < now\(\) - interval '30 days'/);
   assert.match(rateMigration, /grant execute on function public\.record_track_attempt.*service_role/i);
 });
+
+
+test("commission submit requires idempotency key and uses one atomic RPC", () => {
+  const start = backend.indexOf('if (action === "submit") {');
+  const end = backend.indexOf('if (action === "public_board") {', start);
+  const action = backend.slice(start, end);
+  assert.match(action, /body\?\.idempotencyKey/);
+  assert.match(action, /db\.rpc\("submit_commission_atomic"/);
+  assert.doesNotMatch(action, /from\("commission_requests"\)\.insert/);
+  assert.doesNotMatch(action, /from\("order_tracks"\)\.insert/);
+  assert.match(action, /submission\.duplicate === true/);
+});
+
+test("commission deletion uses one atomic RPC after Creator authorization", () => {
+  const start = backend.indexOf('if (action === "delete_commission") {');
+  const end = backend.indexOf('if (action === "respond") {', start);
+  const action = backend.slice(start, end);
+  assert.match(action, /requireOwner\(req, db\)/);
+  assert.match(action, /db\.rpc\("delete_commission_atomic"/);
+  assert.doesNotMatch(action, /\.from\("(order_tracks|commission_management|commission_requests)"\)\.delete/);
+});
+
+test("atomic commission migration retains payment behavior and includes idempotency tombstones", () => {
+  const migration = readFileSync(new URL("../supabase/migrations/202611200002_atomic_commissions.sql", import.meta.url), "utf8");
+  assert.match(migration, /create table if not exists public\.commission_submit_keys/i);
+  assert.match(migration, /pg_advisory_xact_lock/);
+  assert.match(migration, /IDEMPOTENCY_KEY_CONFLICT/);
+  assert.match(migration, /IDEMPOTENCY_KEY_RETIRED/);
+  assert.match(migration, /delete from public\.client_reviews/);
+  assert.match(migration, /delete from public\.notifications/);
+  assert.match(migration, /update public\.commission_submit_keys[\s\S]*deleted_at/);
+  assert.doesNotMatch(migration, /stripe|paypal|payment_intent|checkout/i);
+});
+
+test("browser keeps the idempotency key on retry and clears it only after successful submit", () => {
+  assert.match(html, /mk-submit-idem-/);
+  assert.match(html, /ss\.set\(storageKey, idempotencyKey\)/);
+  assert.match(html, /const result = await Store\.submit\(order, track, idempotencyKey\)/);
+  assert.match(html, /ss\.del\(storageKey\)/);
+});
