@@ -597,3 +597,20 @@ test("desktop Home places Featured Artwork beside the hero without changing mobi
   assert.match(html, /@media \(min-width:1024px\)[\s\S]*?home-dashboard-featured-pair>\.featured-artwork-home\{grid-column:span 5/);
   assert.match(html, /@media\(max-width:767px\)\{[\s\S]*?\.home-dashboard\{grid-template-columns:minmax\(0,1fr\)/);
 });
+
+test("client email templates use the earlier concise transactional layout", () => {
+  const commissionStart = backend.indexOf("function commissionEmailHtml(");
+  const commissionEnd = backend.indexOf("async function sendCommissionEmails", commissionStart);
+  const commission = backend.slice(commissionStart, commissionEnd);
+  assert.match(commission, /Your commission request has been received and is waiting for review/);
+  assert.match(commission, /Use your Request ID and email address to track your order/);
+  assert.match(commission, /No payment has been taken/);
+
+  const updateStart = backend.indexOf("function orderUpdateEmailHtml(");
+  const updateEnd = backend.indexOf("async function sendOrderUpdateEmails", updateStart);
+  const update = backend.slice(updateStart, updateEnd);
+  assert.match(update, /Your finished artwork has been delivered/);
+  assert.match(update, /choose Track Order/);
+  assert.match(update, /same email address used when submitting your commission/);
+  assert.match(update, /Please keep this email for your records/);
+});
