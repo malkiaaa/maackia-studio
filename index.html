@@ -1245,6 +1245,18 @@ html.is-android .home-dashboard>.home-intro-card::before{background:var(--surfac
   :root:not([data-theme="light"]) textarea::placeholder{color:var(--muted);opacity:1}
 }
 
+
+/* Hero gradient: fit the overlay to the card's actual box so overflow clipping
+   does not cut the gradient edges on mobile or desktop. */
+.home-intro-card:has(.home-intro-text)::before,
+.home-dashboard > .home-intro-card::before,
+html.is-android .home-dashboard > .home-intro-card::before {
+  inset:0 !important;
+  width:auto !important;
+  height:auto !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+}
 </style>
 
 <div id="root"></div>
