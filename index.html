@@ -1121,7 +1121,6 @@ html.ui-motion-ready .ui-motion-reveal {
   translate: 0 14px;
   transition: opacity 250ms cubic-bezier(.22, 1, .36, 1),
               translate 250ms cubic-bezier(.22, 1, .36, 1);
-  will-change: opacity, translate;
 }
 html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
   opacity: 1;
@@ -4320,8 +4319,8 @@ function App() {
 
       const observeElement = (element) => {
         if (!element || element.nodeType !== 1) return;
-        if (element.matches(selector) && !element.classList.contains("ui-motion-reveal")) {
-          element.classList.add("ui-motion-reveal");
+        if (element.matches(selector)) {
+          if (!element.classList.contains("ui-motion-reveal")) element.classList.add("ui-motion-reveal");
           const rect = element.getBoundingClientRect();
           if (rect.bottom > 0 && rect.top < window.innerHeight) {
             element.classList.add("ui-motion-visible");
