@@ -1318,7 +1318,115 @@ function buildDoc(site) {
   const S = "<" + "script", E = "<" + "/script>";
   const lib = (u) => S + ' src="' + u + '">' + E;
   return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + ".crop-modal-backdrop{position:fixed;inset:0;z-index:99999;background:rgba(13,20,29,.78);display:grid;place-items:center;padding:18px;overflow:auto}.crop-modal{width:min(560px,100%);max-height:min(92vh,900px);overflow:auto;background:var(--card,#fff);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.32)}.crop-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.crop-modal-head h3{margin:0 0 4px}.crop-modal-head p{margin:0;font-size:.88rem}.crop-preview{position:relative;width:100%;max-height:48vh;background:#17202b;border-radius:14px;overflow:hidden;display:grid;place-items:center}.crop-preview img{width:100%;height:100%;object-fit:cover;transition:transform .12s;transform-origin:center}.crop-guide{position:absolute;inset:8%;border:1px solid rgba(255,255,255,.85);box-shadow:0 0 0 999px rgba(0,0,0,.16);pointer-events:none;border-radius:2px}.crop-controls{display:grid;gap:12px;margin-top:16px}.crop-controls label{display:grid;gap:6px;font-size:.88rem;font-weight:600}.crop-controls label span{font-weight:400}.crop-controls input[type=range]{width:100%;accent-color:var(--primary)}.crop-modal-actions{justify-content:flex-end;margin-top:18px}@media(max-width:600px){.crop-modal{padding:14px;border-radius:17px}.crop-preview{max-height:40vh}}"
-  "</style>" +
+  "
+
+/* Dark contrast correction — preserve the original light theme values. */
+:root{
+  --page-gradient-mid:#fbfeff;
+  --page-gradient-end:#f4fcff;
+  --surface-profile:linear-gradient(145deg,#FFFFFF 0%,#F3FCFE 68%,#FFF9E7 100%);
+  --surface-profile-border:rgba(255,255,255,.88);
+  --surface-profile-placeholder:linear-gradient(145deg,#DDF7FC 0%,#FFFFFF 54%,#FFF2C7 100%);
+  --surface-hero-overlay:linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.84) 24%,rgba(255,255,255,.52) 58%,rgba(255,255,255,.18) 84%,rgba(255,255,255,0) 100%);
+  --surface-hero-overlay-android:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.94) 43%,rgba(232,249,253,.78) 72%,rgba(200,238,247,.28) 100%);
+  --surface-dock:rgba(255,255,255,.97);
+  --surface-input:#FFFFFF;
+  --surface-menu:#FFFFFF;
+  --surface-toolbar:#FFFFFF;
+  --surface-gallery-nav:rgba(255,255,255,.94);
+  --surface-home-reviews:linear-gradient(145deg,#F3FCFF 0%,#FFFFFF 62%,#FFFBEF 100%);
+  --surface-home-review-card:rgba(255,255,255,.88);
+  --surface-home-review-editor:rgba(255,255,255,.78);
+  --surface-selection:color-mix(in srgb,var(--primary) 24%,white);
+}
+:root[data-theme="dark"]{
+  --page-gradient-mid:#1C323C;
+  --page-gradient-end:#172A33;
+  --surface-profile:linear-gradient(145deg,#203943 0%,#1C323C 68%,#294650 100%);
+  --surface-profile-border:rgba(210,239,245,.16);
+  --surface-profile-placeholder:linear-gradient(145deg,#294650 0%,#203943 54%,#315B68 100%);
+  --surface-hero-overlay:linear-gradient(180deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.92) 35%,rgba(23,42,51,.72) 68%,rgba(23,42,51,.28) 100%);
+  --surface-hero-overlay-android:linear-gradient(90deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.94) 43%,rgba(32,57,67,.84) 72%,rgba(49,91,104,.42) 100%);
+  --surface-dock:rgba(32,57,67,.97);
+  --surface-input:#172A33;
+  --surface-menu:#203943;
+  --surface-toolbar:#203943;
+  --surface-gallery-nav:rgba(32,57,67,.96);
+  --surface-home-reviews:linear-gradient(145deg,#1C323C 0%,#203943 62%,#294650 100%);
+  --surface-home-review-card:rgba(32,57,67,.92);
+  --surface-home-review-editor:rgba(32,57,67,.90);
+  --surface-selection:color-mix(in srgb,var(--primary) 24%,var(--card));
+  --ok:#80D8A8;
+  --warn:#FFD477;
+  --bad:#FF9EAD;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --page-gradient-mid:#1C323C;
+    --page-gradient-end:#172A33;
+    --surface-profile:linear-gradient(145deg,#203943 0%,#1C323C 68%,#294650 100%);
+    --surface-profile-border:rgba(210,239,245,.16);
+    --surface-profile-placeholder:linear-gradient(145deg,#294650 0%,#203943 54%,#315B68 100%);
+    --surface-hero-overlay:linear-gradient(180deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.92) 35%,rgba(23,42,51,.72) 68%,rgba(23,42,51,.28) 100%);
+    --surface-hero-overlay-android:linear-gradient(90deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.94) 43%,rgba(32,57,67,.84) 72%,rgba(49,91,104,.42) 100%);
+    --surface-dock:rgba(32,57,67,.97);
+    --surface-input:#172A33;
+    --surface-menu:#203943;
+    --surface-toolbar:#203943;
+    --surface-gallery-nav:rgba(32,57,67,.96);
+    --surface-home-reviews:linear-gradient(145deg,#1C323C 0%,#203943 62%,#294650 100%);
+    --surface-home-review-card:rgba(32,57,67,.92);
+    --surface-home-review-editor:rgba(32,57,67,.90);
+    --surface-selection:color-mix(in srgb,var(--primary) 24%,var(--card));
+    --ok:#80D8A8;
+    --warn:#FFD477;
+    --bad:#FF9EAD;
+  }
+}
+/* The page gradient follows the active theme; its light values are byte-for-byte color matches. */
+body{background:var(--bg)}
+body::before{
+  background:
+    radial-gradient(ellipse at 12% 8%,var(--powder) 0%,rgba(234,249,253,.58) 28%,transparent 66%),
+    radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),
+    linear-gradient(180deg,var(--bg) 0%,var(--page-gradient-mid) 54%,var(--page-gradient-end) 100%);
+  background-repeat:no-repeat;
+}
+/* Light-surface components use theme-aware surfaces rather than fixed white fills. */
+.about-profile-card{background:var(--surface-profile);border-color:var(--surface-profile-border)!important}
+.about-profile-card__image-placeholder{background:var(--surface-profile-placeholder)}
+.about-image-error{background:var(--card)}
+.home-intro-card:has(.home-intro-text)::before{background:var(--surface-hero-overlay)}
+.home-dashboard>.home-intro-card::before{background:var(--surface-hero-overlay-android)!important}
+html.is-android .home-dashboard>.home-intro-card::before{background:var(--surface-hero-overlay-android)!important}
+.text-edit-dock{background:var(--surface-dock)}
+.text-edit-dock textarea{background:var(--surface-input)}
+.home-reviews-section{background:var(--surface-home-reviews)}
+.home-review-card{background:var(--surface-home-review-card)}
+.home-review-editor{background:var(--surface-home-review-editor)}
+.home-review-editor input,.home-review-editor textarea,.home-review-editor select{background:var(--surface-input)}
+.service-gallery-nav button{background:var(--surface-gallery-nav)}
+.inpage-add input,.slash-menu{background:var(--surface-menu)}
+.context-toolbar button,.block-style-controls input,.block-style-controls select{background:var(--surface-toolbar)}
+.inline-edit-heading,.inline-edit-text{background:var(--surface-input)}
+.inpage-block.selected{background:var(--surface-selection)!important}
+/* System-dark must not inherit light-only muted overrides; explicit light remains unchanged. */
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .tint .muted,
+  :root:not([data-theme="light"]) .stage:nth-child(even) .muted{color:var(--muted)}
+}
+/* Explicit dark mode also keeps status and error text legible on dark surfaces. */
+:root[data-theme="dark"] .tint .muted,
+:root[data-theme="dark"] .stage:nth-child(even) .muted{color:var(--muted)}
+/* Placeholder color is intentionally changed only in dark mode. */
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder{color:var(--muted);opacity:1}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) input::placeholder,
+  :root:not([data-theme="light"]) textarea::placeholder{color:var(--muted);opacity:1}
+}
+
+</style>" +
     '<div id="root"></div>' +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js") +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js") +
