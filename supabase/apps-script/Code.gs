@@ -53,9 +53,13 @@ function doPost(e) {
     const text = String(payload.text || "").trim();
     const fromName = String(payload.fromName || "Malkiaa Studio").trim().slice(0, 100);
     const idempotencyKey = String(payload.idempotencyKey || "").trim();
+    const replyTo = String(payload.replyTo || "mmaackia@gmail.com").trim().toLowerCase();
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
       return jsonResponse({ ok: false, status: "failed", message: "A valid recipient email is required." });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)) {
+      return jsonResponse({ ok: false, status: "failed", message: "A valid reply-to email is required." });
     }
     if (!subject || !html || html.length > 100000 || !text || text.length > 20000 || !idempotencyKey || idempotencyKey.length > 180) {
       return jsonResponse({ ok: false, status: "failed", message: "Required email fields are missing or invalid." });
@@ -93,7 +97,7 @@ function doPost(e) {
       body: text,
       htmlBody: html,
       name: fromName,
-      replyTo: "mmaackia@gmail.com"
+      replyTo: replyTo
     });
 
     const sentAt = new Date().toISOString();
