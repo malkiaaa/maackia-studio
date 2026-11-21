@@ -1880,7 +1880,10 @@ const PUBLIC_ID_TRANSLATIONS = {
   "02 · PAYMENT": "02 · PEMBAYARAN",
   "03 · COMMUNICATION": "03 · KOMUNIKASI",
   "04 · DELIVERY": "04 · PENGIRIMAN",
-  "05 · FEEDBACK": "05 · MASUKAN"
+  "05 · FEEDBACK": "05 · MASUKAN",
+  "Other link": "Tautan lain",
+  "Custom": "Kustom",
+  "No add-ons for this service.": "Tidak ada add-on untuk layanan ini."
 };
 function translatePublicText(value, language) {
   if (language !== "id" || value == null) return value;
@@ -1904,14 +1907,14 @@ function translatePublicText(value, language) {
     if (!translated && (match = trimmed.match(/^(\d+) updates$/))) translated = match[1] + " pembaruan";
     if (!translated && (match = trimmed.match(/^(\d+) file\(s\)$/))) translated = match[1] + " file";
     if (!translated && (match = trimmed.match(/^(\d+) character\(s\)$/))) translated = match[1] + " karakter";
-    if (!translated && (match = trimmed.match(/^Payment: (.+)$/))) translated = "Pembayaran: " + match[1];
-    if (!translated && (match = trimmed.match(/^Your response: (.+)\. Accepting a proposal does not mean payment has been made\.$/))) translated = "Respons kamu: " + match[1] + ". Menerima proposal bukan berarti pembayaran sudah dilakukan.";
+    if (!translated && (match = trimmed.match(/^Payment: (.+)$/))) translated = "Pembayaran: " + (PUBLIC_ID_TRANSLATIONS[match[1]] || match[1]);
+    if (!translated && (match = trimmed.match(/^Your response: (.+)\. Accepting a proposal does not mean payment has been made\.$/))) translated = "Respons kamu: " + (PUBLIC_ID_TRANSLATIONS[match[1]] || match[1]) + ". Menerima proposal bukan berarti pembayaran sudah dilakukan.";
     if (!translated && (match = trimmed.match(/^This request is (cancelled|rejected)\.$/))) translated = "Permintaan ini " + (match[1] === "cancelled" ? "dibatalkan" : "ditolak") + ".";
   }
   if (!translated) {
-    let match = trimmed.match(/^(\\d+) \/ 5 stars$/);
+    let match = trimmed.match(/^(\d+) \/ 5 stars$/);
     if (match) translated = match[1] + " / 5 bintang";
-    if (!translated && (match = trimmed.match(/^(\\d+) KB, uploaded$/))) translated = match[1] + " KB, diunggah";
+    if (!translated && (match = trimmed.match(/^(\d+) KB, uploaded$/))) translated = match[1] + " KB, diunggah";
     if (!translated && (match = trimmed.match(/^Request: (.+)$/))) translated = "Permintaan: " + match[1];
     if (!translated && (match = trimmed.match(/^rush: (.+)$/))) translated = "pengerjaan cepat: " + match[1];
   }
