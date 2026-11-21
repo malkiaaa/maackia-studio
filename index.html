@@ -1159,6 +1159,7 @@ html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
   --surface-home-review-card:rgba(255,255,255,.88);
   --surface-home-review-editor:rgba(255,255,255,.78);
   --surface-selection:color-mix(in srgb,var(--primary) 24%,white);
+  --surface-inpage-top:color-mix(in srgb,var(--primary) 28%,white);
 }
 :root[data-theme="dark"]{
   --page-gradient-mid:#1C323C;
@@ -1177,6 +1178,7 @@ html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
   --surface-home-review-card:rgba(32,57,67,.92);
   --surface-home-review-editor:rgba(32,57,67,.90);
   --surface-selection:color-mix(in srgb,var(--primary) 24%,var(--card));
+  --surface-inpage-top:color-mix(in srgb,var(--primary) 28%,var(--card));
   --ok:#80D8A8;
   --warn:#FFD477;
   --bad:#FF9EAD;
@@ -1199,6 +1201,7 @@ html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
     --surface-home-review-card:rgba(32,57,67,.92);
     --surface-home-review-editor:rgba(32,57,67,.90);
     --surface-selection:color-mix(in srgb,var(--primary) 24%,var(--card));
+    --surface-inpage-top:color-mix(in srgb,var(--primary) 28%,var(--card));
     --ok:#80D8A8;
     --warn:#FFD477;
     --bad:#FF9EAD;
@@ -1217,6 +1220,7 @@ body::before{
 .about-profile-card{background:var(--surface-profile);border-color:var(--surface-profile-border)!important}
 .about-profile-card__image-placeholder{background:var(--surface-profile-placeholder)}
 .about-image-error{background:var(--card)}
+.inpage-top{background:var(--surface-inpage-top)}
 .home-intro-card:has(.home-intro-text)::before{background:var(--surface-hero-overlay)}
 .home-dashboard>.home-intro-card::before{background:var(--surface-hero-overlay-android)!important}
 html.is-android .home-dashboard>.home-intro-card::before{background:var(--surface-hero-overlay-android)!important}
