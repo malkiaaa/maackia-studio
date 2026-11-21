@@ -51,8 +51,8 @@
 }
 *{box-sizing:border-box}
 [data-ed]{cursor:text;border-radius:8px;transition:outline-color .15s}[data-ed]:hover{outline:2px dashed var(--cyan);outline-offset:3px}[data-ed]:focus{outline:2px solid var(--cyan);outline-offset:3px;background:color-mix(in srgb,var(--cyan) 14%,transparent)}
-body{position:relative;background:#fff;color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,var(--page-radial-mid) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,#fff 0%,#fbfeff 54%,#f4fcff 100%);background-repeat:no-repeat}
+body{position:relative;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,var(--page-radial-mid) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,var(--bg) 0%,var(--page-gradient-mid) 54%,var(--page-gradient-end) 100%);background-repeat:no-repeat}
 .shell{position:relative;z-index:1;background:transparent}.main,.main-inner{background:transparent}
 h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:.01em;text-wrap:balance}
 p{margin:0}
@@ -1209,15 +1209,6 @@ html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
     --warn:#FFD477;
     --bad:#FF9EAD;
   }
-}
-/* The page gradient follows the active theme; its light values are byte-for-byte color matches. */
-body{background:var(--bg)}
-body::before{
-  background:
-    radial-gradient(ellipse at 12% 8%,var(--powder) 0%,var(--page-radial-mid) 28%,transparent 66%),
-    radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),
-    linear-gradient(180deg,var(--bg) 0%,var(--page-gradient-mid) 54%,var(--page-gradient-end) 100%);
-  background-repeat:no-repeat;
 }
 /* Light-surface components use theme-aware surfaces rather than fixed white fills. */
 .about-profile-card{background:var(--surface-profile);border-color:var(--surface-profile-border)!important}
