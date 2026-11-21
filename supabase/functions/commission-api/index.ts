@@ -42,6 +42,9 @@ const allowedTypes = new Set([
 
 type EmailConfig = {
   fromName?: string;
+  creatorEmail?: string;
+  sendClient?: boolean;
+  sendArtist?: boolean;
 };
 
 
@@ -228,6 +231,7 @@ async function deliverEmail(
     text: string;
     orderId: string | null;
     kind: string;
+    replyTo?: string;
     existingId?: string;
     previousAttempts?: number;
     idempotencyKey?: string;
@@ -277,6 +281,7 @@ async function deliverEmail(
           orderId: input.orderId,
           kind: input.kind,
           to: recipient,
+          replyTo: clean(input.replyTo, 254),
           subject: clean(input.subject, 240),
           html: input.html,
           text: clean(input.text, 20000),
@@ -372,23 +377,152 @@ function commissionEmailHtml(order: any, clientName: string) {
     "</div>";
 }
 
+function creatorEmailText(order: any) {
+  const form = order.form || {};
+  const estimate = order.estimate || {};
+  const fieldLabels: Record<string, string> = {
+    cname: "Character name",
+    lore: "Lore/background",
+    pers: "Personality",
+    pose: "Pose",
+    mood: "Mood",
+    style: "Style",
+    bg: "Background",
+    extra: "Additional details",
+    urls: "Reference links",
+    deadline: "Deadline",
+    rush: "Rush",
+    platform: "Platform",
+    commNote: "Communication details",
+    display: "Display preference",
+    more: "Additional notes",
+    username: "Username",
+    ig: "Sosial media",
+    x: "Sosial media",
+    tt: "Sosial media",
+    yt: "Sosial media",
+    other: "Sosial media",
+  };
+  const orderedKeys = Object.keys(form).sort((a, b) => {
+    const priority = (key: string) => key === "cname" ? 0 : key === "deadline" ? 1 : 2;
+    return priority(a) - priority(b);
+  });
+  const formDetails = orderedKeys
+    .filter((key) => key !== "name" && key !== "email")
+    .map((key) => {
+      const value = form[key];
+      if (key === "files") {
+        const files = Array.isArray(value) ? value : [];
+        const names = files
+          .map((file: any) => clean(file?.name, 120))
+          .filter(Boolean);
+        return "Files: " + files.length + " file(s)" +
+          (names.length ? " — " + names.join(", ") : "");
+      }
+
+      const raw = typeof value === "string"
+        ? value
+        : value == null
+          ? ""
+          : JSON.stringify(value);
+      const safeValue = /^data:/i.test(raw) ||
+        /[A-Za-z0-9+/]{100,}={0,2}/.test(raw)
+        ? "(data panjang disembunyikan)"
+        : clean(raw, 800) || "(kosong)";
+      return (fieldLabels[key] || clean(key, 80)) + ": " + safeValue;
+    });
+
+  const estimateLines = Array.isArray(estimate.lines)
+    ? estimate.lines.map((line: any) => {
+        const label = clean(line?.[0], 160);
+        const amount = Number(line?.[1] || 0).toLocaleString("id-ID");
+        const note = clean(line?.[2], 120);
+        return [label, amount, note].filter(Boolean).join(" — ");
+      })
+    : [];
+
+  return [
+    "Malkiaa Studio — Order Baru",
+    "",
+    "Request ID: " + clean(order.id, 40),
+    "Nama client: " + clean(form.name, 120),
+    "Email client: " + clean(form.email, 254),
+    "Service: " + clean(order.serviceTitle, 160),
+    "Option: " + clean(order.tierName, 160),
+    "Estimasi harga: Rp" +
+      Number(estimate.total || 0).toLocaleString("id-ID"),
+    "",
+    "Rincian estimasi:",
+    ...estimateLines,
+    "",
+    "Detail form client:",
+    ...formDetails,
+    "",
+    "Tanggal: " + clean(order.created_at, 50),
+  ].join("\n");
+}
+
+function creatorEmailHtml(order: any) {
+  const text = clean(creatorEmailText(order), 20000);
+  const escaped = text.replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[ch] || ch));
+  return "<div style='font-family:Arial,sans-serif;color:#333;line-height:1.6;max-width:620px'>" +
+    "<pre style='font-family:Arial,sans-serif;white-space:pre-wrap'>" +
+    escaped +
+    "</pre></div>";
+}
+
 async function sendCommissionEmails(db: any, order: any, form: any) {
   const config = await getEmailConfig(db);
   const results: any[] = [];
   const clientName = clean(form?.name, 120) || "Client";
   const clientEmail = clean(form?.email, 254).toLowerCase();
+  const sendClient = config.sendClient !== false;
+  const sendArtist = config.sendArtist !== false;
+  const creatorEmail = (
+    clean(config.creatorEmail, 254) ||
+    clean(Deno.env.get("CREATOR_EMAIL"), 254) ||
+    "mmaackia@gmail.com"
+  ).toLowerCase();
 
-  // Commission confirmation is sent only to the client.
-  if (clientEmail) {
-    results.push(await deliverEmail(db, config, {
-      to: clientEmail,
-      subject: "Permintaan komisi telah diterima",
-      html: commissionEmailHtml(order, clientName),
-      text: commissionEmailText(order, clientName),
-      orderId: order.id,
-      kind: "client",
-    }));
+  if (sendClient && clientEmail) {
+    try {
+      results.push(await deliverEmail(db, config, {
+        to: clientEmail,
+        subject: "Permintaan komisi telah diterima",
+        html: commissionEmailHtml(order, clientName),
+        text: commissionEmailText(order, clientName),
+        orderId: order.id,
+        kind: "client",
+        idempotencyKey: order.id + ":client",
+      }));
+    } catch (error) {
+      console.error("client notification unexpected failure", error);
+    }
   }
+
+  if (sendArtist && creatorEmail) {
+    try {
+      results.push(await deliverEmail(db, config, {
+        to: creatorEmail,
+        subject: "Order baru: " + clean(order.id, 40),
+        html: creatorEmailHtml(order),
+        text: creatorEmailText(order),
+        orderId: order.id,
+        kind: "artist",
+        idempotencyKey: order.id + ":artist",
+        replyTo: clientEmail,
+      }));
+    } catch (error) {
+      console.error("creator notification unexpected failure", error);
+    }
+  }
+
   return results;
 }
 
@@ -1094,27 +1228,28 @@ Deno.serve(async (req) => {
       if (orderError || !order) return json({ error: "Commission request was not found." }, 404);
       const results = [];
       const config = await getEmailConfig(db);
-      const { data: track } = await db.from("order_tracks").select("*").eq("id", id).maybeSingle();
-      // Only failed client notifications are eligible for retry.
-      const failedClientNotifications = (failed || []).filter((item: any) => item.kind === "client");
-      for (const item of failedClientNotifications) {
-        const eventMatch = item.kind.match(/^client_evt_(proposal|progress|status|finished_art|manual)_/);
-        const eventType = eventMatch?.[1];
-        const latestUpdate = Array.isArray(track?.updates) ? [...track.updates].reverse().find((u: any) => u.from === "artist") : null;
-        const message = clean(latestUpdate?.text, 1200) || "A new update is available for your commission. Open Track Order to view the latest details.";
-        const html = eventType
-          ? orderUpdateEmailHtml(order, track, eventType, message)
+      const failedOrderNotifications = (failed || []).filter(
+        (item: any) => item.kind === "client" || item.kind === "artist"
+      );
+      for (const item of failedOrderNotifications) {
+        const isArtist = item.kind === "artist";
+        const html = isArtist
+          ? creatorEmailHtml(order)
           : commissionEmailHtml(order, clean(order.form?.name, 120));
-        const plainText = eventType
-          ? orderUpdateEmailText(order, track, eventType, message)
+        const plainText = isArtist
+          ? creatorEmailText(order)
           : commissionEmailText(order, clean(order.form?.name, 120));
         results.push(await deliverEmail(db, config, {
           to: clean(item.recipient, 254),
-          subject: "Permintaan komisi telah diterima",
+          subject: isArtist
+            ? "Order baru: " + id
+            : "Permintaan komisi telah diterima",
           html,
           text: plainText,
           orderId: id,
           kind: item.kind,
+          idempotencyKey: id + ":" + item.kind,
+          replyTo: isArtist ? clean(order.form?.email, 254) : undefined,
           existingId: item.id,
           previousAttempts: Number(item.attempts) || 0,
         }));
