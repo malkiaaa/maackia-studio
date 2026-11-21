@@ -71,11 +71,11 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#FFFFFF; --card:#FFFFFF; --primary:#C8EEF7; --powder:#EAF9FD; --peach:var(--design-cream); --cyan:var(--design-primary); --ink:var(--design-text); --muted:var(--design-muted); --line:var(--design-border); --shadow:var(--design-shadow); --side:var(--design-bg); --on-accent:var(--design-text); --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70; color-scheme:light;
+    --bg:var(--design-bg); --card:var(--design-surface); --primary:var(--design-primary); --powder:#EEF4FA; --peach:var(--design-cream); --cyan:var(--design-primary); --ink:var(--design-text); --muted:var(--design-muted); --line:var(--design-border); --shadow:var(--design-shadow); --side:var(--design-bg); --on-accent:var(--design-text); --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70; color-scheme:light;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#FFFFFF; --card:#FFFFFF; --primary:#C8EEF7; --powder:#EAF9FD; --peach:var(--design-cream); --cyan:var(--design-primary); --ink:var(--design-text); --muted:var(--design-muted); --line:var(--design-border); --shadow:var(--design-shadow); --side:var(--design-bg); --on-accent:var(--design-text); --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70; color-scheme:light;
+  --bg:var(--design-bg); --card:var(--design-surface); --primary:var(--design-primary); --powder:#EEF4FA; --peach:var(--design-cream); --cyan:var(--design-primary); --ink:var(--design-text); --muted:var(--design-muted); --line:var(--design-border); --shadow:var(--design-shadow); --side:var(--design-bg); --on-accent:var(--design-text); --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70; color-scheme:light;
 }
 *{box-sizing:border-box}
 [data-ed]{cursor:text;border-radius:8px;transition:outline-color .15s}[data-ed]:hover{outline:2px dashed var(--cyan);outline-offset:3px}[data-ed]:focus{outline:2px solid var(--cyan);outline-offset:3px;background:color-mix(in srgb,var(--cyan) 14%,transparent)}
@@ -396,7 +396,7 @@ textarea.in{min-height:96px;resize:vertical}
 /* Pastel blue, soft yellow and white theme */
 :root, :root[data-theme="dark"] {
   color-scheme: light;
-  --bg:#FFFFFF; --card:#FFFFFF; --primary:#C8EEF7; --powder:#EAF9FD;
+  --bg:var(--design-bg); --card:var(--design-surface); --primary:var(--design-primary); --powder:#EEF4FA;
   --peach:var(--design-cream); --cyan:var(--design-primary); --ink:var(--design-text); --muted:var(--design-muted);
   --line:var(--design-border); --shadow:var(--design-shadow);
   --on-accent:var(--design-text); --side:var(--design-bg); --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70;
