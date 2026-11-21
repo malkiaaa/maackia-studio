@@ -51,8 +51,8 @@
 }
 *{box-sizing:border-box}
 [data-ed]{cursor:text;border-radius:8px;transition:outline-color .15s}[data-ed]:hover{outline:2px dashed var(--cyan);outline-offset:3px}[data-ed]:focus{outline:2px solid var(--cyan);outline-offset:3px;background:color-mix(in srgb,var(--cyan) 14%,transparent)}
-body{position:relative;background:#fff;color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,rgba(234,249,253,.58) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,#fff 0%,#fbfeff 54%,#f4fcff 100%);background-repeat:no-repeat}
+body{position:relative;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,var(--page-radial-mid) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,var(--bg) 0%,var(--page-gradient-mid) 54%,var(--page-gradient-end) 100%);background-repeat:no-repeat}
 .shell{position:relative;z-index:1;background:transparent}.main,.main-inner{background:transparent}
 h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:.01em;text-wrap:balance}
 p{margin:0}
@@ -1138,6 +1138,134 @@ html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
     transition: none !important;
     will-change: auto;
   }
+}
+
+
+/* Dark contrast correction — preserve the original light theme values. */
+:root{
+  --page-gradient-mid:#fbfeff;
+  --page-gradient-end:#f4fcff;
+  --page-radial-mid:rgba(234,249,253,.58);
+  --surface-profile:linear-gradient(145deg,#FFFFFF 0%,#F3FCFE 68%,#FFF9E7 100%);
+  --surface-profile-border:rgba(255,255,255,.88);
+  --surface-profile-placeholder:linear-gradient(145deg,#DDF7FC 0%,#FFFFFF 54%,#FFF2C7 100%);
+  --surface-hero-overlay:linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.84) 24%,rgba(255,255,255,.52) 58%,rgba(255,255,255,.18) 84%,rgba(255,255,255,0) 100%);
+  --surface-hero-overlay-android:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.94) 43%,rgba(232,249,253,.78) 72%,rgba(200,238,247,.28) 100%);
+  --surface-dock:rgba(255,255,255,.97);
+  --surface-input:#FFFFFF;
+  --surface-menu:#FFFFFF;
+  --surface-toolbar:#FFFFFF;
+  --surface-gallery-nav:rgba(255,255,255,.94);
+  --surface-home-reviews:linear-gradient(145deg,#F3FCFF 0%,#FFFFFF 62%,#FFFBEF 100%);
+  --surface-home-review-card:rgba(255,255,255,.88);
+  --surface-home-review-editor:rgba(255,255,255,.78);
+  --surface-selection:color-mix(in srgb,var(--primary) 24%,white);
+  --surface-inpage-top:color-mix(in srgb,var(--primary) 28%,white);
+}
+:root[data-theme="dark"]{
+  --page-gradient-mid:#1C323C;
+  --page-gradient-end:#172A33;
+  --page-radial-mid:rgba(41,70,80,.58);
+  --surface-profile:linear-gradient(145deg,#203943 0%,#1C323C 68%,#294650 100%);
+  --surface-profile-border:rgba(210,239,245,.16);
+  --surface-profile-placeholder:linear-gradient(145deg,#294650 0%,#203943 54%,#315B68 100%);
+  --surface-hero-overlay:linear-gradient(180deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.96) 35%,rgba(23,42,51,.92) 68%,rgba(23,42,51,.88) 100%);
+  --surface-hero-overlay-android:linear-gradient(90deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.96) 43%,rgba(32,57,67,.92) 72%,rgba(49,91,104,.88) 100%);
+  --surface-dock:rgba(32,57,67,.97);
+  --surface-input:#172A33;
+  --surface-menu:#203943;
+  --surface-toolbar:#203943;
+  --surface-gallery-nav:rgba(32,57,67,.96);
+  --surface-home-reviews:linear-gradient(145deg,#1C323C 0%,#203943 62%,#294650 100%);
+  --surface-home-review-card:rgba(32,57,67,.92);
+  --surface-home-review-editor:rgba(32,57,67,.90);
+  --surface-selection:color-mix(in srgb,var(--primary) 24%,var(--card));
+  --surface-inpage-top:color-mix(in srgb,var(--primary) 28%,var(--card));
+  --ok:#80D8A8;
+  --warn:#FFD477;
+  --bad:#FF9EAD;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --page-gradient-mid:#1C323C;
+    --page-gradient-end:#172A33;
+    --page-radial-mid:rgba(41,70,80,.58);
+    --surface-profile:linear-gradient(145deg,#203943 0%,#1C323C 68%,#294650 100%);
+    --surface-profile-border:rgba(210,239,245,.16);
+    --surface-profile-placeholder:linear-gradient(145deg,#294650 0%,#203943 54%,#315B68 100%);
+    --surface-hero-overlay:linear-gradient(180deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.96) 35%,rgba(23,42,51,.92) 68%,rgba(23,42,51,.88) 100%);
+    --surface-hero-overlay-android:linear-gradient(90deg,rgba(23,42,51,.98) 0%,rgba(23,42,51,.96) 43%,rgba(32,57,67,.92) 72%,rgba(49,91,104,.88) 100%);
+    --surface-dock:rgba(32,57,67,.97);
+    --surface-input:#172A33;
+    --surface-menu:#203943;
+    --surface-toolbar:#203943;
+    --surface-gallery-nav:rgba(32,57,67,.96);
+    --surface-home-reviews:linear-gradient(145deg,#1C323C 0%,#203943 62%,#294650 100%);
+    --surface-home-review-card:rgba(32,57,67,.92);
+    --surface-home-review-editor:rgba(32,57,67,.90);
+    --surface-selection:color-mix(in srgb,var(--primary) 24%,var(--card));
+    --surface-inpage-top:color-mix(in srgb,var(--primary) 28%,var(--card));
+    --ok:#80D8A8;
+    --warn:#FFD477;
+    --bad:#FF9EAD;
+  }
+}
+/* Light-surface components use theme-aware surfaces rather than fixed white fills. */
+.about-profile-card{background:var(--surface-profile);border-color:var(--surface-profile-border)!important}
+.about-profile-card__image-placeholder{background:var(--surface-profile-placeholder)}
+.about-image-error{background:var(--card)}
+.inpage-top{background:var(--surface-inpage-top)}
+.home-intro-card:has(.home-intro-text)::before{background:var(--surface-hero-overlay)}
+.home-dashboard>.home-intro-card::before{background:var(--surface-hero-overlay-android)!important}
+html.is-android .home-dashboard>.home-intro-card::before{background:var(--surface-hero-overlay-android)!important}
+.text-edit-dock{background:var(--surface-dock)}
+.text-edit-dock textarea{background:var(--surface-input)}
+.home-reviews-section{background:var(--surface-home-reviews)}
+.home-review-card{background:var(--surface-home-review-card)}
+.home-review-editor{background:var(--surface-home-review-editor)}
+.home-review-editor input,.home-review-editor textarea,.home-review-editor select{background:var(--surface-input)}
+.service-gallery-nav button{background:var(--surface-gallery-nav)}
+.inpage-add input,.slash-menu{background:var(--surface-menu)}
+.context-toolbar button,.block-style-controls input,.block-style-controls select{background:var(--surface-toolbar)}
+.inline-edit-heading,.inline-edit-text{background:var(--surface-input)}
+.inpage-block.selected{background:var(--surface-selection)!important}
+/* System-dark must not inherit light-only muted overrides; explicit light remains unchanged. */
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .tint .muted,
+  :root:not([data-theme="light"]) .stage:nth-child(even) .muted{color:var(--muted)}
+}
+/* Explicit dark mode also keeps status and error text legible on dark surfaces. */
+:root[data-theme="dark"] .tint .muted,
+:root[data-theme="dark"] .stage:nth-child(even) .muted{color:var(--muted)}
+/* Placeholder color is intentionally changed only in dark mode. */
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder{color:var(--muted);opacity:1}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) input::placeholder,
+  :root:not([data-theme="light"]) textarea::placeholder{color:var(--muted);opacity:1}
+}
+
+
+/* Hero overlay: subtle top-only wash for text readability.
+   No bottom fade; the card artwork stays visible through its lower edge. */
+.home-intro-card:has(.home-intro-text)::before,
+.home-dashboard > .home-intro-card::before,
+html.is-android .home-dashboard > .home-intro-card::before {
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+  background:linear-gradient(
+    to bottom,
+    color-mix(in srgb,var(--card) 88%,transparent) 0%,
+    color-mix(in srgb,var(--card) 82%,transparent) 18%,
+    color-mix(in srgb,var(--card) 58%,transparent) 38%,
+    color-mix(in srgb,var(--card) 22%,transparent) 54%,
+    transparent 66%
+  ) !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
 }
 </style>
 
@@ -4089,7 +4217,7 @@ function OrdersPanel() {
   if(sel) return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
   const n=(st)=>(list||[]).filter(o=>st.includes(o.status)).length;
   const stats=[["Total",list?list.length:0],["Pending",n(["Pending Review"])],["Accepted",n(["Paid","Awaiting Payment"])],["In progress",n(["In Progress","Waiting for Feedback","Revision"])],["Completed",n(["Completed"])],["Rejected",n(["Rejected","Cancelled"])]];
-  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}<NotifPanel />
+  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}
     <div className="grid">{stats.map(([l,v])=><div key={l} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
     <section className="card"><div className="card-head"><h2>Client requests</h2><Btn kind="ghost" size="sm" onClick={load}>Refresh</Btn></div>
       {list===null?<p className="muted">Loading...</p>:list.length===0?<p className="muted">No requests yet.</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
@@ -4102,6 +4230,7 @@ function OrdersPanel() {
         </div>
       </article>)}</div>}
     </section>
+    <NotifPanel />
   </div>;
 }
 
@@ -4448,3 +4577,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 
 </body></html>
+/* Thin hero card outline: white in light theme, black in dark theme. */
+:root{--hero-card-outline:#FFFFFF}
+:root[data-theme="dark"]{--hero-card-outline:#000000}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--hero-card-outline:#000000}
+}
+.home-intro-card:has(.home-intro-text),
+.home-dashboard > .home-intro-card{
+  border:1px solid var(--hero-card-outline) !important;
+  box-sizing:border-box;
+}
