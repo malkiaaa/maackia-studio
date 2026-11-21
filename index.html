@@ -1424,7 +1424,30 @@ function buildDoc(site) {
   const S = "<" + "script", E = "<" + "/script>";
   const lib = (u) => S + ' src="' + u + '">' + E;
   return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + ".crop-modal-backdrop{position:fixed;inset:0;z-index:99999;background:rgba(13,20,29,.78);display:grid;place-items:center;padding:18px;overflow:auto}.crop-modal{width:min(560px,100%);max-height:min(92vh,900px);overflow:auto;background:var(--card,#fff);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.32)}.crop-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.crop-modal-head h3{margin:0 0 4px}.crop-modal-head p{margin:0;font-size:.88rem}.crop-preview{position:relative;width:100%;max-height:48vh;background:#17202b;border-radius:14px;overflow:hidden;display:grid;place-items:center}.crop-preview img{width:100%;height:100%;object-fit:cover;transition:transform .12s;transform-origin:center}.crop-guide{position:absolute;inset:8%;border:1px solid rgba(255,255,255,.85);box-shadow:0 0 0 999px rgba(0,0,0,.16);pointer-events:none;border-radius:2px}.crop-controls{display:grid;gap:12px;margin-top:16px}.crop-controls label{display:grid;gap:6px;font-size:.88rem;font-weight:600}.crop-controls label span{font-weight:400}.crop-controls input[type=range]{width:100%;accent-color:var(--primary)}.crop-modal-actions{justify-content:flex-end;margin-top:18px}@media(max-width:600px){.crop-modal{padding:14px;border-radius:17px}.crop-preview{max-height:40vh}}"
-  "</style>" +
+  "
+/* Home hero: keep the overlay inside the rounded card and feather its fade.
+   Use --bg so the same geometry adapts to light and dark themes. */
+.home-intro-card:has(.home-intro-text)::before {
+  inset:0 !important;
+  width:auto !important;
+  height:auto !important;
+}
+@media (max-width:767px) {
+  .home-dashboard > .home-intro-card::before,
+  html.is-android .home-dashboard > .home-intro-card::before {
+    inset:0 !important;
+    width:auto !important;
+    height:auto !important;
+    background:linear-gradient(90deg,
+      color-mix(in srgb,var(--bg) 96%,transparent) 0%,
+      color-mix(in srgb,var(--bg) 92%,transparent) 34%,
+      color-mix(in srgb,var(--bg) 78%,transparent) 58%,
+      color-mix(in srgb,var(--bg) 48%,transparent) 82%,
+      color-mix(in srgb,var(--bg) 24%,transparent) 100%) !important;
+    background-size:100% 100% !important;
+  }
+}
+</style>" +
     '<div id="root"></div>' +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js") +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js") +
