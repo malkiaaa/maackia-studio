@@ -334,48 +334,42 @@ async function deliverEmail(
 }
 
 function commissionEmailText(order: any, clientName: string) {
-  const estimate = Number(order?.estimate?.total) || 0;
-  const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
-    (order?.estimate?.custom ? " + custom quote" : "");
   return [
     "Malkiaa Studio",
     "",
-    "Hello " + (clean(clientName, 120) || "there") + ",",
-    "Thank you for contacting Malkiaa Studio. Your commission request has been received.",
+    "Halo " + (clean(clientName, 120) || "Client") + ",",
     "",
-    "Request details",
+    "Terima kasih telah mengirim request komisi ke Malkiaa Studio.",
+    "Request Anda sudah kami terima dan akan ditinjau.",
+    "",
     "Request ID: " + clean(order.id, 40),
-    "Service: " + clean(order.serviceTitle, 160),
-    "Option: " + clean(order.tierName, 120),
-    "Current estimate: " + price,
     "",
-    "No payment has been taken. We will review your request and contact you with the next steps before payment is due.",
-    "Please keep this message for your records. You can reply directly to this email if you have a question.",
+    "Untuk melihat perkembangan, buka halaman Track Order di website Malkiaa Studio, lalu masukkan Request ID dan email Anda.",
+    "",
+    "Balas email ini jika ada pertanyaan.",
+    "",
+    "Jika email ini masuk ke Spam, tekan 'Bukan spam' dan simpan alamat ini ke kontak Anda.",
     "",
     "Malkiaa Studio",
-    "Commission support · mmaackia@gmail.com"
-  ].filter((line) => line !== undefined).join("\n");
+    "mmaackia@gmail.com"
+  ].join("\n");
 }
 
 function commissionEmailHtml(order: any, clientName: string) {
-  const id = escapeHtml(order.id);
-  const name = escapeHtml(clientName || "Client");
-  const service = escapeHtml(order.serviceTitle || "Commission");
-  const tier = escapeHtml(order.tierName || "");
-  const estimate = Number(order?.estimate?.total) || 0;
-  const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
-    (order?.estimate?.custom ? " + custom quote" : "");
-  const greeting = "Thank you, " + name + ". Your commission request has been received and is waiting for review.";
-  const extra = "<p>Keep this email. Use your Request ID and email address to track your order on the Malkiaa Studio website. No payment has been taken; you will receive a proposal before payment is requested.</p>";
-  return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'>" +
-    "<h2>Malkiaa Studio</h2><p>" + greeting + "</p>" +
-    "<table role='presentation' style='border-collapse:collapse;width:100%'>" +
-    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Request ID</td><td style='padding:8px;border-bottom:1px solid #ddd'><b>" + id + "</b></td></tr>" +
-    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Service</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + service + " " + tier + "</td></tr>" +
-    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Estimate</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + price + "</td></tr>" +
-    "</table>" + extra +
-    "<p>If you have a question, reply directly to this email.</p>" +
-    "<p>Malkiaa Studio · Commission support<br>mmaackia@gmail.com</p></body></html>";
+  const name = escapeHtml(clean(clientName, 120) || "Client");
+  const id = escapeHtml(clean(order.id, 40));
+
+  return "<div style='font-family:Arial,sans-serif;color:#333;line-height:1.7;max-width:560px'>" +
+    "<p><strong>Malkiaa Studio</strong></p>" +
+    "<p>Halo " + name + ",</p>" +
+    "<p>Terima kasih telah mengirim request komisi ke Malkiaa Studio.</p>" +
+    "<p>Request Anda sudah kami terima dan akan ditinjau.</p>" +
+    "<p><strong>Request ID:</strong> " + id + "</p>" +
+    "<p>Untuk melihat perkembangan, buka halaman Track Order di website Malkiaa Studio, lalu masukkan Request ID dan email Anda.</p>" +
+    "<p>Balas email ini jika ada pertanyaan.</p>" +
+    "<p>Jika email ini masuk ke Spam, tekan <strong>Bukan spam</strong> dan simpan alamat ini ke kontak Anda.</p>" +
+    "<p>Malkiaa Studio<br>mmaackia@gmail.com</p>" +
+    "</div>";
 }
 
 async function sendCommissionEmails(db: any, order: any, form: any) {
@@ -388,7 +382,7 @@ async function sendCommissionEmails(db: any, order: any, form: any) {
   if (clientEmail) {
     results.push(await deliverEmail(db, config, {
       to: clientEmail,
-      subject: "We received your commission request | " + order.id,
+      subject: "Permintaan komisi telah diterima",
       html: commissionEmailHtml(order, clientName),
       text: commissionEmailText(order, clientName),
       orderId: order.id,
@@ -1116,7 +1110,7 @@ Deno.serve(async (req) => {
           : commissionEmailText(order, clean(order.form?.name, 120));
         results.push(await deliverEmail(db, config, {
           to: clean(item.recipient, 254),
-          subject: "We received your commission request | " + id,
+          subject: "Permintaan komisi telah diterima",
           html,
           text: plainText,
           orderId: id,
