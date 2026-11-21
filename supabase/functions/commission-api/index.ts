@@ -365,20 +365,17 @@ function commissionEmailHtml(order: any, clientName: string) {
   const estimate = Number(order?.estimate?.total) || 0;
   const price = "IDR " + Math.round(estimate).toLocaleString("id-ID") +
     (order?.estimate?.custom ? " + custom quote" : "");
-  const greeting = "Thank you, " + name + ". We have received your commission request.";
-  const extra = "<p>No payment has been taken. We will review your request and contact you with the next steps before payment is due.</p><p>Please keep this message for your records. If you have a question, you can reply directly to this email.</p>";
-  return "<!doctype html><html><body style='margin:0;padding:24px;background:#ffffff;color:#303943;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6'>" +
-    "<div style='max-width:600px;margin:0 auto'>" +
-    "<p style='margin:0 0 20px;font-size:20px;font-weight:700;color:#263f50'>Malkiaa Studio</p>" +
-    "<p>" + greeting + "</p>" +
-    "<p style='margin:24px 0 8px;font-weight:700'>Request details</p>" +
+  const greeting = "Thank you, " + name + ". Your commission request has been received and is waiting for review.";
+  const extra = "<p>Keep this email. Use your Request ID and email address to track your order on the Malkiaa Studio website. No payment has been taken; you will receive a proposal before payment is requested.</p>";
+  return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'>" +
+    "<h2>Malkiaa Studio</h2><p>" + greeting + "</p>" +
     "<table role='presentation' style='border-collapse:collapse;width:100%'>" +
-    "<tr><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;color:#667085'>Request ID</td><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right'><b>" + id + "</b></td></tr>" +
-    "<tr><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;color:#667085'>Service</td><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right'>" + service + " " + tier + "</td></tr>" +
-    "<tr><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;color:#667085'>Estimate</td><td style='padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right'>" + price + "</td></tr>" +
+    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Request ID</td><td style='padding:8px;border-bottom:1px solid #ddd'><b>" + id + "</b></td></tr>" +
+    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Service</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + service + " " + tier + "</td></tr>" +
+    "<tr><td style='padding:8px;border-bottom:1px solid #ddd'>Estimate</td><td style='padding:8px;border-bottom:1px solid #ddd'>" + price + "</td></tr>" +
     "</table>" + extra +
-    "<p style='margin-top:28px;padding-top:16px;border-top:1px solid #e5e7eb;color:#667085;font-size:13px'>Malkiaa Studio · Commission support<br>mmaackia@gmail.com</p>" +
-    "</div></body></html>";
+    "<p>If you have a question, reply directly to this email.</p>" +
+    "<p>Malkiaa Studio · Commission support<br>mmaackia@gmail.com</p></body></html>";
 }
 
 async function sendCommissionEmails(db: any, order: any, form: any) {
@@ -436,23 +433,19 @@ function orderUpdateEmailHtml(order: any, track: any, eventType: string, message
   const name = escapeHtml(clean(order.form?.name, 120) || "Client");
   const service = escapeHtml(order.serviceTitle || "Commission");
   const status = escapeHtml(track?.status || order.status || "Updated");
-  const labels: Record<string, string> = {
-    finished_art: "Your finished artwork has been delivered.",
-    proposal: "Your commission proposal is ready to review.",
-    progress: "There is a new progress update for your commission.",
-    status: "Your commission status has changed.",
-    manual: "There is a new update to your commission.",
-  };
-  const update = escapeHtml(clean(message, 1200) || labels[eventType] || "There is an update to your commission.").replace(/\n/g, "<br>");
-  const body = "<p>Hello " + name + ",</p><p>" + update + "</p>" +
-    "<p style='margin:24px 0 8px;font-weight:700'>Request details</p>" +
+  const safeMessage = escapeHtml(clean(message, 1200) || "A new update is available.").replace(/\n/g, "<br>");
+  const clientIntro = eventType === "finished_art"
+    ? "Your finished artwork has been delivered."
+    : eventType === "proposal"
+      ? "Your commission proposal is ready to review."
+      : "There is a new update to your commission.";
+  const body = "<p>Hello " + name + ",</p><p>" + clientIntro + "</p><p>" + safeMessage + "</p>" +
     "<p><b>Request ID:</b> " + id + "<br><b>Service:</b> " + service + "<br><b>Current status:</b> " + status + "</p>" +
-    "<p>View your latest commission details in Track Order on the Malkiaa Studio website.</p>" +
-    "<p>If you have a question, reply directly to this email.</p>";
-  return "<!doctype html><html><body style='margin:0;padding:24px;background:#ffffff;color:#303943;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6'><div style='max-width:600px;margin:0 auto'>" +
-    "<p style='margin:0 0 20px;font-size:20px;font-weight:700;color:#263f50'>Malkiaa Studio</p>" + body +
-    "<p style='margin-top:28px;padding-top:16px;border-top:1px solid #e5e7eb;color:#667085;font-size:13px'>Malkiaa Studio · Commission support<br>mmaackia@gmail.com</p>" +
-    "</div></body></html>";
+    "<p>To track your order, open the Malkiaa Studio website and choose Track Order. Enter the Request ID above and the same email address used when submitting your commission. You can review proposal details, progress updates and delivered files there.</p>" +
+    "<p>Please keep this email for your records. If you have a question, reply directly to this email.</p>";
+  return "<!doctype html><html><body style='font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:24px;color:#454B55'>" +
+    "<h2>Malkiaa Studio</h2>" + body +
+    "<p>Malkiaa Studio · Commission support<br>mmaackia@gmail.com</p></body></html>";
 }
 
 async function sendOrderUpdateEmails(db: any, order: any, track: any, eventType: string, eventId: string, message: string) {

@@ -599,6 +599,23 @@ test("desktop Home places Featured Artwork beside the hero without changing mobi
 });
 
 
+test("client email templates retain the earlier concise transactional copy", () => {
+  const commissionStart = backend.indexOf("function commissionEmailHtml(");
+  const commissionEnd = backend.indexOf("async function sendCommissionEmails", commissionStart);
+  const commission = backend.slice(commissionStart, commissionEnd);
+  assert.match(commission, /Your commission request has been received and is waiting for review/);
+  assert.match(commission, /Use your Request ID and email address to track your order/);
+  assert.match(commission, /No payment has been taken/);
+
+  const updateStart = backend.indexOf("function orderUpdateEmailHtml(");
+  const updateEnd = backend.indexOf("async function sendOrderUpdateEmails", updateStart);
+  const update = backend.slice(updateStart, updateEnd);
+  assert.match(update, /Your finished artwork has been delivered/);
+  assert.match(update, /choose Track Order/);
+  assert.match(update, /same email address used when submitting your commission/);
+  assert.match(update, /Please keep this email for your records/);
+});
+
 test("client email sender identity and transactional copy are consistent and replyable", () => {
   const gas = readFileSync(new URL("../supabase/apps-script/Code.gs", import.meta.url), "utf8");
   assert.match(gas, /name: fromName,\\s*replyTo: "mmaackia@gmail\\.com"/);
