@@ -188,7 +188,7 @@ function testEmailA() {
   if (
     !to ||
     to === "isi_alamat_gmail_di_sini" ||
-    !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(to)
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)
   ) {
     throw new Error("Isi TEST_EMAIL_A_TO dengan satu alamat Gmail penerima yang valid.");
   }
@@ -221,7 +221,7 @@ function testEmailA() {
     "",
     "Malkiaa Studio",
     "mmaackia@gmail.com"
-  ].join("\\n");
+  ].join("\n");
 
   const safeName = escapeTestEmailHtml(name);
   const safeRequestId = escapeTestEmailHtml(requestId);
