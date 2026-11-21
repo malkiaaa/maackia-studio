@@ -1827,6 +1827,9 @@ const PUBLIC_ID_TRANSLATIONS = {
   "Completed": "Selesai",
   "Cancelled": "Dibatalkan",
   "Rejected": "Ditolak",
+  "Accepted": "Diterima",
+  "Declined": "Ditolak",
+  "Clarification requested": "Klarifikasi diminta",
   "Pending Review": "Menunggu Peninjauan",
   "Unpaid": "Belum Dibayar",
   "Invoice sent": "Invoice Dikirim",
@@ -2449,7 +2452,7 @@ function priceExample(it) {
   if (idx >= 0) return { art: CONFIG.artworks[idx], i: idx };
   return { art: CONFIG.artworks[0] || { title: "", category: "", image: "" }, i: 0 };
 }
-function Commission({ go, cur, setCur }) {
+function Commission({ go, cur, setCur, lang }) {
   const url = orderUrl();
   return (
     <div className="page">
@@ -3003,13 +3006,7 @@ function ListEditor({ path, label, bodyLabel = "Text" }) {
 }
 function TermsPanel() {
   const { site, savePart, saving } = useCreator();
-  const [lang, setLang] = useState(() => {
-    try { return localStorage.getItem("malkiaa-language") === "en" ? "en" : "id"; }
-    catch (error) { return "id"; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("malkiaa-language", lang); } catch (error) {}
-  }, [lang]);
+  const [lang, setLang] = useState("en");
   const names = { en: "English", id: "Indonesian" };
   return (
     <div className="panel">
@@ -4586,7 +4583,13 @@ function App() {
   const [cat, setCat] = useState("all");
   const [openId, setOpenId] = useState(null);
   const [cur, setCur] = useState(saved.defaultCurrency || "IDR");
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState(() => {
+    try { return localStorage.getItem("malkiaa-language") === "en" ? "en" : "id"; }
+    catch (error) { return "id"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("malkiaa-language", lang); } catch (error) {}
+  }, [lang]);
   const [gate, setGate] = useState(false);
   const [auth, setAuth] = useState({ loading: true, owner: false });
   const authRef = useRef(auth); authRef.current = auth;
@@ -4805,7 +4808,7 @@ function App() {
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
-            {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} />}
+            {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
             {view === "services" && <Services go={go} setCat={setCat} />}
             {view === "board" && <CommissionBoard />}
             {view === "terms" && <Terms lang={lang} setLang={setLang} go={go} />}
