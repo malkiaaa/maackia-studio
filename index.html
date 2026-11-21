@@ -1105,6 +1105,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .home-dashboard-featured-pair>.featured-artwork-home{grid-column:span 5;min-width:0;align-self:stretch}
 }
 
+
+/* UI motion: isolated scale/translate properties preserve existing hover transforms. */
+@keyframes ui-motion-press-bounce {
+  0% { scale: 1; }
+  35% { scale: .95; }
+  70% { scale: 1.03; }
+  100% { scale: 1; }
+}
+:where(button:not(:disabled), a[href], [role="button"], [role="tab"]):active {
+  animation: ui-motion-press-bounce 220ms cubic-bezier(.22, 1, .36, 1) both;
+}
+html.ui-motion-ready .ui-motion-reveal {
+  opacity: 0;
+  translate: 0 14px;
+  transition: opacity 250ms cubic-bezier(.22, 1, .36, 1),
+              translate 250ms cubic-bezier(.22, 1, .36, 1);
+}
+html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
+  opacity: 1;
+  translate: 0 0;
+  transition-duration: 450ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(button:not(:disabled), a[href], [role="button"], [role="tab"]):active {
+    animation: none !important;
+  }
+  html.ui-motion-ready .ui-motion-reveal,
+  html.ui-motion-ready .ui-motion-reveal.ui-motion-visible {
+    opacity: 1 !important;
+    translate: none !important;
+    transition: none !important;
+    will-change: auto;
+  }
+}
 </style>
 
 <div id="root"></div>
@@ -4254,6 +4288,70 @@ function App() {
   const view = route === "creator" && !creatorOn ? "home" : route;
   const isTextEditing = creatorOn && editing && view !== "creator";
   const mainRef = useRef(null);
+  // Scroll motion is deliberately scoped to public content and disabled in Creator mode.
+  useEffect(() => {
+    const root = mainRef.current;
+    const html = document.documentElement;
+    const media = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!root) { html.classList.remove("ui-motion-ready"); return; }
+
+    let revealObserver = null;
+    let mutationObserver = null;
+    const selector = ".greet, .home-intro-text h2, .home-intro-text p, .gal-item, .latest-grid > .art, .featured-artwork-slide, .home-review-card";
+
+    const stop = () => {
+      if (mutationObserver) mutationObserver.disconnect();
+      if (revealObserver) revealObserver.disconnect();
+      mutationObserver = null;
+      revealObserver = null;
+      html.classList.remove("ui-motion-ready");
+    };
+
+    const start = () => {
+      stop();
+      if (creatorOn || view === "creator" || (media && media.matches) || !("IntersectionObserver" in window)) return;
+
+      revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          entry.target.classList.toggle("ui-motion-visible", entry.isIntersecting);
+        });
+      }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+
+      const observeElement = (element) => {
+        if (!element || element.nodeType !== 1) return;
+        if (element.matches(selector)) {
+          if (!element.classList.contains("ui-motion-reveal")) element.classList.add("ui-motion-reveal");
+          const rect = element.getBoundingClientRect();
+          if (rect.bottom > 0 && rect.top < window.innerHeight) {
+            element.classList.add("ui-motion-visible");
+          }
+          revealObserver.observe(element);
+        }
+        element.querySelectorAll(selector).forEach(observeElement);
+      };
+
+      root.querySelectorAll(selector).forEach(observeElement);
+      mutationObserver = new MutationObserver((records) => {
+        records.forEach((record) => record.addedNodes.forEach(observeElement));
+      });
+      mutationObserver.observe(root, { childList: true, subtree: true });
+      html.classList.add("ui-motion-ready");
+    };
+
+    start();
+    if (media) {
+      if (media.addEventListener) media.addEventListener("change", start);
+      else if (media.addListener) media.addListener(start);
+    }
+    return () => {
+      stop();
+      if (media) {
+        if (media.removeEventListener) media.removeEventListener("change", start);
+        else if (media.removeListener) media.removeListener(start);
+      }
+    };
+  }, [creatorOn, view]);
+
   const [editText, setEditText] = useState(null);
 
   useEffect(() => {
