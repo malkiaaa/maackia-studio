@@ -4576,3 +4576,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 
 </body></html>
+/* Thin hero card outline: white in light theme, black in dark theme. */
+:root{--hero-card-outline:#FFFFFF}
+:root[data-theme="dark"]{--hero-card-outline:#000000}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--hero-card-outline:#000000}
+}
+.home-intro-card:has(.home-intro-text),
+.home-dashboard > .home-intro-card{
+  border:1px solid var(--hero-card-outline) !important;
+  box-sizing:border-box;
+}
