@@ -1246,28 +1246,39 @@ html.is-android .home-dashboard>.home-intro-card::before{background:var(--surfac
 }
 
 
-/* Hero gradient: fit the overlay to the card's actual box so overflow clipping
-   does not cut the gradient edges on mobile or desktop. */
+/* Hero overlays: separate text readability at the top from the image fade at the bottom.
+   Both layers use the active theme card surface and stay behind the hero content. */
 .home-intro-card:has(.home-intro-text)::before,
 .home-dashboard > .home-intro-card::before,
 html.is-android .home-dashboard > .home-intro-card::before {
-  inset:0 !important;
-  width:auto !important;
-  height:auto !important;
-  background-size:100% 100% !important;
-  background-repeat:no-repeat !important;
-}
-
-/* Hero image treatment: keep the artwork clear and fade only its lower edge,
-   matching the image-to-card transition used by the About profile card. */
-.home-intro-card:has(.home-intro-text)::before,
-.home-dashboard > .home-intro-card::before,
-html.is-android .home-dashboard > .home-intro-card::before {
+  content:"" !important;
+  position:absolute !important;
   inset:0 !important;
   top:0 !important;
   left:0 !important;
   width:auto !important;
   height:auto !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+  background:linear-gradient(
+    to bottom,
+    color-mix(in srgb,var(--card) 97%,transparent) 0%,
+    color-mix(in srgb,var(--card) 93%,transparent) 24%,
+    color-mix(in srgb,var(--card) 78%,transparent) 43%,
+    color-mix(in srgb,var(--card) 34%,transparent) 59%,
+    transparent 73%
+  ) !important;
+  background-size:100% 100% !important;
+  background-repeat:no-repeat !important;
+}
+.home-intro-card:has(.home-intro-text)::after,
+.home-dashboard > .home-intro-card::after,
+html.is-android .home-dashboard > .home-intro-card::after {
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  pointer-events:none !important;
   background:linear-gradient(
     to bottom,
     transparent 0%,
