@@ -396,7 +396,7 @@ function creatorEmailText(order: any) {
     commNote: "Communication details",
     display: "Display preference",
     more: "Additional notes",
-    username: "Username",
+    username: "Sosial media",
     ig: "Sosial media",
     x: "Sosial media",
     tt: "Sosial media",
@@ -464,13 +464,14 @@ function creatorEmailText(order: any) {
 
 function creatorEmailHtml(order: any) {
   const text = clean(creatorEmailText(order), 20000);
-  const escaped = text.replace(/[&<>"']/g, (ch) => ({
+  const htmlEntities: Record<string, string> = {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
     "'": "&#39;",
-  }[ch] || ch));
+  };
+  const escaped = text.replace(/[&<>"']/g, (ch) => htmlEntities[ch] || ch);
   return "<div style='font-family:Arial,sans-serif;color:#333;line-height:1.6;max-width:620px'>" +
     "<pre style='font-family:Arial,sans-serif;white-space:pre-wrap'>" +
     escaped +
