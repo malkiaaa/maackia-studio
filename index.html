@@ -1,4 +1,31 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ctext x=%2232%22 y=%2249%22 font-size=%2252%22 text-anchor=%22middle%22%3E%E2%98%81%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><script id="android-detection-v1">if(/Android/i.test(navigator.userAgent))document.documentElement.classList.add("is-android");</script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* Creator visual editing + shared About image */
+.about-profile-card{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;min-height:0;padding:0!important;border:1px solid rgba(255,255,255,.88)!important;background:linear-gradient(145deg,#FFFFFF 0%,#F3FCFE 68%,#FFF9E7 100%);box-shadow:0 16px 36px -22px rgba(91,157,177,.42)}
+.about-profile-card__image{position:relative;width:100%;height:auto;aspect-ratio:4/5;max-height:460px;object-fit:cover;object-position:center 28%;display:block;z-index:0;mask-image:linear-gradient(to bottom,#000 76%,transparent 100%)}
+.about-profile-card__image-placeholder{width:100%;aspect-ratio:4/5;max-height:300px;background:linear-gradient(145deg,#DDF7FC 0%,#FFFFFF 54%,#FFF2C7 100%)}
+.about-profile-card__content{position:relative;z-index:2;margin-top:-22px;padding:0 22px 22px;display:flex;flex-direction:column;align-items:flex-start}
+.about-image-actions{position:absolute;z-index:3;top:14px;right:14px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 28px)}
+.about-image-error{position:absolute;z-index:4;left:14px;right:14px;top:58px;padding:8px 10px;border-radius:12px;background:#fff;color:var(--bad);font-size:.8rem;font-weight:800}
+.home-intro-text{max-width:760px;position:relative;z-index:1}
+.home-intro-card{position:relative;isolation:isolate;min-height:300px;background-size:cover!important;background-position:center!important}
+.home-intro-card:has(.home-intro-text){overflow:hidden}
+.home-intro-card:has(.home-intro-text)::before{content:"";position:absolute;top:-9%;left:-7%;width:114%;height:112%;background:linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.84) 24%,rgba(255,255,255,.52) 58%,rgba(255,255,255,.18) 84%,rgba(255,255,255,0) 100%);z-index:0;pointer-events:none}
+.text-edit-dock{position:fixed;left:50%;bottom:calc(78px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:125;width:min(680px,calc(100vw - 28px));padding:14px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 55px -22px rgba(30,54,64,.35);display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(16px)}
+.text-edit-dock textarea{width:100%;min-height:84px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;color:var(--ink);background:#fff}
+.text-edit-dock .btns{display:flex;gap:8px;flex-wrap:wrap}
+[data-ed]{cursor:text}
+@media(max-width:767px){
+ .about-profile-card__image,.about-profile-card__image-placeholder{aspect-ratio:4/5;max-height:390px}
+ .about-profile-card__content{padding:0 16px 18px}
+ .about-image-actions{top:10px;right:10px}
+ .home-intro-card{min-height:260px}
+ .text-edit-dock{bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:12px;border-radius:16px}
+}
+@media(max-width:380px){
+ .home-intro-text{max-width:100%;padding-right:0}
+}
+
+</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ctext x=%2232%22 y=%2249%22 font-size=%2252%22 text-anchor=%22middle%22%3E%E2%98%81%EF%B8%8F%3C/text%3E%3C/svg%3E">
 </head><body>
 <title>Malkiaa Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -7,24 +34,26 @@
 <style id="app-css">
 /* Layout concept: fixed pastel sidebar, card-grid dashboard in the middle, original mascot peeking up from behind the dashboard on the right. Creator mode adds a peach management layer on the same visual identity. */
 :root{
-  --bg:#FFFFFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#F4F8FF;
-  --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096;
-  --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28);
-  --on-accent:#30445D; --side:#FFFFFF; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70; color-scheme:light;
+  --bg:#FFFFFF; --card:#FFFFFF; --primary:#C8EEF7; --powder:#EAF9FD;
+  --peach:#FFE485; --gold:#FFD14C; --cyan:#9BE7FA; --ink:#2F4F5E; --muted:#4F6F7E;
+  --line:rgba(47,79,94,.12); --shadow:0 10px 30px -12px rgba(155,231,250,.38);
+  --on-accent:#1E3640; --side:#FFFFFF; --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70; color-scheme:light;
   --font-display:'Fredoka','Nunito',system-ui,sans-serif;
   --font-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#FFFFFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#F4F8FF; --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096; --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28); --side:#FFFFFF; --on-accent:#30445D; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70; color-scheme:light;
+    --bg:#FFFFFF; --card:#FFFFFF; --primary:#C8EEF7; --powder:#EAF9FD; --peach:#FFE485; --cyan:#9BE7FA; --ink:#2F4F5E; --muted:#4F6F7E; --line:rgba(47,79,94,.12); --shadow:0 10px 30px -12px rgba(155,231,250,.38); --side:#FFFFFF; --on-accent:#1E3640; --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70; color-scheme:light;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#FFFFFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#F4F8FF; --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096; --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28); --side:#FFFFFF; --on-accent:#30445D; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70; color-scheme:light;
+  --bg:#FFFFFF; --card:#FFFFFF; --primary:#C8EEF7; --powder:#EAF9FD; --peach:#FFE485; --cyan:#9BE7FA; --ink:#2F4F5E; --muted:#4F6F7E; --line:rgba(47,79,94,.12); --shadow:0 10px 30px -12px rgba(155,231,250,.38); --side:#FFFFFF; --on-accent:#1E3640; --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70; color-scheme:light;
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
-body{background-image:radial-gradient(circle at 12% 8%,var(--powder) 0,transparent 38%),radial-gradient(circle at 88% 92%,var(--powder) 0,transparent 34%);background-attachment:fixed}
+[data-ed]{cursor:text;border-radius:8px;transition:outline-color .15s}[data-ed]:hover{outline:2px dashed var(--cyan);outline-offset:3px}[data-ed]:focus{outline:2px solid var(--cyan);outline-offset:3px;background:color-mix(in srgb,var(--cyan) 14%,transparent)}
+body{position:relative;background:#fff;color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 12% 8%,var(--powder) 0%,rgba(234,249,253,.58) 28%,transparent 66%),radial-gradient(ellipse at 88% 88%,color-mix(in srgb,var(--cyan) 34%,transparent) 0%,transparent 64%),linear-gradient(180deg,#fff 0%,#fbfeff 54%,#f4fcff 100%);background-repeat:no-repeat}
+.shell{position:relative;z-index:1;background:transparent}.main,.main-inner{background:transparent}
 h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;letter-spacing:.01em;text-wrap:balance}
 p{margin:0}
 button{font:inherit;color:inherit}
@@ -95,7 +124,7 @@ svg.ic{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:2;s
 
 .btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:11px 20px;font-weight:800;cursor:pointer;text-decoration:none;transition:transform .2s,box-shadow .2s,background .2s;font-size:.92rem}
 .btn:hover:not(:disabled){transform:translateY(-2px)}
-.btn.peach{background:var(--peach);color:#1E3640;box-shadow:0 8px 18px -10px var(--peach)}
+.btn.peach{background:var(--gold);color:#1E3640;box-shadow:0 8px 18px -10px var(--gold)}
 .btn.cyan{background:var(--cyan);color:var(--on-accent)}
 .btn.ghost{background:var(--card);border:1px solid var(--line)}
 .btn.danger{background:transparent;border:1px solid var(--bad);color:var(--bad)}
@@ -117,17 +146,33 @@ button.art:hover img{transform:scale(1.05)}
 .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}
 .strip>*{scroll-snap-align:start}
-.latest-section{grid-column:span 7;grid-row:span 2;min-width:0}
+.home-work-grid{grid-column:span 12;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:18px;align-items:stretch;min-width:0}
+.latest-section{min-width:0}
+.home-reviews-section{min-width:0;background:linear-gradient(145deg,#F3FCFF 0%,#FFFFFF 62%,#FFFBEF 100%);border-color:rgba(155,231,250,.32)}
+.home-review-list{display:flex;flex-direction:column;gap:12px}
+.home-review-card{padding:14px;border-radius:18px;background:rgba(255,255,255,.88);border:1px solid rgba(155,231,250,.3);box-shadow:0 8px 22px -17px rgba(47,79,94,.35);display:flex;flex-direction:column;gap:8px;min-width:0}
+.home-review-top{display:flex;align-items:center;gap:10px;min-width:0}
+.home-review-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:linear-gradient(145deg,var(--cyan),#FFF0B8);color:var(--ink);font-weight:900}
+.home-review-name{font-weight:900;line-height:1.15}
+.home-review-stars{color:#E5AD24;letter-spacing:2px;font-size:.92rem;white-space:nowrap}
+.home-review-date{font-size:.75rem;color:var(--muted)}
+.home-review-editor{margin-top:12px;padding:12px;border:1px dashed rgba(91,157,177,.4);border-radius:16px;background:rgba(255,255,255,.78);display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.home-review-editor label{display:flex;flex-direction:column;gap:4px;font-size:.76rem;font-weight:800;color:var(--muted)}
+.home-review-editor input,.home-review-editor textarea,.home-review-editor select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fff;color:var(--ink);font:inherit;font-size:.86rem}
+.home-review-editor textarea{min-height:72px;resize:vertical;grid-column:1/-1}
+.home-review-editor .wide{grid-column:1/-1}
 .latest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .latest-grid .art{width:100%;aspect-ratio:1/1;min-height:0}
 .featured-section{grid-column:span 5;grid-row:span 2;min-width:0}
 .featured-section .feat{min-height:100%}
 .featured-section .feat>.art{min-height:0;flex:1;aspect-ratio:auto}
 @media(min-width:1100px){.latest-grid{gap:14px}.latest-grid .art{max-height:220px}}
-@media(max-width:1023px){.featured-section,.latest-section{grid-column:span 6;grid-row:auto}.featured-section .feat>.art{aspect-ratio:4/5;min-height:180px}.latest-grid .art{max-height:none}}
-@media(max-width:767px){.featured-section,.latest-section{grid-column:span 12}.latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.latest-grid .art{aspect-ratio:1/1;min-height:0}.featured-section .feat>.art{aspect-ratio:4/5;min-height:220px}}
+@media(max-width:1023px){.featured-section{grid-column:span 6;grid-row:auto}.home-work-grid{grid-template-columns:minmax(0,1fr) minmax(260px,.9fr)}.featured-section .feat>.art{aspect-ratio:4/5;min-height:180px}.latest-grid .art{max-height:none}}
+@media(max-width:767px){.featured-section{grid-column:span 12}.home-work-grid{grid-template-columns:minmax(0,1fr);gap:14px}.home-review-editor{grid-template-columns:1fr}.home-review-editor textarea,.home-review-editor .wide{grid-column:auto}.latest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.latest-grid .art{aspect-ratio:1/1;min-height:0}.featured-section .feat>.art{aspect-ratio:4/5;min-height:220px}}
 
 .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.service-gallery{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.service-gallery-main{position:relative;overflow:hidden;border-radius:22px;background:var(--powder)}.service-gallery-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;scrollbar-width:thin}.service-gallery-slide{flex:0 0 100%;min-width:0;aspect-ratio:16/10;scroll-snap-align:center;background:var(--powder)}.service-gallery-slide img{display:block;width:100%;height:100%;object-fit:contain}.service-gallery-nav{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;pointer-events:none}.service-gallery-nav button{pointer-events:auto;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.94);box-shadow:var(--shadow);cursor:pointer;font-size:1.2rem}.service-gallery-dots{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}.service-gallery-dots button{width:9px;height:9px;border:0;border-radius:50%;background:var(--line);padding:0;cursor:pointer}.service-gallery-dots button[aria-current=true]{background:var(--ink);width:22px;border-radius:99px}.service-gallery-thumbs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px}.service-gallery-thumbs button{width:72px;height:58px;flex:none;padding:0;border:2px solid transparent;border-radius:10px;overflow:hidden;background:var(--powder);cursor:pointer}.service-gallery-thumbs button[aria-pressed=true]{border-color:var(--ink)}.service-gallery-thumbs img{width:100%;height:100%;object-fit:cover}.service-gallery-empty{aspect-ratio:16/10;display:grid;place-items:center;color:var(--muted)}
+@media(max-width:767px){.service-gallery-slide{aspect-ratio:4/3}.service-gallery-thumbs button{width:62px;height:50px}}
 .svc{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--powder);border:0;border-radius:22px;padding:16px;cursor:pointer;transition:transform .2s,background .2s}
 .svc:hover{transform:translateY(-4px) rotate(-1deg);background:var(--primary)}
 .svc .ico{width:40px;height:40px;border-radius:14px;background:var(--card);display:grid;place-items:center;color:var(--cyan)}
@@ -175,7 +220,13 @@ button.art:hover img{transform:scale(1.05)}
 .seg button[aria-pressed="true"]{background:var(--cyan);color:var(--on-accent)}
 
 .terms{display:flex;flex-direction:column;gap:14px}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.steps{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.step-progress-head{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:.86rem}
+.step-scrubber{width:100%;height:30px;margin:0;accent-color:var(--cyan);cursor:grab;touch-action:pan-y}
+.step-scrubber:active{cursor:grabbing}
+.step-jumps{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 7px;scrollbar-width:thin}
+.step-jumps .chip{flex:0 0 auto;white-space:nowrap}
+.step-jumps .chip[aria-pressed="true"]{background:var(--peach);color:#1E3640}
 .step{display:flex;flex-direction:column;gap:8px}
 .step .n{width:44px;height:44px;border-radius:16px;background:var(--peach);color:#1E3640;display:grid;place-items:center;font-family:var(--font-display);font-size:1.3rem}
 .stages{display:flex;gap:0;flex-wrap:wrap;margin-top:12px}
@@ -186,7 +237,7 @@ button.art:hover img{transform:scale(1.05)}
 :root:not([data-theme="dark"]) .stage:nth-child(even) .muted{color:#4B5A66}
 
 /* creator layer */
-.cbar{position:sticky;top:10px;z-index:35;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(100deg,var(--peach),color-mix(in srgb,var(--peach) 55%,var(--primary)));color:#1E3640;border-radius:999px;padding:8px 10px 8px 18px;margin-bottom:18px;box-shadow:0 12px 26px -14px var(--peach)}
+.cbar{position:sticky;top:10px;z-index:35;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(100deg,var(--gold),var(--peach));color:#1E3640;border-radius:999px;padding:8px 10px 8px 18px;margin-bottom:18px;box-shadow:0 12px 26px -14px var(--peach)}
 .cbar b{font-family:var(--font-display);letter-spacing:.06em;display:flex;align-items:center;gap:8px}
 .cbar .btn.ghost{color:var(--ink)}
 .cbar .unsaved{font-size:.8rem;font-weight:800;background:#1E3640;color:#fff;border-radius:999px;padding:3px 10px}
@@ -316,10 +367,10 @@ textarea.in{min-height:96px;resize:vertical}
 /* Pastel blue, soft yellow and white theme */
 :root, :root[data-theme="dark"] {
   color-scheme: light;
-  --bg:#FFFFFF; --card:#FFFFFF; --primary:#D7E9FF; --powder:#F4F8FF;
-  --peach:#FFF0B8; --cyan:#B9D8F7; --ink:#3F4D61; --muted:#718096;
-  --line:rgba(63,77,97,.12); --shadow:0 10px 30px -12px rgba(133,173,214,.28);
-  --on-accent:#30445D; --side:#FFFFFF; --ok:#4B9B78; --warn:#B98A32; --bad:#C45C70;
+  --bg:#FFFFFF; --card:#FFFFFF; --primary:#C8EEF7; --powder:#EAF9FD;
+  --peach:#FFE485; --cyan:#9BE7FA; --ink:#2F4F5E; --muted:#4F6F7E;
+  --line:rgba(47,79,94,.12); --shadow:0 10px 30px -12px rgba(155,231,250,.38);
+  --on-accent:#1E3640; --side:#FFFFFF; --ok:#2F7D5B; --warn:#8A6418; --bad:#C45C70;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) { color-scheme: light; }
@@ -533,6 +584,527 @@ button,.btn{white-space:normal}
   .workflow-page>.btns{grid-template-columns:1fr}
 }
 
+@media (max-width:1023px) and (min-width:768px){
+  .side .dbind{display:none}
+  .side .side-foot{align-items:center;padding-left:0;padding-right:0}
+  .side .clink{max-width:54px;text-align:center;line-height:1.25;font-size:.68rem;white-space:normal}
+  .side .socials{justify-content:center}
+}
+.cta-label{text-transform:none}
+
+/* Malkiaa Studio UI refinement — keep the pastel cyan/yellow identity. */
+:root[data-theme="dark"]{
+  --bg:#172A33;--card:#203943;--primary:#315B68;--powder:#294650;
+  --peach:#FFE485;--gold:#FFD14C;--cyan:#9BE7FA;--ink:#F0FAFC;
+  --muted:#B6CFD6;--line:rgba(210,239,245,.15);
+  --shadow:0 14px 34px -16px rgba(0,0,0,.55);--side:#1C323C;
+  --on-accent:#17313B;color-scheme:dark;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#172A33;--card:#203943;--primary:#315B68;--powder:#294650;
+    --peach:#FFE485;--gold:#FFD14C;--cyan:#9BE7FA;--ink:#F0FAFC;
+    --muted:#B6CFD6;--line:rgba(210,239,245,.15);
+    --shadow:0 14px 34px -16px rgba(0,0,0,.55);--side:#1C323C;
+    --on-accent:#17313B;color-scheme:dark;
+  }
+}
+html,body{max-width:100%;overflow-x:hidden}
+#root,.shell,.main,.main-inner,.page,.panel{min-width:0;max-width:100%}
+button,.btn,.chip,.ib,.iconbtn,.soc,.nav button,.bnav button{ -webkit-tap-highlight-color:transparent;touch-action:manipulation }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.btn,.ib,.iconbtn,.xbtn,.nbtn,.ctabs .chip,.bnav button{min-height:40px}
+.card{box-shadow:var(--shadow)}
+.field,.field>*{min-width:0;max-width:100%}
+.field .in{width:100%;min-width:0}
+.rowi,.rowi .grow,.rowi .acts{min-width:0;max-width:100%}
+.ctabs{overscroll-behavior-x:contain;scrollbar-width:thin}
+.latest-grid,.gal,.svc-grid,.price-grid{min-width:0}
+@media (min-width:768px) and (max-width:1023px){
+  .side{width:72px;padding:16px 8px}
+  .main{margin-left:72px}
+  .main-inner{padding:18px 16px 48px}
+  .top{padding:12px 16px}
+  .grid{gap:14px}
+  .card{padding:18px}
+  .creator-bar-wrap{padding-left:16px;padding-right:16px}
+  .olay{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:767px){
+  .side{display:none!important}
+  .main{width:100%;margin:0!important}
+  .main-inner{width:100%;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .creator-bar-wrap{width:100%;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .grid>[class*="span-"]{grid-column:1/-1!important}
+  .form{grid-template-columns:minmax(0,1fr)}
+  .form .full{grid-column:1/-1}
+  .modal-box{grid-template-columns:minmax(0,1fr);max-width:100%}
+  .rowi{width:100%;flex-wrap:wrap}
+  .rowi .acts{width:100%;flex-wrap:wrap;justify-content:flex-start}
+  .cbar{position:relative;top:auto;width:100%;max-width:100%}
+  .bnav{padding-bottom:calc(5px + env(safe-area-inset-bottom,0px))}
+  .drawer{max-width:calc(100vw - 20px)}
+  .latest-section,.featured-section{grid-column:1/-1}
+  .latest-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:430px){
+  .card{padding:13px;border-radius:17px}
+  .card-head{gap:8px}
+  .btn{white-space:normal}
+  .rowi .acts>*{max-width:100%}
+}
+@media (max-width:360px){
+  .main-inner{padding-left:9px;padding-right:9px}
+  .creator-bar-wrap{padding-left:9px;padding-right:9px}
+  .latest-grid,.gal{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Homepage-only mobile layout refinement. Desktop rules remain unchanged. */
+@media (max-width:767px) {
+  .home-dashboard {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    align-items:start;
+    gap:14px;
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+  .home-dashboard > .home-intro-card,
+  .home-dashboard > .featured-section {
+    grid-column:1 / -1 !important;
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    margin:0;
+    box-sizing:border-box;
+  }
+  .home-dashboard > .home-intro-card {
+    min-height:0;
+    padding:clamp(17px,4.5vw,22px);
+    border-radius:20px;
+    background-position:72% center !important;
+    background-size:cover !important;
+  }
+  .home-dashboard > .home-intro-card::before {
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    background:linear-gradient(90deg,
+      rgba(255,255,255,.98) 0%,
+      rgba(255,255,255,.94) 38%,
+      rgba(255,255,255,.76) 62%,
+      rgba(255,255,255,.18) 100%) !important;
+  }
+  .home-dashboard .home-intro-text {
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:11px !important;
+    width:min(100%, 430px);
+    max-width:100%;
+    min-width:0;
+    padding:0;
+  }
+  .home-dashboard .home-intro-text > .tag {
+    max-width:100%;
+    white-space:normal;
+    line-height:1.35;
+    padding:5px 10px;
+    font-size:.66rem;
+  }
+  .home-dashboard .home-intro-text h2 {
+    max-width:100%;
+    font-size:clamp(1.9rem,8vw,2.35rem) !important;
+    line-height:1.02 !important;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+  .home-dashboard .home-intro-text p {
+    max-width:34ch;
+    font-size:.91rem;
+    line-height:1.55;
+    overflow-wrap:break-word;
+  }
+  .home-dashboard .home-intro-text .btns {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    width:min(100%,260px);
+    gap:8px;
+    margin-top:4px !important;
+  }
+  .home-dashboard .home-intro-text .btns > * {
+    width:100%;
+    min-width:0;
+    justify-content:center;
+    white-space:normal;
+    text-align:center;
+  }
+  .home-dashboard > .featured-section {
+    grid-row:auto;
+    padding:16px;
+  }
+  .home-dashboard > .featured-section .feat {
+    min-width:0;
+    width:100%;
+  }
+  .bnav {
+    min-height:62px;
+    align-items:stretch;
+    gap:2px;
+    padding-top:5px;
+    padding-bottom:calc(5px + env(safe-area-inset-bottom,0px));
+  }
+  .bnav button {
+    flex:1 1 0;
+    min-width:0;
+    min-height:50px;
+    gap:3px;
+    padding:5px 1px;
+    white-space:nowrap;
+    overflow:hidden;
+    font-size:clamp(.58rem,2.35vw,.68rem);
+    line-height:1.15;
+    overflow-wrap:normal;
+  }
+  .bnav button svg { width:19px; height:19px; }
+  .text-edit-dock { bottom:calc(72px + env(safe-area-inset-bottom,0px)); }
+  .toast { bottom:calc(72px + env(safe-area-inset-bottom,0px)); }
+}
+@media (max-width:380px) {
+  .home-dashboard { gap:12px; }
+  .home-dashboard > .home-intro-card { padding:14px; }
+  .home-dashboard .home-intro-text { gap:9px !important; }
+  .home-dashboard .home-intro-text p { font-size:.86rem; }
+  .home-dashboard .home-intro-text .btns { width:100%; }
+  .bnav button { font-size:.55rem; }
+}
+
+/* Featured Artwork carousel */
+.featured-artwork-home{min-width:0;overflow:hidden}
+.featured-artwork-viewport{width:100%;overflow:hidden;border-radius:16px;touch-action:pan-y;cursor:grab;outline-offset:4px}
+.featured-artwork-viewport:active{cursor:grabbing}
+.featured-artwork-track{display:flex;width:100%;transition:transform .55s cubic-bezier(.22,.7,.25,1);will-change:transform}
+.featured-artwork-slide{position:relative;flex:0 0 100%;width:100%;min-width:0;aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:var(--bg)}
+.featured-artwork-slide img{display:block;width:100%;height:100%;object-fit:cover;user-select:none}
+.featured-artwork-caption{position:absolute;left:14px;right:14px;bottom:14px;padding:9px 13px;border-radius:12px;background:rgba(30,54,64,.72);color:#fff;font-weight:800;backdrop-filter:blur(8px)}
+.featured-artwork-controls{display:flex;gap:8px}
+.featured-artwork-dots{display:flex;justify-content:center;align-items:center;gap:8px;padding-top:14px}
+.featured-artwork-dots button{width:9px;height:9px;border:0;border-radius:50%;padding:0;background:var(--primary);opacity:.55;cursor:pointer}
+.featured-artwork-dots button.is-active{width:24px;border-radius:8px;background:var(--gold);opacity:1}
+.featured-artwork-manager .featured-upload-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px 16px;border:2px dashed var(--primary);border-radius:16px;background:var(--bg);text-align:center;transition:border-color .2s,background .2s}
+.featured-upload-drop.is-dragging{border-color:var(--cyan);background:color-mix(in srgb,var(--cyan) 12%,var(--bg))}
+.featured-artwork-list{display:grid;gap:12px;margin-top:16px}
+.featured-artwork-row{display:grid;grid-template-columns:112px minmax(0,1fr) auto;align-items:center;gap:16px;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--bg);min-width:0}
+.featured-artwork-thumb{width:112px;aspect-ratio:4/5;height:auto;flex:none;overflow:hidden;border-radius:13px;background:var(--powder);display:grid;place-items:center}
+.featured-artwork-thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.featured-artwork-fields{min-width:0;display:flex;flex-direction:column;gap:8px}
+.featured-artwork-fields .field{min-width:0}
+.featured-artwork-actions{display:flex;flex-direction:column;gap:7px;align-self:center}
+@media(max-width:640px){
+ .featured-artwork-slide{aspect-ratio:4/3}
+ .featured-artwork-row{grid-template-columns:84px minmax(0,1fr);align-items:start;gap:10px;padding:10px}
+ .featured-artwork-thumb{width:84px;aspect-ratio:4/5}
+ .featured-artwork-fields{gap:7px}
+ .featured-artwork-actions{grid-column:1/-1;flex-direction:row;width:100%;justify-content:flex-end}
+}
+@media(prefers-reduced-motion:reduce){
+ .featured-artwork-track{transition:none!important}
+ .featured-artwork-dots button{transition:none!important}
+}
+
+/* Track Order — responsive overview only */
+.track-overview{min-width:0;padding:clamp(16px,2.4vw,26px);overflow:hidden}
+.track-overview-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,auto);align-items:start;gap:18px;margin-bottom:18px}
+.track-overview-head>div:first-child{min-width:0}
+.track-overview-head h2{line-height:1.25;overflow-wrap:anywhere}
+.track-overview-head p{line-height:1.5;overflow-wrap:anywhere}
+.track-overview-badges{display:flex;justify-content:flex-end;align-items:flex-start;flex-wrap:wrap;gap:9px;min-width:0;max-width:100%}
+.track-overview-badges .tag{display:inline-flex;align-items:center;justify-content:center;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.45;text-align:center;padding:6px 11px;letter-spacing:.045em}
+.track-overview-stages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;min-width:0;margin-top:0}
+.track-overview-stages .stage,
+.track-overview-stages .stage:first-child,
+.track-overview-stages .stage:last-child{display:flex;align-items:center;justify-content:center;text-align:center;min-width:0;min-height:68px;height:100%;padding:13px 10px;border:0!important;border-radius:15px!important;overflow-wrap:anywhere;line-height:1.35;background:var(--cyan);color:var(--on-accent);transition:background .18s ease,color .18s ease}
+.track-overview-stages .stage.is-active,
+.track-overview-stages .stage.is-active:first-child,
+.track-overview-stages .stage.is-active:last-child{background:var(--gold)!important;color:var(--on-accent)!important}
+@media(max-width:1023px){
+ .track-overview-stages{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+ .track-overview-stages .stage:last-child{grid-column:2}
+}
+@media(max-width:767px){
+ .track-overview{padding:18px}
+ .track-overview-head{grid-template-columns:minmax(0,1fr);gap:13px;margin-bottom:16px}
+ .track-overview-badges{justify-content:flex-start;gap:8px}
+ .track-overview-stages{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .track-overview-stages .stage:last-child{grid-column:1/-1;width:calc((100% - 9px)/2);justify-self:center}
+}
+@media(max-width:380px){
+ .track-overview{padding:14px}
+ .track-overview-stages{gap:8px}
+ .track-overview-stages .stage,
+ .track-overview-stages .stage:first-child,
+ .track-overview-stages .stage:last-child{min-height:64px;padding:11px 8px;border-radius:13px!important;font-size:.88rem}
+ .track-overview-stages .stage:last-child{width:calc((100% - 8px)/2)}
+ .track-overview-badges .tag{font-size:.66rem;padding:5px 9px}
+}
+
+
+/* ANDROID HOME REFINEMENT — isolated from iOS, tablet and desktop */
+@media (max-width: 767px) {
+  html.is-android body { overflow-x:hidden; }
+  html.is-android .main { margin-left:0 !important; width:100% !important; min-width:0 !important; }
+  html.is-android .main-inner {
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+    padding:16px 16px calc(92px + env(safe-area-inset-bottom,0px)) !important;
+    box-sizing:border-box !important;
+  }
+  html.is-android .home-dashboard {
+    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
+    grid-auto-flow:row !important; gap:16px !important;
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+  }
+  html.is-android .home-dashboard > .home-intro-card,
+  html.is-android .home-dashboard > .featured-section,
+  html.is-android .home-dashboard > .home-work-grid,
+  html.is-android .home-dashboard > section.card {
+    grid-column:1 / -1 !important; grid-row:auto !important;
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+    margin:0 !important; box-sizing:border-box !important;
+  }
+  html.is-android .home-dashboard > .home-intro-card {
+    min-height:0 !important; padding:20px 18px !important;
+    border-radius:22px !important; background-position:72% center !important;
+    background-size:cover !important; overflow:hidden !important;
+  }
+  html.is-android .home-dashboard > .home-intro-card::before {
+    inset:0 !important; width:100% !important; height:100% !important;
+    background:linear-gradient(90deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.94) 43%,rgba(232,249,253,.78) 72%,rgba(200,238,247,.28) 100%) !important;
+  }
+  html.is-android .home-dashboard .home-intro-text {
+    width:100% !important; max-width:100% !important; min-width:0 !important;
+    gap:11px !important; align-items:flex-start !important;
+  }
+  html.is-android .home-dashboard .home-intro-text > .tag {
+    width:max-content !important; max-width:100% !important;
+    white-space:nowrap !important; font-size:clamp(9px,2.5vw,11px) !important;
+    letter-spacing:.025em !important; overflow:hidden; text-overflow:ellipsis;
+  }
+  html.is-android .home-dashboard .home-intro-text h2 {
+    max-width:100% !important; font-size:clamp(30px,8vw,36px) !important;
+    line-height:1.08 !important; overflow-wrap:normal !important; word-break:normal !important;
+  }
+  html.is-android .home-dashboard .home-intro-text p {
+    max-width:36ch !important; font-size:15px !important; line-height:1.55 !important;
+  }
+  html.is-android .home-dashboard .home-intro-text .btns {
+    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
+    width:100% !important; max-width:320px !important; gap:9px !important;
+  }
+  html.is-android .home-dashboard .home-intro-text .btns > .btn {
+    display:flex !important; align-items:center !important; justify-content:center !important;
+    width:100% !important; min-width:0 !important; min-height:50px !important;
+    padding:12px 14px !important; white-space:nowrap !important;
+    text-align:center !important; box-sizing:border-box !important;
+  }
+  html.is-android .home-dashboard > .featured-section { padding:16px !important; }
+  html.is-android .home-dashboard > .featured-section .feat {
+    display:flex !important; flex-direction:column !important;
+    width:100% !important; min-width:0 !important; height:auto !important;
+  }
+  html.is-android .home-dashboard > .featured-section .feat > .art {
+    flex:none !important; width:100% !important; min-width:0 !important;
+    min-height:0 !important; aspect-ratio:4/3 !important;
+  }
+  html.is-android .home-dashboard > .home-work-grid {
+    display:grid !important; grid-template-columns:minmax(0,1fr) !important;
+    gap:16px !important;
+  }
+  html.is-android .home-dashboard .latest-section,
+  html.is-android .home-dashboard .home-reviews-section {
+    width:100% !important; min-width:0 !important; max-width:100% !important;
+  }
+  html.is-android .home-dashboard .home-review-list {
+    display:flex !important; flex-direction:row !important; gap:12px !important;
+    width:100% !important; min-width:0 !important; overflow-x:auto !important;
+    overflow-y:hidden !important; padding:2px 2px 12px !important;
+    scroll-snap-type:x mandatory !important; overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  html.is-android .home-dashboard .home-review-card {
+    flex:0 0 84% !important; min-width:0 !important; scroll-snap-align:start !important;
+  }
+  html.is-android .home-dashboard .card-head h2 { font-size:21px !important; }
+  html.is-android .bnav {
+    left:0 !important; right:0 !important; bottom:0 !important; width:100% !important;
+    padding-bottom:calc(5px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  html.is-android .text-edit-dock,
+  html.is-android .toast { bottom:calc(76px + env(safe-area-inset-bottom,0px)) !important; }
+}
+@media (max-width:380px) {
+  html.is-android .main-inner { padding-left:16px !important; padding-right:16px !important; }
+  html.is-android .home-dashboard > .home-intro-card { padding:16px !important; }
+  html.is-android .home-dashboard .home-intro-text .btns { max-width:100% !important; }
+  html.is-android .home-dashboard .home-review-card { flex-basis:88% !important; }
+}
+
+/* Homepage mobile/desktop correction — shared Featured Artwork carousel */
+.featured-artwork-home{width:100%;max-width:100%;min-width:0;overflow:hidden}
+.featured-artwork-slide{
+  flex:0 0 100%;
+  width:100%;
+  min-width:0;
+  aspect-ratio:3/2;
+  max-height:420px;
+  border-radius:16px;
+  overflow:hidden;
+}
+.featured-artwork-slide img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 25%;
+  border-radius:inherit;
+}
+.featured-artwork-caption{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  max-width:100%;
+  padding:24px 12px 10px;
+  border-radius:0 0 16px 16px;
+  background:linear-gradient(180deg,rgba(18,36,46,0) 0%,rgba(18,36,46,.08) 28%,rgba(18,36,46,.62) 100%);
+  color:#fff;
+  font-size:12px;
+  line-height:1.3;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  pointer-events:none;
+}
+.featured-artwork-dots{gap:6px;padding-top:8px}
+.featured-artwork-dots button,
+.featured-artwork-dots button.is-active{
+  width:7px;
+  height:7px;
+  min-width:7px;
+  border-radius:50%;
+}
+.featured-artwork-dots button.is-active{background:var(--gold);opacity:1}
+@media(min-width:768px){
+  .featured-artwork-slide{aspect-ratio:3/2;max-height:420px}
+}
+@media(max-width:767px){
+  .home-dashboard{grid-template-columns:minmax(0,1fr);width:100%;max-width:100%;min-width:0}
+  .home-dashboard>.home-intro-card,
+  .home-dashboard>.featured-section,
+  .home-dashboard>.featured-artwork-home{
+    grid-column:1/-1!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    justify-self:stretch;
+    flex:1 1 100%;
+    box-sizing:border-box;
+  }
+  .home-dashboard>.home-intro-card{
+    min-height:0;
+    padding:16px 14px;
+  }
+  .home-dashboard .home-intro-text{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+  .home-dashboard .home-intro-text .btns{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    width:100%;
+    max-width:100%;
+    gap:7px;
+  }
+  .home-dashboard .home-intro-text .btns>.btn,
+  .home-dashboard .home-intro-text .btns>a{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    padding:9px 7px;
+    font-size:clamp(.68rem,2.9vw,.82rem);
+    white-space:nowrap;
+    justify-content:center;
+    text-align:center;
+  }
+  .home-dashboard>.featured-section,
+  .home-dashboard>.featured-artwork-home{
+    grid-row:auto;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    padding:14px!important;
+    max-height:380px;
+    overflow:hidden;
+    box-sizing:border-box;
+  }
+  .featured-artwork-home .card-head{
+    align-items:center;
+    flex-wrap:nowrap;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .featured-artwork-home .card-head h2{font-size:clamp(18px,4.8vw,20px);line-height:1.2}
+  .featured-artwork-home .card-head small{font-size:12px;line-height:1.3}
+  .featured-artwork-home .featured-artwork-controls{gap:6px;flex:none}
+  .featured-artwork-home .featured-artwork-controls .ib{width:34px;height:34px;min-height:34px}
+  .featured-artwork-viewport{width:100%;max-width:100%;border-radius:14px}
+  .featured-artwork-slide{
+    flex:0 0 100%;
+    width:100%;
+    aspect-ratio:4/3;
+    max-height:280px;
+    border-radius:14px;
+  }
+  .featured-artwork-slide img{width:100%;height:100%;object-fit:cover;object-position:center 25%;border-radius:14px}
+  .featured-artwork-caption{padding:22px 10px 8px;font-size:11.5px;border-radius:0 0 14px 14px}
+  .featured-artwork-dots{gap:6px;padding-top:7px}
+  .featured-artwork-dots button,
+  .featured-artwork-dots button.is-active{width:7px;height:7px;min-width:7px}
+  .home-work-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-auto-flow:row;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    gap:14px;
+  }
+  .home-work-grid>.latest-section,
+  .home-work-grid>.home-reviews-section{
+    grid-column:1/-1;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    justify-self:stretch;
+  }
+}
+@media(max-width:380px){
+  .home-dashboard>.home-intro-card{padding:14px 12px}
+  .home-dashboard .home-intro-text .btns{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .home-dashboard .home-intro-text .btns>.btn,
+  .home-dashboard .home-intro-text .btns>a{padding:8px 5px;font-size:.68rem}
+  .home-dashboard>.featured-section,
+  .home-dashboard>.featured-artwork-home{padding:14px!important}
+}
+/* Desktop only: place Hero and Featured Artwork side by side */
+@media (min-width:1024px){
+  .home-dashboard-featured-pair>.home-intro-card{grid-column:span 7;min-width:0}
+  .home-dashboard-featured-pair>.featured-artwork-home{grid-column:span 5;min-width:0;align-self:stretch}
+}
+
 </style>
 
 <div id="root"></div>
@@ -561,7 +1133,7 @@ const DEFAULT_SITE = {
     location: "Indonesia",
     languages: "Indonesian / English",
     platform: "VGen",
-    about: { image: "", introduction: "", interests: [], philosophy: "", specialties: ["Character Illustration", "VTuber Illustration", "Game Character Illustration", "Graphic Design", "Custom Artwork"] },
+    about: { image: "", cardImage: "", introduction: "", interests: [], philosophy: "", specialties: ["Character Illustration", "VTuber Illustration", "Game Character Illustration", "Graphic Design", "Custom Artwork"] },
   },
   commissionStatus: "OPEN",
   defaultCurrency: "IDR",
@@ -584,6 +1156,7 @@ const DEFAULT_SITE = {
     { id: "personal", label: "Personal Artwork" },
   ],
   featuredId: "a1",
+  featuredArtworks: [],
   artworks: [
     { id: "a1", title: "Featured artwork slot", category: "character", year: "", image: "", description: "", tools: "", notes: "" },
     { id: "a2", title: "VTuber slot", category: "vtuber", year: "", image: "", description: "", tools: "", notes: "" },
@@ -689,6 +1262,8 @@ function loadSaved() {
     const el = document.getElementById("site-data");
     const o = JSON.parse((el && el.textContent) || "{}");
     const s = mergeDeep(DEFAULT_SITE, o);
+    if (!s.profile.about.cardImage && s.appearance.banner) s.profile.about.cardImage = s.appearance.banner;
+    s.appearance.banner = s.profile.about.cardImage || "";
     s.pricing.forEach((g) => g.items.forEach((it) => { if (!it.id) it.id = uid("p"); if (it.image === undefined) it.image = ""; if (it.exampleId === undefined) it.exampleId = ""; }));
     return s;
   } catch (e) { return clone(DEFAULT_SITE); }
@@ -708,7 +1283,8 @@ function buildDoc(site) {
   const json = JSON.stringify(site).replace(/</g, "\\u003c");
   const S = "<" + "script", E = "<" + "/script>";
   const lib = (u) => S + ' src="' + u + '">' + E;
-  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + "</style>" +
+  return SKEL_PRE + HEAD_STATIC + '<style id="app-css">' + css + ".crop-modal-backdrop{position:fixed;inset:0;z-index:99999;background:rgba(13,20,29,.78);display:grid;place-items:center;padding:18px;overflow:auto}.crop-modal{width:min(560px,100%);max-height:min(92vh,900px);overflow:auto;background:var(--card,#fff);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.32)}.crop-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.crop-modal-head h3{margin:0 0 4px}.crop-modal-head p{margin:0;font-size:.88rem}.crop-preview{position:relative;width:100%;max-height:48vh;background:#17202b;border-radius:14px;overflow:hidden;display:grid;place-items:center}.crop-preview img{width:100%;height:100%;object-fit:cover;transition:transform .12s;transform-origin:center}.crop-guide{position:absolute;inset:8%;border:1px solid rgba(255,255,255,.85);box-shadow:0 0 0 999px rgba(0,0,0,.16);pointer-events:none;border-radius:2px}.crop-controls{display:grid;gap:12px;margin-top:16px}.crop-controls label{display:grid;gap:6px;font-size:.88rem;font-weight:600}.crop-controls label span{font-weight:400}.crop-controls input[type=range]{width:100%;accent-color:var(--primary)}.crop-modal-actions{justify-content:flex-end;margin-top:18px}@media(max-width:600px){.crop-modal{padding:14px;border-radius:17px}.crop-preview{max-height:40vh}}"
+  "</style>" +
     '<div id="root"></div>' +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js") +
     lib("https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js") +
@@ -763,19 +1339,31 @@ function downscale(file, maxDim) {
       const k = Math.min(1, maxDim / Math.max(img.width, img.height));
       const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-      c.toBlob((b) => (b ? resolve(b) : reject(new Error("encode"))), "image/webp", 0.86);
+      c.toBlob((b) => (b && b.type === "image/webp" ? resolve(b) : reject(new Error("This browser could not encode WebP. Please use a browser with WebP support."))), "image/webp", 0.82);
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
     img.src = url;
   });
 }
 const blobToDataUrl = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result || "").split(",")[1] || "");
+  reader.onerror = () => reject(new Error("Could not read the image."));
+  reader.readAsDataURL(blob);
+});
 async function storeImage(file, maxDim = 1800) {
-  if (!file || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) throw new Error("type");
+  if (!file || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) throw new Error("Use a PNG, JPG, WebP or GIF image.");
   const blob = await downscale(file, maxDim);
-  const assets = await cap("assets");
-  if (assets) { try { const r = await assets.upload(blob, { type: blob.type || "image/webp" }); return "/_blob/" + r.id; } catch (e) {} }
-  return blobToDataUrl(blob);
+  if (!blob || blob.size > 4 * 1024 * 1024) throw new Error("Image is too large after compression. Use a smaller image.");
+  const base64 = await blobToBase64(blob);
+  const result = await Store.api("portfolio_upload", {
+    base64,
+    contentType: blob.type || "image/webp",
+    fileName: (file.name || "portfolio-image").slice(0, 100)
+  }, true);
+  if (!result || !result.url || !result.path) throw new Error("Upload completed without a permanent file URL.");
+  return result.url;
 }
 
 /* ============================================================ constants & icons */
@@ -1055,7 +1643,7 @@ function MobileChrome({ route, go, openGate, creatorOn }) {
       </>}
       <nav className="bnav" aria-label="Quick">
         {quick.map((id) => { const p = all.find((x) => x.id === id); return (
-          <button key={id} aria-current={route === id ? "page" : undefined} onClick={() => go(id)}><Icon name={p.icon} />{p.label}</button>
+          <button key={id} aria-current={route === id ? "page" : undefined} onClick={() => go(id)}><Icon name={p.icon} />{id === "services" ? "Services" : p.label}</button>
         ); })}
         <button onClick={() => setOpen(true)}><Icon name="menu" />More</button>
       </nav>
@@ -1082,18 +1670,116 @@ function TopBar({ route, go, query, setQuery }) {
 }
 
 /* ============================================================ visitor pages (read-only) */
+function FeaturedArtworkCarousel({ items }) {
+  const slides = (Array.isArray(items) ? items : []).filter((item) => safeImg(item.url));
+  const count = slides.length;
+  const [index, setIndex] = useState(1);
+  const [paused, setPaused] = useState(false);
+  const [visible, setVisible] = useState(!document.hidden);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [instant, setInstant] = useState(false);
+  const pointerStart = useRef(null);
+
+  useEffect(() => {
+    setIndex(count > 1 ? 1 : 0);
+  }, [count]);
+
+  useEffect(() => {
+    const media = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setReducedMotion(!!(media && media.matches));
+    const updateVisibility = () => setVisible(!document.hidden);
+    updateMotion();
+    if (media) {
+      if (media.addEventListener) media.addEventListener("change", updateMotion);
+      else if (media.addListener) media.addListener(updateMotion);
+    }
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => {
+      if (media) {
+        if (media.removeEventListener) media.removeEventListener("change", updateMotion);
+        else if (media.removeListener) media.removeListener(updateMotion);
+      }
+      document.removeEventListener("visibilitychange", updateVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (count < 2 || paused || !visible || reducedMotion) return;
+    const timer = window.setInterval(() => setIndex((current) => current + 1), 4000);
+    return () => window.clearInterval(timer);
+  }, [count, paused, visible, reducedMotion]);
+
+  const next = () => { if (count > 1) setIndex((current) => Math.min(count + 1, current + 1)); };
+  const previous = () => { if (count > 1) setIndex((current) => Math.max(0, current - 1)); };
+  const active = count > 1 ? (index - 1 + count) % count : 0;
+  const trackItems = count > 1 ? [slides[count - 1], ...slides, slides[0]] : slides;
+
+  const finishTransition = () => {
+    if (count < 2) return;
+    if (index === count + 1 || index === 0) {
+      setInstant(true);
+      setIndex(index === count + 1 ? 1 : count);
+      window.requestAnimationFrame(() => setInstant(false));
+    }
+  };
+  const startPointer = (e) => {
+    pointerStart.current = e.clientX;
+    if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
+    setPaused(true);
+  };
+  const endPointer = (e) => {
+    if (pointerStart.current !== null) {
+      const delta = e.clientX - pointerStart.current;
+      if (Math.abs(delta) > 45) delta < 0 ? next() : previous();
+    }
+    pointerStart.current = null;
+  };
+
+  if (!count) return null;
+  return (
+    <section className="card span-12 featured-artwork-home" aria-roledescription="carousel" aria-label="Featured Artwork" onPointerEnter={() => setPaused(true)} onPointerLeave={() => { pointerStart.current = null; setPaused(false); }}>
+      <div className="card-head">
+        <div><h2>{T("sec_featured")}</h2><small className="muted">{count} featured {count === 1 ? "artwork" : "artworks"}</small></div>
+        {count > 1 && <div className="featured-artwork-controls">
+          <button className="ib" type="button" onClick={previous} aria-label="Previous featured artwork"><Icon name="left" /></button>
+          <button className="ib" type="button" onClick={next} aria-label="Next featured artwork"><Icon name="right" /></button>
+        </div>}
+      </div>
+      <div className="featured-artwork-viewport" tabIndex={0} role="group" aria-label="Featured artwork slides. Use left and right arrow keys to navigate."
+        onPointerDown={startPointer}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
+        onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); next(); } else if (e.key === "ArrowLeft") { e.preventDefault(); previous(); } }}>
+        <div className="featured-artwork-track" style={{ transform: "translateX(-" + (count > 1 ? index * 100 : 0) + "%)", transition: instant || count < 2 ? "none" : undefined }} onTransitionEnd={finishTransition}>
+          {trackItems.map((item, i) => {
+            const caption = String(item.title || item.alt || "").trim();
+            const isRawFilename = /^(?:\d{7,}|(?:IMG|DSC|PXL|Screenshot|FB_IMG|WP)[ _-]?\d{4,})$/i.test(caption);
+            return <div className="featured-artwork-slide" key={(item.id || item.url) + "-" + i}>
+              <img src={safeImg(item.url)} alt={item.title || (!isRawFilename && item.alt) || "Featured artwork " + (((i - 1 + count) % count) + 1)} loading={i === (count > 1 ? 1 : 0) ? "eager" : "lazy"} decoding="async" draggable="false" />
+              {caption && !isRawFilename && <div className="featured-artwork-caption">{caption}</div>}
+            </div>;
+          })}
+        </div>
+      </div>
+      {count > 1 && <div className="featured-artwork-dots" role="group" aria-label="Choose featured artwork">
+        {slides.map((item, i) => <button key={item.id || item.url} type="button" className={i === active ? "is-active" : ""} onClick={() => setIndex(i + 1)} aria-label={"Go to featured artwork " + (i + 1)} aria-pressed={i === active} />)}
+      </div>}
+    </section>
+  );
+}
+
 function Home({ go, open }) {
   const w = CONFIG.appearance.widgets;
-  const feat = CONFIG.artworks.find((a) => a.id === CONFIG.featuredId) || CONFIG.artworks[0];
-  const latest = CONFIG.artworks.slice(0, 8);
+  const latest = CONFIG.artworks.filter((art) => safeImg(art.image)).slice(0, 8);
   const st = CONFIG.commissionStatus;
   const stMsg = { OPEN: T("st_OPEN"), LIMITED: T("st_LIMITED"), CLOSED: T("st_CLOSED") }[st];
-  const banner = safeImg(CONFIG.appearance.banner);
-  const introStyle = banner ? { overflow: "visible", backgroundImage: `linear-gradient(100deg,color-mix(in srgb,var(--primary) 92%,transparent),color-mix(in srgb,var(--powder) 70%,transparent)),url("${banner}")`, backgroundSize: "cover", backgroundPosition: "center" } : { overflow: "visible" };
+  // One canonical image: the About profile card is also the Home dashboard banner.
+  const banner = safeImg(CONFIG.profile.about.cardImage);
+  const introStyle = banner ? { overflow: "hidden", backgroundImage: `url("${banner}")`, backgroundSize: "cover", backgroundPosition: "center" } : { overflow: "visible" };
   return (
-    <div className="grid page">
-      {w.intro && <section className="card tint span-7" style={introStyle}>
-        <div className="intro-text" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className={`grid page home-dashboard${w.intro && w.featured && Array.isArray(CONFIG.featuredArtworks) && CONFIG.featuredArtworks.length > 0 ? " home-dashboard-featured-pair" : ""}`}>
+      {w.intro && <section className="card tint span-7 home-intro-card" style={introStyle}>
+        <div className="intro-text home-intro-text" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span className="tag" style={{ alignSelf: "flex-start", background: "var(--card)" }}>{CONFIG.profile.title}</span>
           <h2 style={{ fontSize: "2.1rem", lineHeight: 1.05 }}>{CONFIG.profile.name}</h2>
           <p>{CONFIG.profile.intro}</p>
@@ -1104,24 +1790,15 @@ function Home({ go, open }) {
         </div>
       </section>}
 
-      {w.featured && feat && <section className="card span-5 row-2 lift featured-section">
-        <div className="feat">
-          <div className="card-head" style={{ marginBottom: 0 }}><h2>{T("sec_featured")}</h2><Icon name="star" /></div>
-          <Art art={feat} i={0} onOpen={open} />
-          <div>
-            <h3>{feat.title}</h3>
-            <div className="meta" style={{ marginTop: 6 }}><span className="tag">{catLabel(feat.category)}</span><span className="muted">{feat.year || "Year not set"}</span></div>
-          </div>
-          <Btn kind="cyan" onClick={() => open(feat.id)}>View Details</Btn>
-        </div>
-      </section>}
+      {w.featured && Array.isArray(CONFIG.featuredArtworks) && CONFIG.featuredArtworks.length > 0 && <FeaturedArtworkCarousel items={CONFIG.featuredArtworks} />}
 
-      {w.latest && <section className="card span-7 row-2 latest-section">
-        <div className="card-head"><h2>{T("sec_latest")}</h2><Btn kind="ghost" size="sm" onClick={() => go("gallery")}>See all</Btn></div>
-        {latest.length ? <div className="latest-grid">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
-      </section>}
-
-      <ReviewsCarousel />
+      <div className="home-work-grid">
+        {w.latest && <section className="card latest-section">
+          <div className="card-head"><h2>{T("sec_latest")}</h2><Btn kind="ghost" size="sm" onClick={() => go("gallery")}>See all</Btn></div>
+          {latest.length ? <div className="latest-grid">{latest.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" onOpen={open} />)}</div> : <p className="muted">No artwork yet.</p>}
+        </section>}
+        <HomeReviews />
+      </div>
 
       {w.services && <section className="card span-12">
         <div className="card-head"><h2>{T("sec_services")}</h2><Btn kind="ghost" size="sm" onClick={() => go("services")}>All details</Btn></div>
@@ -1157,29 +1834,87 @@ function Home({ go, open }) {
   );
 }
 
-function ReviewsCarousel() {
+function HomeReviews() {
   const [reviews, setReviews] = useState([]);
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     let active = true;
-    Store.api("public_reviews", {}).then((result) => {
-      if (active) setReviews(Array.isArray(result.reviews) ? result.reviews : []);
-    }).catch(() => { if (active) setMessage("Client reviews are temporarily unavailable."); });
+    Store.api("public_reviews", {})
+      .then((result) => { if (active) setReviews(Array.isArray(result.reviews) ? result.reviews : []); })
+      .catch(() => { if (active) setReviews([]); })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
-  if (!reviews.length && !message) return null;
   return (
-    <section className="card span-12">
-      <div className="card-head"><div><h2>Kind Words from Clients</h2><p className="muted">A few words from people I've worked with.</p></div><Icon name="heart" /></div>
-      {message ? <p className="muted">{message}</p> : <div className="review-window" aria-label="Client reviews, slowly scrolling">
-        <div className="review-track">
-          {[...reviews, ...reviews].map((r, i) => <article className="review-card" key={r.id + "-" + i} aria-hidden={i >= reviews.length}>
-            <div className="review-stars" aria-label={r.rating + " out of 5 stars"}>{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>
-            <p>“{r.message}”</p><b>{r.display_name || "Anonymous"}</b>
-            <small className="muted">{fmtDate(r.created_at)}</small>
-          </article>)}
-        </div>
+    <section className="card home-reviews-section">
+      <div className="card-head">
+        <div><h2>Client Reviews</h2><p className="muted" style={{fontSize:".82rem"}}>Feedback from completed commissions</p></div>
+        <Icon name="heart" />
+      </div>
+      <div className="home-review-list">
+        {reviews.map((r) => {
+          const name = r.display_name || "Anonymous";
+          const initials = name.split(/\\s+/).filter(Boolean).slice(0,2).map((x) => x[0]).join("").toUpperCase() || "?";
+          const rating = Math.max(1, Math.min(5, Number(r.rating) || 5));
+          return <article className="home-review-card" key={r.id}>
+            <div className="home-review-top">
+              <div className="home-review-avatar" aria-hidden="true">{initials}</div>
+              <div style={{minWidth:0,flex:1}}>
+                <div className="home-review-name">{name}</div>
+                <div className="home-review-stars" aria-label={rating+" out of 5 stars"}>{"★".repeat(rating)}{"☆".repeat(5-rating)}</div>
+              </div>
+              <small className="home-review-date">{fmtDate(r.created_at)}</small>
+            </div>
+            <p>“{r.message || ""}”</p>
+          </article>;
+        })}
+        {loading && <p className="muted">Loading client reviews...</p>}
+        {!loading && !reviews.length && <p className="muted">No approved client reviews yet.</p>}
+      </div>
+    </section>
+  );
+}
+
+function AboutProfileCard({ p, a }) {
+  const cc = useCreator();
+  const canEdit = !!(cc && cc.editing);
+  const fileRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [cropFile, setCropFile] = useState(null);
+  const src = safeImg(a.cardImage);
+  const pickPhoto = (e) => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file || !cc) return;
+    if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) { setErr("Use a PNG, JPG, WebP or GIF image."); return; }
+    setCropFile(file);
+  };
+  const applyProfileCrop = async (cropped) => {
+    setBusy(true); setErr("");
+    try {
+      const url = await storeImage(cropped, 1200);
+      cc.upd((n) => { n.profile = n.profile || {}; n.profile.about = n.profile.about || {}; n.profile.about.cardImage = url; });
+    } catch (error) {
+      setErr(error && error.message === "type" ? "Use a PNG, JPG, WebP or GIF image." : "Could not upload this image.");
+    } finally { setBusy(false); setCropFile(null); }
+  };
+  const removePhoto = () => cc && cc.upd((n) => { n.profile.about = n.profile.about || {}; n.profile.about.cardImage = ""; });
+  return (
+    <section className="card about-profile-card span-5">
+      {src ? <img className="about-profile-card__image" src={src} alt={p.name + " profile card"} /> : <div className="about-profile-card__image-placeholder" aria-hidden="true" />}
+      {canEdit && <div className="about-image-actions" data-no-edit="true">
+        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pickPhoto} />
+        <button type="button" className="btn cyan sm" disabled={busy} onClick={() => fileRef.current && fileRef.current.click()}>{busy ? "Uploading…" : src ? "Change image" : "Add image"}</button>
+        {src && <button type="button" className="btn ghost sm" disabled={busy} onClick={removePhoto}>Remove</button>}
       </div>}
+      <div className="about-profile-card__content">
+        <span className="tag" style={{ alignSelf: "flex-start" }}>ARTIST PROFILE</span>
+        <h2 style={{ marginTop: 14, fontSize: "1.8rem" }}>{p.name}</h2>
+        <p className="muted" style={{ marginTop: 4 }}>{p.title}</p>
+        {p.bio && <p style={{ marginTop: 14, whiteSpace: "pre-line" }}>{p.bio}</p>}
+      </div>
+      {err && <div className="about-image-error" role="status">{err}</div>}
+      {cropFile && <CropImageModal file={cropFile} onCancel={() => setCropFile(null)} onApply={applyProfileCrop} />}
     </section>
   );
 }
@@ -1191,13 +1926,7 @@ function About() {
     <div className="page">
       <PageHead crumb="ABOUT ME" title={"About " + p.name}>{T("about_sub")}</PageHead>
       <div className="grid">
-        <section className="card tint span-5" style={{ textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 220 }}>
-          {safeImg(a.cardImage) && <div style={{ width:"100%", maxWidth:220, aspectRatio:"16/10", borderRadius:18, overflow:"hidden", marginBottom:14, background:"var(--powder)" }}><img src={safeImg(a.cardImage)} alt={p.name + " profile card"} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} /></div>}
-          <span className="tag" style={{ alignSelf: "flex-start" }}>ARTIST PROFILE</span>
-          <h2 style={{ marginTop: 14, fontSize: "1.8rem" }}>{p.name}</h2>
-          <p className="muted" style={{ marginTop: 4 }}>{p.title}</p>
-          {p.bio && <p style={{ marginTop: 14 }}>{p.bio}</p>}
-        </section>
+        <AboutProfileCard p={p} a={a} />
         <div className="span-7" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <section className="card">
             <h2 style={{ marginBottom: 8 }}>Introduction</h2>
@@ -1219,7 +1948,7 @@ function About() {
           </div>}
           <section className="card">
             <h3 style={{ marginBottom: 12 }}>{T("find_online")}</h3>
-            <div className="btns">{CONFIG.socials.map((s) => <LinkBtn key={s.id} s={s} kind="cyan" size="sm" />)}</div>
+            <div className="btns">{CONFIG.socials.map((x) => <LinkBtn key={x.id} s={x} kind="cyan" size="sm" />)}</div>
           </section>
         </div>
       </div>
@@ -1477,7 +2206,6 @@ const TABS = [
   { id: "overview", label: "Overview", icon: "grid" },
   { id: "orders", label: "Client Orders", icon: "mail" },
   { id: "reviews", label: "Client Reviews", icon: "star" },
-  { id: "offers", label: "Service details", icon: "sparkles" },
   { id: "profile", label: "Edit Profile", icon: "user" },
   { id: "media", label: "All images", icon: "image" },
   { id: "gallery", label: "Gallery", icon: "image" },
@@ -1516,32 +2244,40 @@ function TextIn({ label, value, onChange, hint, className, placeholder, multilin
     </Field>
   );
 }
-function ImagePicker({ label, value, onChange, maxDim = 1800, round }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-  const ref = useRef(null);
-  const pick = async (e) => {
-    const f = e.target.files && e.target.files[0]; e.target.value = "";
-    if (!f) return;
-    setBusy(true); setErr("");
-    try { onChange(await storeImage(f, maxDim)); } catch (x) { setErr(x.message === "type" ? "Use a PNG, JPG, WebP or GIF image." : "Could not upload this image."); }
-    setBusy(false);
+function CropImageModal({ file, onCancel, onApply }) {
+  const [ratio,setRatio]=useState("original"),[zoom,setZoom]=useState(1),[x,setX]=useState(50),[y,setY]=useState(50),[busy,setBusy]=useState(false),[error,setError]=useState(""),[dimensions,setDimensions]=useState(null);
+  const imageRef=useRef(null),previewUrl=useMemo(()=>URL.createObjectURL(file),[file]);
+  useEffect(()=>()=>URL.revokeObjectURL(previewUrl),[previewUrl]);
+  const selectedRatio=ratio==="square"?1:ratio==="portrait"?4/5:ratio==="landscape"?16/9:dimensions?dimensions.width/dimensions.height:1;
+  const finish=()=>{
+    const img=imageRef.current;if(!img||!img.naturalWidth||!img.naturalHeight)return;
+    setBusy(true);setError("");const iw=img.naturalWidth,ih=img.naturalHeight,ar=selectedRatio;
+    let cw=Math.min(iw,ih*ar),ch=cw/ar;if(ch>ih){ch=ih;cw=ch*ar;}cw/=zoom;ch/=zoom;
+    const sx=Math.max(0,Math.min(iw-cw,(iw-cw)*x/100)),sy=Math.max(0,Math.min(ih-ch,(ih-ch)*y/100));
+    const canvas=document.createElement("canvas"),scale=Math.min(1,1800/Math.max(cw,ch));
+    canvas.width=Math.max(1,Math.round(cw*scale));canvas.height=Math.max(1,Math.round(ch*scale));
+    canvas.getContext("2d").drawImage(img,sx,sy,cw,ch,0,0,canvas.width,canvas.height);
+    canvas.toBlob(blob=>{if(!blob){setBusy(false);setError("Gagal memproses crop gambar.");return;}onApply(new File([blob],(file.name||"image").replace(/\.[^.]+$/,"")+".webp",{type:"image/webp"}));},"image/webp",.88);
   };
-  const src = safeImg(value);
-  return (
-    <div className="field full">
-      {label && <span>{label}</span>}
-      <div className="imgpick">
-        <div className="pv" style={round ? { borderRadius: "50%" } : undefined}>{src ? <img src={src} alt="" /> : <Icon name="image" />}</div>
-        <div className="btns">
-          <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pick} />
-          <Btn kind="cyan" size="sm" icon="upload" disabled={busy} onClick={() => ref.current && ref.current.click()}>{busy ? "Uploading..." : src ? "Replace" : "Upload"}</Btn>
-          {src && <Btn kind="ghost" size="sm" onClick={() => onChange("")}>Remove</Btn>}
-        </div>
+  return <div className="crop-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)onCancel();}}>
+    <section className="crop-modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
+      <div className="crop-modal-head"><div><h3 id="crop-title">Crop image</h3><p className="muted">Atur area gambar sebelum diunggah.</p></div><button type="button" className="ib" onClick={onCancel} disabled={busy} aria-label="Close crop editor">×</button></div>
+      <div className="crop-preview" style={{aspectRatio:String(selectedRatio)}}><img ref={imageRef} src={previewUrl} alt="Crop preview" onLoad={e=>setDimensions({width:e.currentTarget.naturalWidth,height:e.currentTarget.naturalHeight})} style={{objectFit:"cover",objectPosition:x+"% "+y+"%",transform:"scale("+zoom+")"}}/><div className="crop-guide"/></div>
+      <div className="crop-controls">
+        <label>Aspect ratio<select className="in" value={ratio} onChange={e=>setRatio(e.target.value)}><option value="original">Original</option><option value="square">1:1 Square</option><option value="portrait">4:5 Portrait</option><option value="landscape">16:9 Landscape</option></select></label>
+        <label>Zoom <span>{zoom.toFixed(1)}×</span><input type="range" min="1" max="3" step=".05" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
+        <label>Horizontal position<input type="range" min="0" max="100" value={x} onChange={e=>setX(Number(e.target.value))}/></label>
+        <label>Vertical position<input type="range" min="0" max="100" value={y} onChange={e=>setY(Number(e.target.value))}/></label>
       </div>
-      {err && <div className="err">{err}</div>}
-    </div>
-  );
+      {error&&<p className="err">{error}</p>}<div className="btns crop-modal-actions"><Btn kind="ghost" disabled={busy} onClick={onCancel}>Cancel</Btn><Btn kind="cyan" disabled={!dimensions||busy} onClick={finish}>{busy?"Processing…":"Use this crop"}</Btn></div>
+    </section></div>;
+}
+function ImagePicker({ label, value, onChange, maxDim = 1800, round }) {
+  const [busy,setBusy]=useState(false),[err,setErr]=useState(""),[cropFile,setCropFile]=useState(null),ref=useRef(null);
+  const pick=e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;if(!/^image\/(png|jpeg|webp|gif)$/.test(f.type)){setErr("Use a PNG, JPG, WebP or GIF image.");return;}setErr("");setCropFile(f);};
+  const applyCrop=async cropped=>{setBusy(true);setErr("");try{onChange(await storeImage(cropped,maxDim));setCropFile(null);}catch(x){setErr(x&&x.message?x.message:"Could not upload this image.");}finally{setBusy(false);}};
+  const src=safeImg(value);
+  return <div className="field full">{label&&<span>{label}</span>}<div className="imgpick"><div className="pv" style={round?{borderRadius:"50%"}:undefined}>{src?<img src={src} alt=""/>:<Icon name="image"/>}</div><div className="btns"><input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={pick}/><Btn kind="cyan" size="sm" icon="upload" disabled={busy} onClick={()=>ref.current&&ref.current.click()}>{busy?"Uploading...":src?"Replace":"Upload"}</Btn>{src&&<Btn kind="ghost" size="sm" onClick={()=>onChange("")}>Remove</Btn>}</div></div>{err&&<div className="err">{err}</div>}{cropFile&&<CropImageModal file={cropFile} onCancel={()=>setCropFile(null)} onApply={applyCrop}/>}</div>;
 }
 function ConfirmDelete({ onYes, label = "Delete" }) {
   const [ask, setAsk] = useState(false);
@@ -1603,7 +2339,7 @@ function ProfilePanel() {
         <h2 style={{ marginBottom: 14 }}>Identity</h2>
         <div className="form">
           <ImagePicker label="Profile picture" value={p.avatar} onChange={set(["profile", "avatar"])} maxDim={600} round />
-          <ImagePicker label="About Me ID card image" value={a.cardImage || ""} onChange={set(["profile", "about", "cardImage"])} maxDim={1200} hint="Displayed inside the Artist Profile card on the About Me page." />
+          <ImagePicker label="About Me ID card image" value={a.cardImage || ""} onChange={set(["profile", "about", "cardImage"])} maxDim={1200} hint="Shared image: updates both the Home dashboard intro card and the About Me Artist Profile card." />
           <ImagePicker label="Mascot character (transparent PNG works best)" value={site.mascot.image} onChange={set(["mascot", "image"])} maxDim={1400} />
           <TextIn label="Artist name" value={p.name} onChange={set(["profile", "name"])} />
           <TextIn label="Title" value={p.title} onChange={set(["profile", "title"])} />
@@ -1802,6 +2538,7 @@ function ServicesPanel() {
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
   return (
     <div className="panel">
+      <div className="note info">Manage each service, its public gallery, pricing, availability and order terms in one place.</div>
       {site.services.map((s, i) => (
         <section key={s.id} className="card">
           <div className="form">
@@ -1810,16 +2547,20 @@ function ServicesPanel() {
             <TextIn label="Short description" value={s.short} onChange={sets(["services", i, "short"])} className="full" />
             <TextIn label="Detailed description" value={s.detail} onChange={sets(["services", i, "detail"])} multiline className="full" />
             <Field label="Example category"><select className="in" value={s.category} onChange={(e) => sets(["services", i, "category"])(e.target.value)}>{site.categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></Field>
-            <ImagePicker label="Preview image (optional)" value={s.image} onChange={sets(["services", i, "image"])} maxDim={1400} />
+            <ImagePicker label="Cover image (shown on service card)" value={s.image} onChange={sets(["services", i, "image"])} maxDim={1400} />
+            <TextIn label="External booking URL (optional)" value={s.orderUrl || ""} onChange={sets(["services", i, "orderUrl"])} placeholder="https://..." className="full" hint="If set, Request Commission opens this link. Otherwise it opens the built-in request form." />
+            <Field label={"Detail gallery (" + (s.gallery || []).length + " images)"} className="full"><div className="list">{(s.gallery || []).map((url, gi) => <div className="rowi" key={url + gi}><div className="thumb">{safeImg(url) ? <img src={safeImg(url)} alt="" /> : <Icon name="image" />}</div><div className="grow"><small className="muted">Gallery image {gi + 1}</small></div><ConfirmDelete onYes={() => upd((n) => { n.services[i].gallery = (n.services[i].gallery || []).filter((_, j) => j !== gi); })} label="Remove gallery image" /></div>)}</div><ImagePicker label="Add gallery image" value="" onChange={(url) => { if (url) upd((n) => { const a = n.services[i].gallery || (n.services[i].gallery = []); a.push(url); }); }} maxDim={1800} /><small className="muted">Upload images one by one. They appear in the swipeable detail gallery, not on the service card.</small></Field>
           </div>
+          <ServicePricingEditor service={s} index={i} />
           <div className="btns" style={{ marginTop: 12, justifyContent: "flex-end" }}>
-            <button className="ib" disabled={i === 0} onClick={() => upd((n) => { n.services = move(n.services, i, -1); })} aria-label="Move up"><Icon name="up" /></button>
-            <button className="ib" disabled={i === site.services.length - 1} onClick={() => upd((n) => { n.services = move(n.services, i, 1); })} aria-label="Move down"><Icon name="down" /></button>
+            <button className="ib" disabled={i === 0} onClick={() => upd((n) => { n.services = move(n.services, i, -1); })} aria-label="Move service up"><Icon name="up" /></button>
+            <button className="ib" disabled={i === site.services.length - 1} onClick={() => upd((n) => { n.services = move(n.services, i, 1); })} aria-label="Move service down"><Icon name="down" /></button>
             <ConfirmDelete onYes={() => upd((n) => { n.services.splice(i, 1); })} label="Delete service" />
           </div>
         </section>
       ))}
-      <Btn icon="plus" onClick={() => upd((n) => { n.services.push({ id: uid("s"), icon: "sparkles", title: "New service", short: "", detail: "", category: (n.categories[0] || {}).id || "", image: "" }); })}>Add service</Btn>
+      <Btn icon="plus" onClick={() => upd((n) => { n.services.push({ id: uid("s"), icon: "sparkles", title: "New service", short: "", detail: "", category: (n.categories[0] || {}).id || "", image: "", gallery: [], orderUrl: "", ...clone(SVC_DEF) }); })}>Add service</Btn>
+      <LicensesEditor />
     </div>
   );
 }
@@ -1922,8 +2663,16 @@ function AppearancePanel() {
 }
 
 function MediaPanel() {
-  const { site, upd } = useCreator();
+  const { site, upd, save, saving, dirty } = useCreator();
   const sets = (path) => (v) => upd((n) => setPath(n, path, v));
+  const [featuredBusy, setFeaturedBusy] = useState(false);
+  const [featuredQueue, setFeaturedQueue] = useState([]);
+
+  const [featuredFailed, setFeaturedFailed] = useState([]);
+  const [featuredMessage, setFeaturedMessage] = useState("");
+  const [draggingFeatured, setDraggingFeatured] = useState(false);
+  const featuredInput = useRef(null);
+  const featured = Array.isArray(site.featuredArtworks) ? site.featuredArtworks : [];
   const addArtwork = () => upd((n) => {
     n.artworks.unshift({ id:uid("a"), title:"New artwork", category:(n.categories[0]||{}).id||"", year:"", image:"", description:"", tools:"", notes:"" });
   });
@@ -1931,6 +2680,34 @@ function MediaPanel() {
     n.artworks = n.artworks.filter((a) => a.id !== id);
     if (n.featuredId === id) n.featuredId = (n.artworks[0]||{}).id||"";
   });
+  const uploadFeatured = (fileList) => {
+    const files = Array.from(fileList || []).filter((f) => /^image\/(png|jpeg|webp|gif)$/.test(f.type));
+    if (!files.length) return;
+    const remaining = Math.max(0, 10 - featured.length);
+    if (!remaining) { setFeaturedMessage("Featured Artwork sudah mencapai batas 10 gambar."); return; }
+    setFeaturedFailed(files.length > remaining ? ["Maksimal 10 gambar. " + (files.length - remaining) + " file tidak diproses."] : []);
+    setFeaturedQueue(files.slice(0, remaining));
+    setFeaturedMessage("");
+    setFeaturedBusy(true);
+  };
+  const applyFeaturedCrop = async (cropped) => {
+    const current = featuredQueue[0];
+    if (!current) return;
+    try {
+      const url = await storeImage(cropped, 1600);
+      const entry = {id:uid("fa"),url,alt:(current.name||"Featured artwork").replace(/\.[^.]+$/,"").slice(0,140),title:""};
+      upd((n) => { n.featuredArtworks = (Array.isArray(n.featuredArtworks) ? n.featuredArtworks : []).concat([entry]).slice(0,10); });
+    } catch (error) {
+      setFeaturedFailed((items) => items.concat([(current.name||"Image")+": "+(error&&error.message?error.message:"Upload gagal.")]));
+    }
+    const next = featuredQueue.slice(1);
+    setFeaturedQueue(next);
+    if (!next.length) {
+      setFeaturedBusy(false);
+      setFeaturedMessage("Selesai memproses gambar. Periksa urutan dan alt text, lalu klik Publish changes untuk menyimpan.");
+    }
+  };
+  const cancelFeaturedQueue = () => { setFeaturedQueue([]); setFeaturedBusy(false); setFeaturedMessage("Sisa upload dibatalkan."); if(featuredInput.current)featuredInput.current.value=""; };
   const groups = [
     ["Site images", [["Profile picture", ["profile", "avatar"], 600, true], ["About Me ID card", ["profile","about","cardImage"], 1200], ["Mascot", ["mascot", "image"], 1400], ["Home banner", ["appearance", "banner"], 1800]]],
     ["Services", site.services.map((x, i) => [x.title, ["services", i, "image"], 1400])],
@@ -1938,13 +2715,48 @@ function MediaPanel() {
   ];
   return (
     <div className="panel">
-      <div className="note info">Manage images used across the website. Use Remove on an image picker to clear it. Add or delete portfolio images below; all changes are saved with Creator Mode.</div>
+      {featuredQueue.length > 0 && <CropImageModal key={featuredQueue[0].name + featuredQueue.length} file={featuredQueue[0]} onCancel={cancelFeaturedQueue} onApply={applyFeaturedCrop} />}
+      <div className="note info">Upload images directly to permanent Supabase Storage from this dashboard. New uploads are saved in the studio media bucket; website content stores only the public file URL. Remove unlinks an image from the page but keeps the stored file as a safety copy.</div>
       {groups.map(([t, items]) => (
         <section key={t} className="card">
           <h2 style={{ marginBottom: 14 }}>{t}</h2>
           <div className="form">{items.map(([l, pth, m, r]) => <ImagePicker key={pth.join(".")} label={l} value={getPath(site, pth) || ""} onChange={sets(pth)} maxDim={m} round={r} />)}</div>
         </section>
       ))}
+      {featuredFailed.length > 0 && <div className="note info" role="status">{featuredFailed.join(" ")}</div>}\n      <section className="card featured-artwork-manager">
+        <div className="card-head"><div><h2>Featured Artwork</h2><small className="muted">{featured.length}/10 images</small></div></div>
+        <p className="muted" style={{ marginBottom: 12 }}>Images appear in the Home carousel. Files are resized to a maximum 1600px and uploaded to permanent Storage as WebP URLs.</p>
+        <div className={"featured-upload-drop" + (draggingFeatured ? " is-dragging" : "")}
+          onDragOver={(e) => { e.preventDefault(); setDraggingFeatured(true); }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDraggingFeatured(false); }}
+          onDrop={(e) => { e.preventDefault(); setDraggingFeatured(false); uploadFeatured(e.dataTransfer.files); }}>
+          <Icon name="upload" />
+          <b>Drop images here</b>
+          <small className="muted">PNG, JPG, WebP or GIF · up to 10 images · WebP optimized</small>
+          <input ref={featuredInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden onChange={(e) => uploadFeatured(e.target.files)} />
+          <Btn kind="cyan" size="sm" icon="plus" disabled={featuredBusy || featured.length >= 10} onClick={() => featuredInput.current && featuredInput.current.click()}>{featuredBusy ? "Crop in progress…" : "Choose images"}</Btn>
+        </div>
+        {featuredMessage && <div className="note info" role="status" style={{ marginTop: 12 }}>{featuredMessage}</div>}
+        <div className="featured-artwork-list">
+          {featured.map((item, i) => <div className="featured-artwork-row" key={item.id || item.url}>
+            <div className="featured-artwork-thumb">{safeImg(item.url) ? <img src={safeImg(item.url)} alt={item.alt || item.title || "Featured artwork " + (i + 1)} /> : <Icon name="image" />}</div>
+            <div className="featured-artwork-fields">
+              <small className="muted">Image {i + 1} of {featured.length}</small>
+              <TextIn label="Alt text" value={item.alt || ""} onChange={(v) => upd((n) => { n.featuredArtworks[i].alt = v; })} placeholder="Describe the artwork" />
+              <TextIn label="Title (optional)" value={item.title || ""} onChange={(v) => upd((n) => { n.featuredArtworks[i].title = v; })} placeholder="Artwork title" />
+            </div>
+            <div className="featured-artwork-actions">
+              <button className="ib" disabled={i === 0} onClick={() => upd((n) => { n.featuredArtworks = move(n.featuredArtworks, i, -1); })} aria-label={"Move " + (item.title || "image " + (i + 1)) + " up"} title="Move up"><Icon name="up" /></button>
+              <button className="ib" disabled={i === featured.length - 1} onClick={() => upd((n) => { n.featuredArtworks = move(n.featuredArtworks, i, 1); })} aria-label={"Move " + (item.title || "image " + (i + 1)) + " down"} title="Move down"><Icon name="down" /></button>
+              <ConfirmDelete onYes={() => upd((n) => { n.featuredArtworks.splice(i, 1); })} label="Delete featured artwork" />
+            </div>
+          </div>)}
+          {!featured.length && <p className="muted">Belum ada Featured Artwork. Upload hingga 10 gambar untuk menampilkannya di Home.</p>}
+        </div>
+        <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
+          <Btn kind="cyan" icon="save" disabled={saving || !dirty} onClick={save}>{saving ? "Saving…" : "Save Featured Artwork"}</Btn>
+        </div>
+      </section>
       <section className="card">
         <div className="card-head"><h2>Portfolio images ({site.artworks.length})</h2><Btn size="sm" icon="plus" onClick={addArtwork}>Add image</Btn></div>
         <p className="muted" style={{marginBottom:12}}>Add creates a new portfolio item. You can edit each image title and upload, replace, or remove its image directly here. Edit additional artwork details in Creator Dashboard → Gallery.</p>
@@ -1958,7 +2770,7 @@ function MediaPanel() {
             <div style={{minWidth:180,flex:"1 1 220px"}}><ImagePicker label="Image" value={a.image||""} onChange={sets(["artworks",i,"image"])} maxDim={1800}/></div>
             <ConfirmDelete onYes={() => removeArtwork(a.id)} label="Delete image" />
           </div>)}
-          {!site.artworks.length && <p className="muted">No portfolio images yet. Add one to begin.</p>}
+          {!site.artworks.length && <p className="muted">No portfolio images yet.</p>}
         </div>
       </section>
     </div>
@@ -2087,7 +2899,7 @@ function getEmailCfg() { try { return JSON.parse(localStorage.getItem(EMAIL_CFG_
 function setEmailCfgLocal(cfg) { try { localStorage.setItem(EMAIL_CFG_KEY, JSON.stringify(cfg)); } catch (e) {} }
 
 function EmailPanel() {
-  const defaultCfg = { artistEmail: "mmaackia@gmail.com", fromName: "Malkiaa Studio", sendArtist: true, sendClient: true, testResult: "" };
+  const defaultCfg = { fromName: "Malkiaa Studio" };
   const [cfg, setCfg] = useState(() => ({ ...defaultCfg, ...(getEmailCfg() || {}) }));
   const [msg, setMsg] = useState({ text: "", ok: false });
   const [saving, setSaving] = useState(false);
@@ -2124,10 +2936,7 @@ function EmailPanel() {
       const { error } = await sb.from("app_settings").upsert({
         key: "email_config",
         value: {
-          artistEmail: cfg.artistEmail.trim(),
           fromName: cfg.fromName.trim() || "Malkiaa Studio",
-          sendArtist: cfg.sendArtist,
-          sendClient: cfg.sendClient,
         },
       }, { onConflict: "key" });
       if (error) throw new Error(error.message);
@@ -2139,31 +2948,18 @@ function EmailPanel() {
     setSaving(false);
   };
 
-  const sendTest = async () => {
-    setTesting(true); setMsg({ text: "", ok: false });
-    try {
-      const r = await Store.api("test", {}, true);
-      setMsg(r.status === "sent"
-        ? { text: "Google Apps Script accepted the test email for the configured studio address. Check your inbox to confirm it arrived.", ok: true }
-        : { text: "Attempts: " + (r.attempts || 1) + " · " + (r.message || "Email delivery failed."), ok: false });
-    } catch (e) { setMsg({ text: authErr(e), ok: false }); }
-    setTesting(false);
-  };
-
   return (
     <div className="panel">
       <section className="card">
         <div className="card-head"><h2>Email Notification Settings</h2><span style={{ fontSize: ".8rem", fontWeight: 800, color: "var(--muted)" }}>Gmail · Google Apps Script</span></div>
         <p className="muted" style={{ marginBottom: 16 }}>Email notifications are sent by commission-api through Google Apps Script after a request is saved. The webhook URL and shared secret stay in Supabase Edge Function secrets and are never exposed in this browser.</p>
         <div className="form">
-          <div className="field full"><span>Studio Notification Email</span><input className="in" type="email" value={cfg.artistEmail} onChange={(e) => set("artistEmail")(e.target.value)} placeholder="mmaackia@gmail.com" /><small className="muted">New commission alerts go here. If left blank, the system uses mmaackia@gmail.com.</small></div>
+          
           <div className="field"><span>From Name</span><input className="in" value={cfg.fromName} onChange={(e) => set("fromName")(e.target.value)} placeholder="Malkiaa Studio" /></div>
-          <label className="switch full"><span>Send artist notification on new request</span><input type="checkbox" checked={cfg.sendArtist} onChange={(e) => set("sendArtist")(e.target.checked)} /></label>
-          <label className="switch full"><span>Send confirmation email to client after submission</span><input type="checkbox" checked={cfg.sendClient} onChange={(e) => set("sendClient")(e.target.checked)} /></label>
         </div>
         <div className="btns" style={{ marginTop: 14 }}>
           <Btn disabled={saving} onClick={save}>{saving ? "Saving…" : "Save Email Settings"}</Btn>
-          <Btn kind="ghost" size="sm" disabled={testing} onClick={sendTest}>{testing ? "Sending…" : "Send Test Email"}</Btn>
+          
         </div>
         {msg.text && <div className={"note " + (msg.ok ? "ok" : "bad")} style={{ marginTop: 12 }}>{msg.text}</div>}
       </section>
@@ -2171,7 +2967,7 @@ function EmailPanel() {
       <section className="card">
         <h2 style={{ marginBottom: 6 }}>How It Works</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, margin: "12px 0" }}>
-          {[["1. Visitor submits", "Commission is saved to Supabase before email delivery is attempted."],["2. API sends notifications", "The commission-api function reads email preferences from Supabase."],["3. Gmail sends email", "The function calls a protected Google Apps Script Web App. Its URL and shared secret remain server-side."],["4. Delivery is logged", "Studio and optional client email attempts are recorded in Creator Dashboard notifications."]].map(([t,d]) => (
+          {[["1. Visitor submits", "The commission is saved to Supabase first."],["2. Client receives confirmation", "A request confirmation and tracking details are sent to the client email address."],["3. Client receives updates", "Proposal, progress, status and finished-art notifications are sent only to the client."],["4. Delivery is logged", "Every client email attempt is recorded in Creator Dashboard notifications."]].map(([t,d]) => (
             <div key={t} style={{ background: "var(--powder)", borderRadius: 16, padding: 14 }}>
               <b style={{ display: "block", fontSize: ".85rem", marginBottom: 4 }}>{t}</b>
               <small style={{ color: "var(--muted)" }}>{d}</small>
@@ -2191,7 +2987,7 @@ function EmailPanel() {
           <li>In Supabase, open <b>Edge Functions → Secrets</b> and add <code>GAS_WEBHOOK_URL</code> and <code>GAS_WEBHOOK_SECRET</code>.</li>
           <li>Never place the webhook URL or shared secret in this website, GitHub source, or browser storage.</li>
         </ol>
-        <p className="muted" style={{ marginTop: 10 }}>The commission-api function handles new-order emails, test emails, and safe retries. No database migration or extra SQL is required for this integration.</p>
+        <p className="muted" style={{ marginTop: 10 }}>The commission-api function sends commission confirmations and order updates only to clients. Creator email notifications and standalone test emails are disabled. Failed client notifications can be retried. No database migration or extra SQL is required for this integration.</p>
       </section>
     </div>
   );
@@ -2214,8 +3010,8 @@ function SupabasePanel() {
 }
 
 function CreatorPage() {
-  const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t; });
-  const pick = (t) => { setTab(t); ss.set("mk-tab", t); window.scrollTo({ top: 0 }); };
+  const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t==="offers"?"services":t; });
+  const pick = (t) => { const next = t === "offers" ? "services" : t; setTab(next); ss.set("mk-tab", next); window.scrollTo({ top: 0 }); };
   return (
     <div className="page">
       <PageHead crumb="CREATOR" title="Creator Dashboard">Manage your portfolio. Changes preview instantly and go live when you save.</PageHead>
@@ -2227,7 +3023,6 @@ function CreatorPage() {
       {tab === "profile" && <ProfilePanel />}
       {tab === "orders" && <OrdersPanel />}
       {tab === "reviews" && <ReviewsPanel />}
-      {tab === "offers" && <OffersPanel />}
       {tab === "media" && <MediaPanel />}
       {tab === "contact" && <ContactPanel />}
       {tab === "texts" && <TextsPanel />}
@@ -2331,8 +3126,8 @@ function BuilderBlockView({ block, editing, selected, change }) {
 function PageBuilderBlocks({ page }) {
   const {site,upd,editing}=useCreator();
   const blocks=site.builder?.pages?.[page]||[];
-  if(!editing&&!blocks.length)return null;
   const [selected,setSelected]=useState(null),[slash,setSlash]=useState(""),[dragId,setDragId]=useState(null);
+  if(!editing&&!blocks.length)return null;
   const active=blocks.find(b=>b.id===selected)||null;
   const mutate=(fn)=>upd(n=>{n.builder=n.builder||{version:2,pages:{}};n.builder.pages=n.builder.pages||{};n.builder.pages[page]=n.builder.pages[page]||[];fn(n.builder.pages[page]);});
   const change=(id,key,value)=>mutate(a=>{const b=a.find(x=>x.id===id);if(b)b[key]=value;});
@@ -2375,7 +3170,7 @@ const PAY_STATUS = ["Unpaid", "Invoice sent", "Paid", "Refunded"];
 const TL = [["Request Submitted", ["Pending Review"]], ["Reviewing", ["Reviewing"]], ["Proposal", ["Proposal Sent", "Awaiting Client Approval"]], ["Payment", ["Awaiting Payment", "Paid"]], ["In Progress", ["In Progress", "Waiting for Feedback"]], ["Revision", ["Revision"]], ["Completed", ["Completed"]]];
 const idr = (n) => "IDR " + Math.round(n || 0).toLocaleString("id-ID");
 const SVC_DEF = {
-  status: "Available", license: "Personal use included. Commercial use available.", delivery: "To be confirmed in your proposal", files: "PNG and JPG",
+  status: "Available", license: "Personal use included. Commercial use available.", delivery: "To be confirmed in your proposal", files: "PNG and JPG", usageTerms: "", serviceTerms: "", orderUrl: "", gallery: [],
   tiers: [{ id: "t1", name: "Headshot / Icon", price: 150000 }, { id: "t2", name: "Bust Up", price: 200000 }, { id: "t3", name: "Half Body", price: 250000 }, { id: "t4", name: "Full Body", price: 0 }],
   includes: ["Finished illustration", "PNG file", "JPG file", "WIP updates", "Revisions according to the Terms of Service"],
   addons: [
@@ -2496,9 +3291,8 @@ const Store = {
   async getTrack(id) {
     const sb = await this.client();
     if (sb) {
-      const { data, error } = await sb.from("order_tracks").select("*").eq("id", id).single();
-      if (error && error.code !== "PGRST116") throw error;
-      return data || null;
+      const result = await this.api("creator_track", { id }, true);
+      return result.track || null;
     }
     return lsGet("mk-tracks")[id] || null;
   },
@@ -2507,11 +3301,36 @@ const Store = {
     t = plain(t);
     const sb = await this.client();
     if (sb) {
-      const { error } = await sb.from("order_tracks").upsert(t, { onConflict: "id" });
-      if (error) throw new Error("Could not save tracking data: " + error.message);
-      return;
+      throw new Error("Direct browser writes to order_tracks are disabled. Use the authenticated commission save endpoint so the private emailHash is preserved.");
     }
     const m = lsGet("mk-tracks"); m[t.id] = t; lsSet("mk-tracks", m);
+  },
+
+  async saveCommissionState(order, track) {
+    const payload = {
+      id: order.id,
+      order: {
+        status: order.status,
+        payment: order.payment,
+        notes: order.notes || "",
+        finalPrice: order.finalPrice == null || order.finalPrice === "" ? null : Number(order.finalPrice),
+        extraLines: order.extraLines || ""
+      },
+      track: (() => {
+        const patch = {};
+        for (const key of ["proposal", "updates", "finalFiles", "estimate", "custom"]) {
+          if (!Object.prototype.hasOwnProperty.call(track, key)) continue;
+          if (key === "finalFiles") {
+            const files = Array.isArray(track.finalFiles) ? track.finalFiles : [];
+            const invalid = files.some((file) => !file?.path || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9))));
+            if (invalid) throw new Error("One or more Finished Art files are legacy local previews. Re-upload every artwork file before saving or delivering this commission.");
+            patch.finalFiles = files.map((file) => ({ name: file.name, path: file.path, type: file.type }));
+          } else patch[key] = track[key];
+        }
+        return patch;
+      })()
+    };
+    return this.api("creator_save_commission", payload, true);
   },
 
   async setOrder(o) {
@@ -2581,9 +3400,17 @@ const Store = {
     const cfg = getSbCfg(); if (!cfg || !cfg.url) throw new Error("Database is not configured.");
     let tok = cfg.anonKey; if (asOwner) { tok = await Auth.token(); if (!tok) throw new Error("Your session has expired. Please sign in again."); }
     const r = await fetch(cfg.url.replace(/\/$/, "") + "/functions/v1/commission-api", { method: "POST", headers: { "Content-Type": "application/json", apikey: cfg.anonKey, Authorization: "Bearer " + tok }, body: JSON.stringify({ action, ...body }) });
-    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Request failed (" + r.status + ")"); return j;
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const error = new Error(j.error || "Request failed (" + r.status + ")");
+      error.status = r.status;
+      error.payload = j;
+      if (j.commissionId) error.commissionId = j.commissionId;
+      throw error;
+    }
+    return j;
   },
-  async submit(order, track) { return (await this.api("submit", { order, track })).track; },
+  async submit(order, track, idempotencyKey) { return (await this.api("submit", { order, track, idempotencyKey })).track; },
   async lookup(id, email) {
     if (!(await this.client())) { const tr = await this.getTrack(id); return tr && tr.emailHash === (await sha(email.toLowerCase() + "|" + id)) ? tr : null; }
     try {
@@ -2608,7 +3435,18 @@ const Store = {
     const order = { id, created_at: now, createdAt: now, status: "Pending Review", payment: "Unpaid", serviceId: s.id, serviceTitle: s.title, tierName: tier ? tier.name : "", form: f, estimate: est, notes: "", finalPrice: null, extraLines: "" };
     const track = { id, createdAt: now, created_at: now, serviceTitle: s.title, status: "Pending Review", payment: "Unpaid", estimate: est.total, custom: c.custom, emailHash: await sha(f.email.trim().toLowerCase() + "|" + id), proposal: null, updates: [], finalFiles: [] };
     // 1. Save to DB first — commission is never lost even if email fails
-    if (sb) return await Store.submit(order, track);
+    if (sb) {
+      const fingerprint = await sha(JSON.stringify({ serviceId: s.id, form: f }));
+      const storageKey = "mk-submit-idem-" + fingerprint;
+      let idempotencyKey = ss.get(storageKey);
+      if (!idempotencyKey) {
+        idempotencyKey = "idem-" + await sha(fingerprint + "|" + Date.now() + "|" + Math.random());
+        ss.set(storageKey, idempotencyKey);
+      }
+      const result = await Store.submit(order, track, idempotencyKey);
+      ss.del(storageKey);
+      return result;
+    }
     await Store.setOrder(order);
     await Store.setTrack(track);
     return track;
@@ -2652,15 +3490,15 @@ function Services({ go }) {
       <div className="grid">
         {CONFIG.services.map((s, i) => {
           const x = X(s), sp = startPrice(s), ex = CONFIG.artworks.find((a) => a.category === s.category) || CONFIG.artworks[0] || { title: "", category: "", image: "" };
-          const off = x.status === "Unavailable";
+          const off = x.status === "Unavailable", cover = safeImg(s.image) || safeImg(ex.image);
           return (
             <article key={s.id} className="card lift span-4" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <Art art={s.image ? { ...ex, image: s.image } : ex} i={i} ratio="wide" />
+              <div className="art wide">{cover ? <img src={cover} alt={s.title + " cover"} loading="lazy" /> : <div className="service-gallery-empty">No cover image</div>}</div>
               <div className="meta"><span className="tag">{catLabel(s.category)}</span><span className={spCls(x.status)}>{x.status}</span></div>
               <h3>{s.title}</h3>
               <p className="muted" style={{ flex: 1 }}>{s.short}</p>
               <div><b style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}>{sp ? "From " + idr(sp) : "Custom quote"}</b><small className="muted" style={{ display: "block" }}>{x.license}</small></div>
-              <div className="btns"><Btn kind="cyan" size="sm" onClick={() => go("service-" + s.id)}>View Details</Btn><Btn size="sm" disabled={off} onClick={() => go("order-" + s.id)}>Request Commission</Btn></div>
+              <div className="btns"><Btn kind="cyan" size="sm" onClick={() => go("service-" + s.id)}>View Details</Btn>{safeUrl(s.orderUrl) ? <a className={"btn sm" + (off ? " ghost" : "")} href={safeUrl(s.orderUrl)} target="_blank" rel="noopener noreferrer" aria-disabled={off} onClick={(e) => { if (off) e.preventDefault(); }}>Request Commission</a> : <Btn size="sm" disabled={off} onClick={() => go("order-" + s.id)}>Request Commission</Btn>}</div>
             </article>
           );
         })}
@@ -2668,10 +3506,27 @@ function Services({ go }) {
     </div>
   );
 }
+function ServiceGallery({ images, title }) {
+  const track = useRef(null), [active, setActive] = useState(0);
+  const urls = (images || []).map((v) => typeof v === "string" ? safeImg(v) : safeImg(v && v.url)).filter(Boolean);
+  const jump = (index) => { const el = track.current; if (!el) return; const next = Math.max(0, Math.min(urls.length - 1, index)); el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" }); setActive(next); };
+  const sync = () => { const el = track.current; if (el && el.clientWidth) setActive(Math.max(0, Math.min(urls.length - 1, Math.round(el.scrollLeft / el.clientWidth)))); };
+  if (!urls.length) return <section className="card span-12"><h2 style={{ marginBottom: 12 }}>Preview gallery</h2><div className="service-gallery-empty">No gallery images added yet.</div></section>;
+  return <section className="card span-12"><div className="card-head"><h2>Preview gallery</h2><small className="muted">{active + 1} / {urls.length}</small></div>
+    <div className="service-gallery"><div className="service-gallery-main"><div className="service-gallery-track" ref={track} onScroll={sync}>{urls.map((url, i) => <div className="service-gallery-slide" key={url + i}><img src={url} alt={title + " preview " + (i + 1)} loading={i > 1 ? "lazy" : "eager"} /></div>)}</div>
+      {urls.length > 1 && <div className="service-gallery-nav"><button type="button" onClick={() => jump(active - 1)} aria-label="Previous image">‹</button><button type="button" onClick={() => jump(active + 1)} aria-label="Next image">›</button></div>}
+    </div>
+    {urls.length > 1 && <><div className="service-gallery-dots">{urls.map((_, i) => <button key={i} type="button" aria-label={"Go to image " + (i + 1)} aria-current={active === i} onClick={() => jump(i)} />)}</div><div className="service-gallery-thumbs">{urls.map((url, i) => <button key={url + i} type="button" aria-label={"Show image " + (i + 1)} aria-pressed={active === i} onClick={() => jump(i)}><img src={url} alt="" loading="lazy" /></button>)}</div></>}
+    </div>
+  </section>;
+}
 function ServiceDetail({ id, go }) {
   const s = CONFIG.services.find((a) => a.id === id); const [ok, setOk] = useState(false);
   if (!s) return <div className="page"><PageHead crumb="SERVICE" title="Service not found" /><Btn onClick={() => go("services")}>Back to services</Btn></div>;
-  const x = X(s), sp = startPrice(s), av = safeImg(CONFIG.profile.avatar), gal = CONFIG.artworks.filter((a) => a.category === s.category).slice(0, 4), terms = (CONFIG.terms.en || []);
+  const x = X(s), sp = startPrice(s), av = safeImg(CONFIG.profile.avatar);
+  const fallbackGallery = CONFIG.artworks.filter((a) => a.category === s.category && safeImg(a.image)).slice(0, 4).map((a) => a.image);
+  const gallery = (s.gallery || []).length ? s.gallery : (s.image ? [s.image, ...fallbackGallery.filter((u) => u !== s.image)] : fallbackGallery);
+  const terms = (CONFIG.terms.en || []), bookingUrl = safeUrl(s.orderUrl);
   return (
     <div className="page">
       <PageHead crumb={"COMMISSION SERVICES / " + s.title.toUpperCase()} title={s.title} />
@@ -2681,19 +3536,22 @@ function ServiceDetail({ id, go }) {
           <div style={{ flex: 1, minWidth: 180 }}><b>{CONFIG.profile.name}</b><div className="meta"><span className="tag">{catLabel(s.category)}</span><span className={spCls(x.status)}>{x.status}</span></div></div>
           <div><small className="muted">Starting price</small><div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem" }}>{sp ? idr(sp) : "Custom quote"}</div></div>
         </section>
-        {gal.length > 0 && <section className="card span-12"><h2 style={{ marginBottom: 12 }}>Preview gallery</h2><div className="strip">{gal.map((a, i) => <Art key={a.id} art={a} i={i} ratio="sq" />)}</div></section>}
+        <ServiceGallery images={gallery} title={s.title} />
         <section className="card span-7"><h2 style={{ marginBottom: 8 }}>Description</h2><p style={{ whiteSpace: "pre-line" }}>{x.desc}</p>
-          <div className="kv" style={{ marginTop: 14 }}><div className="kv-row"><Icon name="file" /><div><span>Files and format</span>{x.files}</div></div><div className="kv-row"><Icon name="check" /><div><span>Estimated time</span>{x.delivery}</div></div><div className="kv-row"><Icon name="globe" /><div><span>License</span>{x.license}</div></div></div></section>
-        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Includes</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.includes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
+          <div className="kv" style={{ marginTop: 14 }}><div className="kv-row"><Icon name="file" /><div><span>Files and format</span>{x.files}</div></div><div className="kv-row"><Icon name="check" /><div><span>Estimated turnaround</span>{x.delivery}</div></div><div className="kv-row"><Icon name="globe" /><div><span>Usage / license</span>{x.license}</div></div></div>
+          {x.usageTerms && <p style={{ whiteSpace: "pre-line", marginTop: 12 }}>{x.usageTerms}</p>}
+        </section>
+        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Deliverables</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.includes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
         <section className="card span-7"><h2 style={{ marginBottom: 8 }}>Base prices and add-ons</h2>
           <div className="list">{x.tiers.map((t) => <div key={t.id} className="rowi"><b className="grow">{t.name}</b>{t.price > 0 ? idr(t.price) : "Custom quote"}</div>)}</div>
           <h3 style={{ margin: "16px 0 8px" }}>Add-ons</h3>
           <div className="list">{x.addons.map((a) => <div key={a.id} className="rowi"><div className="grow"><b>{a.name}{a.required ? " (required)" : ""}</b><small className="muted">{a.desc}</small></div><span>{a.type === "custom" ? "Custom quote" : a.type === "percent" ? "+" + a.price + "%" : "+" + idr(a.price)}</span></div>)}</div></section>
         <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Important notes</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.notes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
         <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Artist terms</h2>
+          {x.serviceTerms && <p style={{ whiteSpace: "pre-line", marginBottom: 12 }}>{x.serviceTerms}</p>}
           {terms.length ? terms.map((t, i) => <details key={i} style={{ marginBottom: 6 }}><summary><b>{t.title}</b></summary><p style={{ whiteSpace: "pre-line", marginTop: 6 }}>{t.body}</p></details>) : <p className="muted">The artist has not added terms yet.</p>}
           <label className="switch" style={{ marginTop: 14 }}><span>I have read and agree to the Terms of Service.</span><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} /></label>
-          <div className="btns" style={{ marginTop: 14 }}><Btn disabled={!ok || x.status === "Unavailable"} onClick={() => go("order-" + s.id)}>{x.status === "Unavailable" ? "Currently unavailable" : "Request Commission"}</Btn><Btn kind="ghost" onClick={() => go("services")}>Back</Btn></div></section>
+          <div className="btns" style={{ marginTop: 14 }}>{bookingUrl ? <a className={"btn peach" + (x.status === "Unavailable" ? " ghost" : "")} href={bookingUrl} target="_blank" rel="noopener noreferrer" aria-disabled={x.status === "Unavailable"} onClick={(e) => { if (x.status === "Unavailable") e.preventDefault(); }}>Request Commission</a> : <Btn disabled={!ok || x.status === "Unavailable"} onClick={() => go("order-" + s.id)}>{x.status === "Unavailable" ? "Currently unavailable" : "Request Commission"}</Btn>}<Btn kind="ghost" onClick={() => go("services")}>Back</Btn></div></section>
       </div>
     </div>
   );
@@ -2737,7 +3595,38 @@ function OrderFlow({ id, go }) {
       } catch (x2) { setUp("Could not upload " + file.name + ": " + (x2 && x2.message || "unknown error")); }
     }
   };
-  const submit = async () => { if (!check(7)) return; setBusy(true); setFail(""); try { setDone(await Store.create(f, s, c)); } catch (x2) { setFail("Your request could not be saved, so it was NOT submitted. " + ((x2 && x2.message) || "") + " Please try again."); } setBusy(false); };
+  const validateAll = () => {
+    const e = {};
+    if (!String(f.name || "").trim()) e.name = "Please enter your name.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(f.email || "").trim())) e.email = "Please enter a valid email address.";
+    if (!f.want) e.want = "Required.";
+    if (!f.tier) e.tier = "Choose a commission type.";
+    x.addons.forEach((a) => { if (a.required && !(Number(f.addons?.[a.id]) > 0)) e["a" + a.id] = a.name + " is required."; });
+    if (!f.display) e.display = "Please choose one option.";
+    if (!f.tos) e.tos = "You must agree to the Terms of Service.";
+    setErr(e);
+    if (Object.keys(e).length) {
+      const firstStep = e.name || e.email ? 0 : e.want || e.tier ? 1 : Object.keys(e).some((k) => k.startsWith("a")) ? 3 : e.display ? 6 : 7;
+      setStep(firstStep);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return false;
+    }
+    return true;
+  };
+  const submit = async () => {
+    if (!validateAll()) return;
+    setBusy(true); setFail("");
+    try {
+      setDone(await Store.create(f, s, c));
+    } catch (x2) {
+      if (x2 && x2.commissionId) {
+        setFail("Your commission was saved, but order tracking could not be initialized. Request ID: " + x2.commissionId + ". Do not submit again; contact the studio with this ID.");
+      } else {
+        setFail("Your request could not be saved, so it was NOT submitted. " + ((x2 && x2.message) || "") + " Please try again.");
+      }
+    }
+    setBusy(false);
+  };
   const tx = (k, l, o = {}) => <TextIn label={l} value={f[k]} onChange={set(k)} className={o.full ? "full" : ""} multiline={o.ml} placeholder={o.ph} hint={err[k] || o.hint} />;
   const radios = (k, l, opts) => <Field label={l} className="full"><div className="chips">{opts.map((o) => <label key={o} className="chip" aria-pressed={f[k] === o} style={{ cursor: "pointer" }}><input type="radio" name={k} checked={f[k] === o} onChange={() => set(k)(o)} style={{ marginRight: 6 }} />{o}</label>)}</div>{err[k] && <div className="err">{err[k]}</div>}</Field>;
   if (done) return (
@@ -2745,6 +3634,7 @@ function OrderFlow({ id, go }) {
       <h2>Your commission request has been submitted!</h2>
       <p style={{ margin: "10px auto", maxWidth: 520 }}>Thank you for considering Malkiaa for your project. Your request is now waiting for review.</p>
       {Store.mode() === "local" && <div className="note info" style={{ margin: "12px auto", maxWidth: 520 }}>Demo mode: saved only in this browser. The artist has not received it.</div>}
+      {Store.mode() !== "local" && <div className="note info" role="status" style={{ margin: "12px auto", maxWidth: 560, textAlign: "left" }}><b style={{ display: "block", marginBottom: 4 }}>Please check your email</b><p>Your order confirmation will be sent to the email address you provided. Please check your Inbox. If you can't find it, check your Spam/Junk folder. If our email is there, select <b>“Not Spam”</b> so future messages from Malkiaa Studio are more likely to reach your Inbox.</p></div>}
       <div className="kv" style={{ maxWidth: 420, margin: "16px auto", textAlign: "left" }}>
         <div className="kv-row"><Icon name="check" /><div><span>Request ID</span><b>{done.id}</b></div></div><div className="kv-row"><Icon name="pen" /><div><span>Service</span>{done.serviceTitle}</div></div>
         <div className="kv-row"><Icon name="file" /><div><span>Submitted</span>{fmtDate(done.createdAt)}</div></div><div className="kv-row"><Icon name="star" /><div><span>Estimated price</span>{idr(done.estimate)}{done.custom ? " + custom" : ""}</div></div><div className="kv-row"><Icon name="flow" /><div><span>Status</span>{done.status}</div></div></div>
@@ -2757,7 +3647,14 @@ function OrderFlow({ id, go }) {
     <div className="form" key="1">
       <Field label="What would you like me to create? *" className="full"><select className="in" value={f.want} onChange={(e) => set("want")(e.target.value)}><option value="">Select...</option>{["Character Illustration", "VTuber Illustration", "Game Character", "Chibi", "Character Design", "Other"].concat(CONFIG.services.map((q) => q.title)).filter((v, i, a) => a.indexOf(v) === i).map((o) => <option key={o}>{o}</option>)}</select>{err.want && <div className="err">{err.want}</div>}</Field>
       <Field label="Commission type *" className="full"><div className="list">{x.tiers.map((t) => <label key={t.id} className="switch"><span><b>{t.name}</b> <small className="muted">{t.price > 0 ? idr(t.price) : "Custom quote"}</small></span><input type="radio" name="tier" checked={f.tier === t.id} onChange={() => set("tier")(t.id)} /></label>)}</div>{err.tier && <div className="err">{err.tier}</div>}</Field>
-      <Field label="Number of characters" hint="The first character is included in the base price. Each additional character adds 80% of the selected base price."><input className="in" type="number" min="1" max="20" step="1" value={f.chars} onChange={(e) => set("chars")(Math.max(1, Math.min(20, Number(e.target.value) || 1)))} /></Field>{tx("cname", "Character name")}{tx("lore", "Character lore / background", { ml: true, full: true })}{tx("pers", "Character personality", { ml: true, full: true })}{tx("pose", "Pose preference")}{tx("mood", "Expression / mood")}{tx("style", "Art style preference", { full: true })}
+      <Field label="Number of characters" hint="The first character is included in the base price. Each additional character adds 80% of the selected base price.">
+        <div className="btns" style={{ alignItems: "center", gap: 10 }}>
+          <button type="button" className="ib" disabled={Number(f.chars) <= 1} onClick={() => set("chars")(Math.max(1, Number(f.chars || 1) - 1))} aria-label="Remove one character">−</button>
+          <input className="in" type="number" inputMode="numeric" min="1" max="20" step="1" value={f.chars} onChange={(e) => { const raw = e.target.value; if (raw === "") return; const n = Number(raw); if (Number.isFinite(n)) set("chars")(Math.max(1, Math.min(20, Math.floor(n)))); }} aria-label="Number of characters" style={{ width: 100, textAlign: "center" }} />
+          <button type="button" className="ib" disabled={Number(f.chars) >= 20} onClick={() => set("chars")(Math.min(20, Number(f.chars || 1) + 1))} aria-label="Add one character">+</button>
+          <b>{f.chars} / 20</b>
+        </div>
+      </Field>{tx("cname", "Character name")}{tx("lore", "Character lore / background", { ml: true, full: true })}{tx("pers", "Character personality", { ml: true, full: true })}{tx("pose", "Pose preference")}{tx("mood", "Expression / mood")}{tx("style", "Art style preference", { full: true })}
       {radios("bg", "Background preference", ["Transparent", "Simple Background", "Detailed Background", "Custom"])}{tx("extra", "Additional details", { ml: true, full: true })}</div>,
     <div className="form" key="2">
       <Field label="Upload references" className="full" hint="Character references, moodboards, pose, outfit and color references. PNG, JPG, WebP, GIF or PDF, up to 10 MB each."><input type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" onChange={pickFiles} className="in" /></Field>
@@ -2777,7 +3674,11 @@ function OrderFlow({ id, go }) {
   return (
     <div className="page">
       <PageHead crumb={"REQUEST / " + s.title.toUpperCase()} title={"Request: " + s.title}>Fill in the steps below. No payment is taken when you submit. You receive a custom proposal first.</PageHead>
-      <div className="steps" role="list">{STEPS.map((t, i) => <button key={t} role="listitem" className="chip" aria-pressed={i === step} disabled={i > step} onClick={() => setStep(i)}>{i + 1}. {t}</button>)}</div>
+      <div className="steps" aria-label="Commission form progress">
+        <div className="step-progress-head"><b>{step + 1} / {STEPS.length} · {STEPS[step]}</b><span>{Math.round(((step + 1) / STEPS.length) * 100)}%</span></div>
+        <input className="step-scrubber" type="range" min="0" max="7" step="1" value={step} onChange={(e) => setStep(Number(e.target.value))} aria-label="Slide to jump to a form step" />
+        <div className="step-jumps">{STEPS.map((t, i) => <button type="button" key={t} className="chip" aria-pressed={i === step} onClick={() => setStep(i)}>{i + 1}. {t}</button>)}</div>
+      </div>
       <div className="olay"><section className="card"><h2 style={{ marginBottom: 14 }}>{STEPS[step]}</h2>{body[step]}
         <div className="btns" style={{ marginTop: 18, justifyContent: "space-between" }}><Btn kind="ghost" onClick={() => (step ? setStep(step - 1) : go("service-" + s.id))}>Back</Btn>{step < 7 ? <Btn onClick={next}>Next</Btn> : <Btn disabled={busy} onClick={submit}>{busy ? "Sending..." : "Submit commission request"}</Btn>}</div></section>
         <aside><details className="osd" open><summary>Price estimate</summary><Sum s={s} sel={f} /></details></aside></div>
@@ -2825,107 +3726,256 @@ function Track() {
   const [reviewRating, setReviewRating] = useState("5"); const [reviewText, setReviewText] = useState(""); const [reviewAnonymous, setReviewAnonymous] = useState(false); const [reviewBusy, setReviewBusy] = useState(false); const [reviewMessage, setReviewMessage] = useState("");
   const look = async (e) => {
     e && e.preventDefault(); setBusy(true); setMsg("");
-    try { const id = rid.trim().toUpperCase(), tr = await Store.lookup(id, em.trim()); if (!tr) { setT(null); setMsg("No order matches that Request ID and email."); } else setT(tr); } catch (x2) { setMsg("Could not look up your order right now."); }
-    setBusy(false);
+    try { const id = rid.trim().toUpperCase(), tr = await Store.lookup(id, em.trim()); if (!tr) { setT(null); setMsg("No order matches that Request ID and email."); } else setT(tr); }
+    catch (x2) { setT(null); setMsg("Could not look up your order right now. Please try again."); }
+    finally { setBusy(false); }
   };
   const act = async (resp, text) => {
-    const n = clone(t), now = new Date().toISOString(); n.proposal.response = resp; n.updates.push({ at: now, from: "client", text: text || "Client: " + resp });
-    n.status = resp === "Accepted" ? "Awaiting Payment" : resp === "Declined" ? "Cancelled" : "Reviewing";
-    try { const n2 = (await Store.client()) ? await Store.respond(t.id, em.trim(), resp, text || "Client: " + resp) : (await Store.setTrack(n), n); setT(n2); setQ(""); } catch (x2) { setMsg("Could not save your response. Please try again."); }
+    const now = new Date().toISOString(), responseText = text || "Client: " + resp;
+    try {
+      const n2 = (await Store.client())
+        ? await Store.respond(t.id, em.trim(), resp, responseText)
+        : (() => { const n = clone(t); n.proposal.response = resp; n.updates.push({ at: now, from: "client", text: responseText }); n.status = resp === "Accepted" ? "Awaiting Payment" : resp === "Declined" ? "Cancelled" : "Reviewing"; return Store.setTrack(n).then(() => n); })();
+      setT(n2); setQ(""); setMsg("");
+    } catch (x2) { setMsg("Could not save your response. Please try again."); }
   };
   const submitReview = async (e) => {
     e.preventDefault(); setReviewBusy(true); setReviewMessage("");
     try {
-      const result = await Store.api("submit_review", {
-        id: t.id, email: em.trim(), rating: Number(reviewRating),
-        message: reviewText.trim(), isAnonymous: reviewAnonymous
-      });
-      setT({ ...t, reviewSubmitted: true });
-      setReviewText("");
+      const result = await Store.api("submit_review", { id: t.id, email: em.trim(), rating: Number(reviewRating), message: reviewText.trim(), isAnonymous: reviewAnonymous });
+      setT({ ...t, reviewSubmitted: true }); setReviewText("");
       setReviewMessage(result.message || "Thank you. Your review is awaiting approval.");
-    } catch (error) {
-      setReviewMessage(error.message || "Could not submit your review. Please try again.");
-    }
-    setReviewBusy(false);
+    } catch (error) { setReviewMessage(error.message || "Could not submit your review. Please try again."); }
+    finally { setReviewBusy(false); }
   };
   const idx = t ? TL.findIndex((a) => a[1].includes(t.status)) : -1, p = t && t.proposal;
+  const updates = t ? (t.updates || []).slice().sort((a,b) => new Date(a.at || 0) - new Date(b.at || 0)) : [];
+  const paymentInfo = p && p.paymentInfo;
   return (
-    <div className="page"><PageHead crumb="TRACK ORDER" title="Track Your Order">Enter your Request ID and the email you used when ordering.</PageHead><StoreBanner />
-      <form className="card form" onSubmit={look}>{<TextIn label="Request ID" value={rid} onChange={setRid} placeholder="COMMISSION-2026-0001" />}<TextIn label="Email" value={em} onChange={setEm} /><div className="full"><Btn type="submit" disabled={busy || !rid || !em}>{busy ? "Checking..." : "Find my order"}</Btn></div>{msg && <div className="note bad full" role="alert">{msg}</div>}</form>
-      {t && <div className="grid" style={{ marginTop: 18 }}>
-        <section className="card span-12"><div className="meta"><b>{t.id}</b><span className="tag">{t.serviceTitle}</span><span className="tag">{t.status}</span><span className="tag">Payment: {t.payment}</span></div>
-          <div className="stages" style={{ marginTop: 14 }}>{TL.map((a, i) => <div key={a[0]} className="stage" style={i <= idx ? { background: "var(--cyan)", color: "var(--on-accent)" } : undefined}>{a[0]}</div>)}</div>
-          {["Cancelled", "Rejected"].includes(t.status) && <div className="note bad" style={{ marginTop: 12 }}>This request is {t.status.toLowerCase()}.</div>}</section>
-        {p && <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Proposal</h2><div className="list">{(p.lines || []).map((l, i) => <div key={i} className="rowi"><b className="grow">{l[0]}</b>{l[2] || idr(l[1])}</div>)}</div>
-          <p style={{ marginTop: 10 }}><b>Final price: {idr(p.finalPrice)}</b></p>{p.delivery && <p>Estimated delivery: {p.delivery}</p>}{p.notes && <p style={{ whiteSpace: "pre-line" }}>{p.notes}</p>}{p.revision && <p><b>Revisions:</b> {p.revision}</p>}{p.paymentInfo && <p style={{ whiteSpace: "pre-line" }}><b>Payment instructions:</b> {p.paymentInfo}</p>}
-          {!p.response ? <div style={{ marginTop: 12 }}><div className="btns"><Btn onClick={() => act("Accepted")}>Accept Proposal</Btn><Btn kind="danger" onClick={() => act("Declined")}>Decline Proposal</Btn></div><div className="pwrow" style={{ marginTop: 10 }}><input className="in" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask a question about this proposal" /><Btn kind="cyan" size="sm" disabled={!q.trim()} onClick={() => act("Clarification requested", "Client question: " + q.trim())}>Request Clarification</Btn></div></div> : <div className="note info" style={{ marginTop: 12 }}>Your response: {p.response}. Accepting does not mean payment has been made. Payment status is shown above.</div>}</section>}
-        <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Updates</h2>{t.updates.length ? t.updates.slice().reverse().map((u, i) => <p key={i} style={{ marginBottom: 6 }}><small className="muted">{fmtDate(u.at)} {u.from === "client" ? "(you)" : ""}</small><br />{u.text}</p>) : <p className="muted">No updates yet.</p>}
-          {t.finalFiles.length > 0 && <div style={{ marginTop: 10 }}><h3>Final files</h3>{t.finalFiles.map((fl) => <p key={fl.url}><a href={fl.url} download={fl.name}>{fl.name}</a></p>)}</div>}</section>
-        {t.status === "Completed" && <section className="card span-12">
-          <h2 style={{ marginBottom: 8 }}>Leave a Review</h2>
-          {t.reviewSubmitted
-            ? <div className="note ok">Thank you. Your review has been submitted and is waiting for studio approval.</div>
-            : <form className="panel" onSubmit={submitReview}>
-              <p className="muted">Share your experience with Malkiaa Studio. Only completed commissions can leave a review.</p>
-              <Field label="Your rating"><select className="in" value={reviewRating} onChange={(e) => setReviewRating(e.target.value)}>{[5,4,3,2,1].map((n) => <option key={n} value={n}>{n} / 5 stars</option>)}</select></Field>
-              <Field label="Your review"><textarea className="in" minLength={10} maxLength={1200} required value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Tell me about your experience (10–1200 characters)." /></Field>
-              <label className="switch"><span><b>Post anonymously</b><small className="muted" style={{ display: "block" }}>Your order name will not be shown publicly.</small></span><input type="checkbox" checked={reviewAnonymous} onChange={(e) => setReviewAnonymous(e.target.checked)} /></label>
-              {reviewMessage && <div className="note info" role="status">{reviewMessage}</div>}
-              <div><Btn type="submit" disabled={reviewBusy || reviewText.trim().length < 10}>{reviewBusy ? "Submitting..." : "Submit review"}</Btn></div>
-            </form>}
-        </section>}</div>}
+    <div className="page">
+      <PageHead crumb="TRACK ORDER" title="Track Your Order">Enter your Request ID and the email you used when ordering. Your order details are shown in separate sections below.</PageHead>
+      <StoreBanner />
+      <form className="card form" onSubmit={look}>
+        <TextIn label="Request ID" value={rid} onChange={setRid} placeholder="COMMISSION-2026-0001" />
+        <TextIn label="Email" value={em} onChange={setEm} />
+        <div className="full"><Btn type="submit" disabled={busy || !rid.trim() || !em.trim()}>{busy ? "Checking..." : "Find my order"}</Btn></div>
+        {msg && <div className="note bad full" role="alert">{msg}</div>}
+      </form>
+      {t && <div className="track-layout" style={{ display:"grid", gap:16, marginTop:18 }}>
+        <section className="card track-overview" style={{ borderTop:"5px solid var(--cyan)" }}>
+          <div className="card-head track-overview-head">
+            <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
+            <div className="meta track-overview-badges"><span className="tag">{t.status || "Pending Review"}</span><span className="tag">Payment: {t.payment || "Unpaid"}</span></div>
+          </div>
+          <div className="stages track-overview-stages" aria-label="Commission progress">{TL.map((a,i)=><div key={a[0]} className={"stage" + (i === idx ? " is-active" : "")} aria-current={i === idx ? "step" : undefined}>{a[0]}</div>)}</div>
+          {["Cancelled","Rejected"].includes(t.status) && <div className="note bad" style={{ marginTop:12 }}>This request is {t.status.toLowerCase()}.</div>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>01 · PRICE & PROPOSAL</small><h2 style={{ marginTop:4 }}>Proposal</h2></div><span className="tag">{p ? "Available" : "Awaiting artist"}</span></div>
+          {p ? <>
+            <div className="list">{(p.lines||[]).map((l,i)=><div key={i} className="rowi"><b className="grow">{l[0]}</b><span>{l[2]||idr(l[1])}</span></div>)}</div>
+            <div className="srow tot" style={{ marginTop:8 }}><b>Final price</b><b>{idr(p.finalPrice)}</b></div>
+            {p.delivery && <p style={{ marginTop:10 }}><b>Estimated delivery:</b> {p.delivery}</p>}
+            {p.notes && <p style={{ marginTop:8, whiteSpace:"pre-line" }}>{p.notes}</p>}
+            {p.revision && <p style={{ marginTop:8 }}><b>Revision policy:</b> {p.revision}</p>}
+            {!p.response ? <div style={{ marginTop:14 }}>
+              <div className="btns"><Btn onClick={()=>act("Accepted")}>Accept Proposal</Btn><Btn kind="danger" onClick={()=>act("Declined")}>Decline Proposal</Btn></div>
+              <div className="pwrow" style={{ marginTop:10 }}><input className="in" value={q} onChange={e=>setQ(e.target.value)} placeholder="Ask a question about this proposal" /><Btn kind="cyan" size="sm" disabled={!q.trim()} onClick={()=>act("Clarification requested","Client question: "+q.trim())}>Request Clarification</Btn></div>
+            </div> : <div className="note info" style={{ marginTop:12 }}>Your response: <b>{p.response}</b>. Accepting a proposal does not mean payment has been made.</div>}
+          </> : <p className="muted">The artist has not sent a proposal yet. This section will update when it is ready.</p>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>02 · PAYMENT</small><h2 style={{ marginTop:4 }}>Payment information</h2></div><span className="tag">{t.payment || "Unpaid"}</span></div>
+          {paymentInfo ? <p style={{ whiteSpace:"pre-line" }}>{paymentInfo}</p> : <p className="muted">Payment instructions will appear here after the proposal is sent. Please do not make a payment before receiving the official instructions.</p>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>03 · COMMUNICATION</small><h2 style={{ marginTop:4 }}>Order messages</h2></div><span className="tag">{updates.length} updates</span></div>
+          {updates.length ? <div style={{ display:"grid", gap:12 }}>{updates.map((u,i)=><article key={i} style={{ padding:"12px 14px", borderRadius:16, border:"1px solid var(--line)", background:u.from==="client"?"var(--powder)":"#fff" }}>
+            <div className="meta" style={{ justifyContent:"space-between" }}><b>{u.from==="client"?"Your message":"Malkiaa Studio"}</b><small className="muted">{fmtDate(u.at)}</small></div>
+            <p style={{ marginTop:7, whiteSpace:"pre-wrap", overflowWrap:"anywhere" }}>{u.text}</p>
+          </article>)}</div> : <p className="muted">There are no messages or progress updates yet.</p>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>04 · DELIVERY</small><h2 style={{ marginTop:4 }}>Finished artwork</h2></div><span className="tag">{(t.finalFiles||[]).length ? "Delivered" : "Not delivered"}</span></div>
+          {(t.finalFiles||[]).length ? <div className="grid">{t.finalFiles.map((fl,i)=><div className="span-4" key={fl.path||fl.url||i} style={{ minWidth:0 }}>
+            {fl.unavailable ? <p className="note bad">This artwork link is unavailable. Please contact the artist for a replacement file.</p> : <>{fl.type && fl.type.startsWith("image/") && <div className="art sq"><img src={fl.url} alt={fl.name||"Finished artwork"} /></div>}
+            <a className="btn ghost sm" style={{ marginTop:8 }} href={fl.url} download={fl.name||"artwork"}>Download file</a></>}
+            <p style={{ marginTop:8, overflowWrap:"anywhere" }}><b>{fl.name||"Final artwork"}</b></p>
+          </div>)}</div> : <p className="muted">Final artwork and download links will appear here once the artist completes delivery.</p>}
+        </section>
+
+        {t.status==="Completed" && <section className="card">
+          <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>05 · FEEDBACK</small><h2 style={{ marginTop:4 }}>Leave a review</h2></div></div>
+          {t.reviewSubmitted ? <div className="note ok">Thank you. Your review has been submitted and is waiting for studio approval.</div> : <form className="panel" onSubmit={submitReview}>
+            <p className="muted">Only completed commissions can leave a review.</p>
+            <Field label="Your rating"><select className="in" value={reviewRating} onChange={e=>setReviewRating(e.target.value)}>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} / 5 stars</option>)}</select></Field>
+            <Field label="Your review"><textarea className="in" minLength={10} maxLength={1200} required value={reviewText} onChange={e=>setReviewText(e.target.value)} placeholder="Tell me about your experience (10–1200 characters)." /></Field>
+            <label className="switch"><span><b>Post anonymously</b><small className="muted" style={{ display:"block" }}>Your order name will not be shown publicly.</small></span><input type="checkbox" checked={reviewAnonymous} onChange={e=>setReviewAnonymous(e.target.checked)} /></label>
+            {reviewMessage && <div className="note info" role="status">{reviewMessage}</div>}
+            <div><Btn type="submit" disabled={reviewBusy||reviewText.trim().length<10}>{reviewBusy?"Submitting...":"Submit review"}</Btn></div>
+          </form>}
+        </section>}
+      </div>}
     </div>
   );
 }
 
-/* ---- creator: services detail editor, orders */
-function OffersPanel() {
-  const { site, upd } = useCreator(); const sets = (p) => (v) => upd((n) => setPath(n, p, v));
-  const ens = (n, i) => { n.services[i] = { ...SVC_DEF, ...n.services[i] }; return n.services[i]; };
+function ServicePricingEditor({ service, index }) {
+  const { upd } = useCreator();
+  const x = X(service);
+  const ens = (n) => { n.services[index] = { ...SVC_DEF, ...n.services[index] }; return n.services[index]; };
+  const mut = (fn) => upd((n) => { fn(ens(n)); });
   const list = (title, items, onChange, ph) => <ChipEditor label={title} items={items} onChange={onChange} placeholder={ph} />;
   return (
-    <div className="panel"><div className="note info">Set status, prices, includes, add-ons and notes for each service. Add or delete services in the Services tab.</div>
-      {site.services.map((sv, i) => { const x = X(sv); const P = (k) => ["services", i, k]; const mut = (fn) => upd((n) => { fn(ens(n, i)); }); return (
-        <section key={sv.id} className="card"><h2 style={{ marginBottom: 12 }}>{sv.title}</h2>
-          <div className="form">
-            <Field label="Availability"><select className="in" value={x.status} onChange={(e) => mut((s2) => { s2.status = e.target.value; })}>{SVC_STATUS.map((o) => <option key={o}>{o}</option>)}</select></Field>
-            <TextIn label="License info (shown on card)" value={x.license} onChange={(v) => mut((s2) => { s2.license = v; })} />
-            <TextIn label="Estimated time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} /><TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
-            {list("Includes", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add an item")}{list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
-            <Field label="Base prices (0 = custom quote)" className="full"><div className="list">{x.tiers.map((t, ti) => <div key={t.id} className="rowi"><input className="in" value={t.name} onChange={(e) => mut((s2) => { s2.tiers[ti].name = e.target.value; })} aria-label="Name" /><input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers[ti].price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} /><ConfirmDelete onYes={() => mut((s2) => { s2.tiers.splice(ti, 1); })} label="Delete" /></div>)}</div><Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.tiers.push({ id: uid("t"), name: "New type", price: 0 }); })}>Add base price</Btn></Field>
-            <Field label="Add-ons" className="full"><div className="list">{x.addons.map((a, ai) => <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}><div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}><input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons[ai].name = e.target.value; })} aria-label="Name" /><input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons[ai].desc = e.target.value; })} placeholder="Description" aria-label="Description" /></div>
-              <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons[ai].type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
-              <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={a.price} disabled={a.type === "custom"} onChange={(e) => mut((s2) => { s2.addons[ai].price = Number(e.target.value) || 0; })} aria-label="Price" />
-              <select className="in" style={{ maxWidth: 130 }} value={a.select} onChange={(e) => mut((s2) => { s2.addons[ai].select = e.target.value; })} aria-label="Selection"><option value="single">Single</option><option value="multiple">Multiple</option></select>
-              <label className="switch"><span>Required</span><input type="checkbox" checked={!!a.required} onChange={(e) => mut((s2) => { s2.addons[ai].required = e.target.checked; })} /></label><ConfirmDelete onYes={() => mut((s2) => { s2.addons.splice(ai, 1); })} label="Delete add-on" /></div>)}</div>
-              <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.addons.push({ id: uid("ad"), name: "New add-on", desc: "", type: "fixed", price: 0, select: "single", required: false }); })}>Add add-on</Btn></Field>
-          </div></section>); })}
-      <section className="card"><h2 style={{ marginBottom: 6 }}>Usage licenses</h2><p className="muted" style={{ marginBottom: 12 }}>Shown in the request form. Percentage is added to the subtotal.</p>
-        <div className="list">{(site.licenses || []).map((l, i) => <div key={l.id} className="rowi" style={{ flexWrap: "wrap" }}><div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}><input className="in" value={l.label} onChange={(e) => sets(["licenses", i, "label"])(e.target.value)} aria-label="Name" /><input className="in" value={l.terms || ""} onChange={(e) => sets(["licenses", i, "terms"])(e.target.value)} placeholder="Terms" aria-label="Terms" /></div>
-          <select className="in" style={{ maxWidth: 140 }} value={l.type} onChange={(e) => sets(["licenses", i, "type"])(e.target.value)}><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select><input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={l.value} disabled={l.type === "custom"} onChange={(e) => sets(["licenses", i, "value"])(Number(e.target.value) || 0)} aria-label="Value" /><ConfirmDelete onYes={() => upd((n) => { n.licenses.splice(i, 1); })} label="Delete license" /></div>)}</div>
-        <Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { n.licenses.push({ id: uid("l"), label: "New license", type: "fixed", value: 0, terms: "" }); })}>Add license</Btn></section>
-    </div>
+    <section className="card service-pricing-editor" style={{ marginTop: 14, background: "var(--bg)", boxShadow: "none" }}>
+      <h3 style={{ marginBottom: 12 }}>Pricing & order details</h3>
+      <div className="form">
+        <Field label="Availability"><select className="in" value={x.status} onChange={(e) => mut((s2) => { s2.status = e.target.value; })}>{SVC_STATUS.map((o) => <option key={o}>{o}</option>)}</select></Field>
+        <TextIn label="License info (shown on card)" value={x.license} onChange={(v) => mut((s2) => { s2.license = v; })} />
+        <TextIn label="Estimated turnaround time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} />
+        <TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
+        <TextIn label="Usage / license terms for this service" value={x.usageTerms || ""} onChange={(v) => mut((s2) => { s2.usageTerms = v; })} multiline className="full" placeholder="Personal use, commercial use, redistribution, credit..." />
+        <TextIn label="Additional service terms" value={x.serviceTerms || ""} onChange={(v) => mut((s2) => { s2.serviceTerms = v; })} multiline className="full" placeholder="What clients should know before ordering..." />
+        {list("Deliverables / What the client receives", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add a deliverable")}
+        {list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
+        <Field label="Base prices (0 = custom quote)" className="full">
+          <div className="list">{x.tiers.map((t, ti) => <div key={t.id} className="rowi">
+            <input className="in" value={t.name} onChange={(e) => mut((s2) => { s2.tiers[ti].name = e.target.value; })} aria-label="Name" />
+            <input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers[ti].price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} />
+            <ConfirmDelete onYes={() => mut((s2) => { s2.tiers.splice(ti, 1); })} label="Delete base price" />
+          </div>)}</div>
+          <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.tiers.push({ id: uid("t"), name: "New type", price: 0 }); })}>Add base price</Btn>
+        </Field>
+        <Field label="Add-ons" className="full">
+          <div className="list">{x.addons.map((a, ai) => <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}>
+            <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
+              <input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons[ai].name = e.target.value; })} aria-label="Name" />
+              <input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons[ai].desc = e.target.value; })} placeholder="Description" aria-label="Description" />
+            </div>
+            <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons[ai].type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
+            <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={a.price} disabled={a.type === "custom"} onChange={(e) => mut((s2) => { s2.addons[ai].price = Number(e.target.value) || 0; })} aria-label="Price" />
+            <select className="in" style={{ maxWidth: 130 }} value={a.select} onChange={(e) => mut((s2) => { s2.addons[ai].select = e.target.value; })} aria-label="Selection"><option value="single">Single</option><option value="multiple">Multiple</option></select>
+            <label className="switch"><span>Required</span><input type="checkbox" checked={!!a.required} onChange={(e) => mut((s2) => { s2.addons[ai].required = e.target.checked; })} /></label>
+            <ConfirmDelete onYes={() => mut((s2) => { s2.addons.splice(ai, 1); })} label="Delete add-on" />
+          </div>)}</div>
+          <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.addons.push({ id: uid("ad"), name: "New add-on", desc: "", type: "fixed", price: 0, select: "single", required: false }); })}>Add add-on</Btn>
+        </Field>
+      </div>
+    </section>
+  );
+}
+
+function LicensesEditor() {
+  const { site, upd } = useCreator();
+  const sets = (p) => (v) => upd((n) => setPath(n, p, v));
+  return (
+    <section className="card">
+      <h2 style={{ marginBottom: 6 }}>Usage licenses</h2>
+      <p className="muted" style={{ marginBottom: 12 }}>Shown in the request form. Percentage is added to the subtotal.</p>
+      <div className="list">{(site.licenses || []).map((l, i) => <div key={l.id} className="rowi" style={{ flexWrap: "wrap" }}>
+        <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
+          <input className="in" value={l.label} onChange={(e) => sets(["licenses", i, "label"])(e.target.value)} aria-label="Name" />
+          <input className="in" value={l.terms || ""} onChange={(e) => sets(["licenses", i, "terms"])(e.target.value)} placeholder="Terms" aria-label="Terms" />
+        </div>
+        <select className="in" style={{ maxWidth: 140 }} value={l.type} onChange={(e) => sets(["licenses", i, "type"])(e.target.value)}><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
+        <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={l.value} disabled={l.type === "custom"} onChange={(e) => sets(["licenses", i, "value"])(Number(e.target.value) || 0)} aria-label="Value" />
+        <ConfirmDelete onYes={() => upd((n) => { n.licenses.splice(i, 1); })} label="Delete license" />
+      </div>)}</div>
+      <Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { n.licenses.push({ id: uid("l"), label: "New license", type: "fixed", value: 0, terms: "" }); })}>Add license</Btn>
+    </section>
   );
 }
 function OrderDetail({ o, onBack, onSaved }) {
-  const [d, setD] = useState(o); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [pub, setPub] = useState(""); const [pr, setPr] = useState({ delivery: "", notes: "", revision: "", paymentInfo: "" });
+  const [d, setD] = useState(o);
+  const [t, setT] = useState(null);
+  const [msg, setMsg] = useState("");
+  const [pub, setPub] = useState("");
+  const [busy, setBusy] = useState("");
+  const [pr, setPr] = useState({ delivery: "", notes: "", revision: "", paymentInfo: "" });
   useEffect(() => { Store.getTrack(o.id).then(setT).catch(() => setMsg("Could not load the client tracking record.")); }, [o.id]);
   const f = d.form, set = (k) => (v) => setD((p) => ({ ...p, [k]: v }));
-  const save = async (extra) => { const n = { ...d }; const tr = clone(t || {}); tr.status = n.status; tr.payment = n.payment; if (extra) extra(tr, n); try { await Store.setManage(n.id, { status: n.status, payment: n.payment, notes: n.notes, finalPrice: n.finalPrice, extraLines: n.extraLines }); await Store.setTrack(tr); setD(n); setT(tr); onSaved(n); setMsg("Saved."); } catch (x2) { setMsg("Could not save. Nothing was changed for the client."); } };
-  const sendProposal = () => save((tr, n) => { const fp = Number(n.finalPrice); const extra = (n.extraLines || "").split("\n").map((l) => l.split("|")).filter((a) => a[0] && a[0].trim()).map((a) => [a[0].trim(), Number(a[1]) || 0, ""]); tr.proposal = { sentAt: new Date().toISOString(), finalPrice: fp || 0, lines: (n.estimate.lines || []).concat(extra), ...pr, response: null }; n.status = "Proposal Sent"; tr.status = n.status; tr.estimate = fp || tr.estimate; tr.updates.push({ at: new Date().toISOString(), from: "artist", text: "A proposal has been sent. Please review it." }); });
-  const post = () => pub.trim() && save((tr) => { tr.updates.push({ at: new Date().toISOString(), from: "artist", text: pub.trim() }); }).then(() => setPub(""));
+  const save = async (extra) => {
+    const n = { ...d };
+    if (n.payment === "Paid" && n.status === "Awaiting Payment") n.status = "Paid";
+    const tr = clone(t || {});
+    tr.status = n.status;
+    tr.payment = n.payment;
+    if (extra) extra(tr, n);
+    try {
+      const saved = await Store.saveCommissionState(n, tr);
+      setD(n);
+      setT(saved.track || tr);
+      onSaved(n);
+      try {
+        const fresh = await Store.getTrack(n.id);
+        if (fresh) setT(fresh);
+      } catch (_) {}
+    } catch (x2) {
+      setMsg("Could not save commission and tracking data: " + (x2?.message || "Please try again."));
+      return false;
+    }
+    setMsg("Changes saved. Client tracking has been synchronized; no email was sent.");
+    return true;
+  };
+  const sendProposal = () => save((tr, n) => {
+    const fp = Number(n.finalPrice);
+    const extra = (n.extraLines || "").split("\n").map((l) => l.split("|")).filter((a) => a[0] && a[0].trim()).map((a) => [a[0].trim(), Number(a[1]) || 0, ""]);
+    tr.proposal = { sentAt: new Date().toISOString(), finalPrice: fp || 0, lines: (n.estimate.lines || []).concat(extra), ...pr, response: null };
+    n.status = "Proposal Sent";
+    tr.status = n.status;
+    tr.estimate = fp || tr.estimate;
+    tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "A proposal has been sent. Please review it." }];
+  });
+  const post = async () => {
+    if (!pub.trim()) return;
+    const message = pub.trim();
+    const ok = await save((tr) => { tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: message }]; });
+    if (ok) setPub("");
+  };
   const finalUp = async (e) => {
     const file = e.target.files[0]; e.target.value = "";
     if (!file) return;
+    if (!file.type.startsWith("image/")) { setMsg("Finished Art preview accepts image files only."); return; }
+    if (file.size > 10 * 1024 * 1024) { setMsg("Finished Art image must be 10 MB or smaller."); return; }
+    setBusy("upload");
     try {
       const ref = await Store.uploadReference(file, "final-" + d.id);
-      save((tr) => { tr.finalFiles.push({ name: file.name, url: ref.url }); });
-    } catch (x2) {
-      // fallback to artifact assets if Supabase storage fails
-      const as = await cap("assets");
-      if (!as) { setMsg("Upload failed: " + (x2 && x2.message || "unavailable")); return; }
-      try { const r = await as.upload(file); save((tr) => { tr.finalFiles.push({ name: file.name, url: "/_blob/" + r.id }); }); } catch { setMsg("Upload failed."); }
+      const tr = clone(t || {});
+      // Discard non-persistent legacy blob previews only when the Creator replaces them.
+      const persistentFiles = (tr.finalFiles || []).filter((item) => item?.path && item.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(item.path.slice(9)));
+      tr.finalFiles = [...persistentFiles, { name: file.name, path: ref.path, type: file.type }];
+      const saved = await Store.saveCommissionState(d, tr);
+      setT(saved.track || tr);
+      try {
+        const fresh = await Store.getTrack(d.id);
+        if (fresh) setT(fresh);
+      } catch (_) {}
+      setMsg("Finished Art uploaded and tracking saved. Review the preview below, then send it to the client.");
+    } catch (x2) { setMsg("Upload failed: " + (x2?.message || "unavailable")); }
+    finally { setBusy(""); }
+  };
+  const sendFinishedArt = async () => {
+    if (!t?.finalFiles?.length) { setMsg("Upload at least one Finished Art image before sending."); return; }
+    if (t.finalFiles.some((file) => !file?.path || !(file.path.startsWith("incoming/") && /^[A-Za-z0-9-]{20,80}$/.test(file.path.slice(9))))) {
+      setMsg("Some Finished Art previews are not stored permanently. Re-upload every artwork file before delivery.");
+      return;
     }
+    setBusy("finished");
+    try {
+      const n = { ...d, status: "Completed" };
+      const tr = clone(t);
+      tr.status = "Completed";
+      tr.updates = [...(tr.updates || []), { at: new Date().toISOString(), from: "artist", text: "Finished Art has been delivered. Your order is marked completed." }];
+      const saved = await Store.saveCommissionState(n, tr);
+      setD(n); setT(saved.track || tr); onSaved(n);
+      setMsg("Finished Art delivered to Track Order. Commission status is Completed; no email was sent.");
+      try { const fresh = await Store.getTrack(n.id); if (fresh) setT(fresh); } catch (_) {}
+    } catch (x2) { setMsg("Could not save Finished Art or synchronize commission status: " + (x2?.message || "Please try again.")); }
+    finally { setBusy(""); }
   };
   const E = d.estimate;
   return (
@@ -2943,11 +3993,13 @@ function OrderDetail({ o, onBack, onSaved }) {
         <TextIn label="Custom add-ons (one per line: name | amount)" value={d.extraLines} onChange={set("extraLines")} multiline className="full" />
         <TextIn label="Estimated delivery" value={pr.delivery} onChange={(v) => setPr({ ...pr, delivery: v })} /><TextIn label="Revision policy" value={pr.revision} onChange={(v) => setPr({ ...pr, revision: v })} />
         <TextIn label="Proposal notes" value={pr.notes} onChange={(v) => setPr({ ...pr, notes: v })} multiline className="full" /><TextIn label="Payment instructions" value={pr.paymentInfo} onChange={(v) => setPr({ ...pr, paymentInfo: v })} multiline className="full" /></div>
-        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={() => save()}>Save changes</Btn><Btn onClick={sendProposal} disabled={!d.finalPrice}>Send proposal to client</Btn></div>
-        <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post}>Post update</Btn></div>
-        <div style={{ marginTop: 12 }}><small className="muted">Upload final file for the client</small><input type="file" className="in" onChange={finalUp} /></div>
-        {msg && <div className="note info" style={{ marginTop: 12 }}>{msg}</div>}
-        {t && t.proposal && <p className="muted" style={{ marginTop: 10 }}>Proposal response: {t.proposal.response || "waiting"}</p>}{t && t.updates.filter((u) => u.from === "client").map((u, i) => <p key={i} className="note info" style={{ marginTop: 6 }}>{u.text}</p>)}</section>
+        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={() => save()}>Save changes</Btn><Btn onClick={sendProposal} disabled={!d.finalPrice || !!busy}>Save proposal to Track Order</Btn></div>
+        <div className="pwrow" style={{ marginTop: 14 }}><input className="in" value={pub} onChange={(e) => setPub(e.target.value)} placeholder="Progress update visible to the client" /><Btn kind="cyan" size="sm" onClick={post} disabled={!!busy}>Post update to Track Order</Btn></div>
+        <div style={{ marginTop: 12 }}><small className="muted">Upload Finished Art (image preview, max 10 MB per file)</small><input type="file" accept="image/*" className="in" onChange={finalUp} disabled={!!busy} /><small className="muted">Re-upload every artwork file that was previously shown as a local preview. Only files with a permanent Storage path can be delivered to clients.</small></div>
+        {t?.finalFiles?.length > 0 && <div style={{ marginTop: 14 }}><h3>Finished Art pre-review</h3><div className="strip">{t.finalFiles.map((fl, i) => <div key={fl.path || fl.url || i} style={{ minWidth: 160, maxWidth: 240 }}><div className="art sq">{fl.unavailable ? <small className="muted">Legacy preview unavailable — re-upload this artwork.</small> : <img src={fl.url} alt={fl.name || "Finished Art preview"} />}</div><small className="muted">{fl.name}</small></div>)}</div><p className="muted" style={{ marginTop: 8 }}>Check every image before marking the order completed. The client will be able to view the files from the tracking page after delivery.</p></div>}
+        <div className="btns" style={{ marginTop: 12 }}><Btn kind="cyan" onClick={sendFinishedArt} disabled={!t?.finalFiles?.length || !!busy || d.status === "Completed"}>{busy === "finished" ? "Saving…" : "Mark Completed & Deliver to Track Order"}</Btn></div>
+        {msg && <div className="note info" role="status" style={{ marginTop: 12 }}>{msg}</div>}
+        {t && t.proposal && <p className="muted" style={{ marginTop: 10 }}>Proposal response: {t.proposal.response || "waiting"}</p>}{t && (t.updates || []).filter((u) => u.from === "client").map((u, i) => <p key={i} className="note info" style={{ marginTop: 6 }}>{u.text}</p>)}</section>
     </div>
   );
 }
@@ -2961,7 +4013,7 @@ function NotifPanel() {
     } catch (e) { setMsg({ err: "Could not load notification history: " + authErr(e) }); setRows([]); }
   };
   useEffect(() => { load(); }, []);
-  const failedIds = [...new Set((rows || []).filter((r) => r.status === "failed" && r.kind !== "test").map((r) => r.order_id))];
+  const failedIds = [...new Set((rows || []).filter((r) => r.status === "failed" && r.kind === "client").map((r) => r.order_id))];
   const retry = async (ids) => {
     setBusy("retry"); setMsg(null); let bad = 0;
     try {
@@ -2970,22 +4022,16 @@ function NotifPanel() {
     } catch (e) { setMsg({ err: authErr(e) }); }
     setBusy(""); load();
   };
-  const test = async () => {
-    setBusy("test"); setMsg(null);
-    try { const r = await Store.api("test", {}, true); setMsg(r.status === "sent" ? { ok: "Google Apps Script accepted the test email. Check your inbox to confirm it arrived." } : { err: "The test email failed. See the history below." }); }
-    catch (e) { setMsg({ err: authErr(e) }); }
-    setBusy(""); load();
-  };
   return (
     <section className="card" style={{ marginBottom: 18 }}>
       <div className="card-head"><h2>Email notifications {failedIds.length > 0 && <span className="tag" style={{ color: "var(--bad)" }}>{failedIds.length} failed</span>}</h2>
-        <div className="btns"><Btn kind="ghost" size="sm" disabled={!!busy} onClick={test}>{busy === "test" ? "Sending..." : "Send test email"}</Btn>
+        <div className="btns">
           <Btn kind="cyan" size="sm" disabled={!!busy || !failedIds.length} onClick={() => retry(failedIds)}>{busy === "retry" ? "Retrying..." : "Retry failed (" + failedIds.length + ")"}</Btn></div></div>
       {msg && <div className={"note " + (msg.err ? "bad" : "ok")} role="status" style={{ marginBottom: 10 }}>{msg.err || msg.ok}</div>}
       {rows === null ? <p className="muted">Loading...</p> : rows.length === 0 ? <p className="muted">No notifications recorded yet.</p> :
         <div className="list">{rows.map((r) => <div key={r.id} className="rowi"><div className="grow"><b>{r.order_id}</b> <span className="tag">{r.kind}</span> <span className="tag" style={{ color: r.status === "sent" ? "var(--ok)" : r.status === "failed" ? "var(--bad)" : "var(--warn)" }}>{r.status === "sent" ? "accepted by Gmail" : r.status}</span>
           <small className="muted" style={{ display: "block" }}>Attempts: {r.attempts}{r.sent_at ? " · " + new Date(r.sent_at).toLocaleString() : ""}{r.message ? " · " + r.message : ""}</small></div>
-          {r.status === "failed" && r.kind !== "test" && <Btn kind="ghost" size="sm" disabled={!!busy} onClick={() => retry([r.order_id])}>Retry</Btn>}</div>)}</div>}
+          {r.status === "failed" && r.kind === "client" && <Btn kind="ghost" size="sm" disabled={!!busy} onClick={() => retry([r.order_id])}>Retry</Btn>}</div>)}</div>}
     </section>
   );
 }
@@ -2993,33 +4039,36 @@ function NotifPanel() {
 function OrdersPanel() {
   const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
   const [connStatus] = useConnectionStatus();
-  const load = () => Store.allOrders().then((a) => setList(a.sort((x, y) => (y.createdAt || y.created_at || "").localeCompare(x.createdAt || x.created_at || "")))).catch((e) => setErr("Could not load requests: " + (e && e.message || "")));
+  const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr("Could not load requests: "+(e&&e.message||"")));
   useEffect(() => {
-    load();
-    // Subscribe to realtime new commissions if Supabase connected
-    let channel = null;
-    if (_sbClient) {
-      channel = _sbClient.channel("commission_requests_changes")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "commission_requests" }, () => { load(); })
-        .subscribe();
-    }
-    return () => { if (channel) _sbClient && _sbClient.removeChannel(channel); };
-  }, [connStatus]);
-  if (sel) return <OrderDetail o={sel} onBack={() => { setSel(null); load(); }} onSaved={() => {}} />;
-  const n = (st) => (list || []).filter((o) => st.includes(o.status)).length;
-  const stats = [["Total", list ? list.length : 0], ["Pending", n(["Pending Review"])], ["Accepted", n(["Paid", "Awaiting Payment"])], ["In progress", n(["In Progress", "Waiting for Feedback", "Revision"])], ["Completed", n(["Completed"])], ["Rejected", n(["Rejected", "Cancelled"])]];
-  return (
-    <div className="panel"><StoreBanner />{err && <div className="note bad">{err}</div>}<NotifPanel />
-      <div className="grid">{stats.map(([l, v]) => <div key={l} className="card stat" style={{ gridColumn: "span 2" }}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
-      <section className="card"><h2 style={{ marginBottom: 12 }}>Client requests</h2>{list === null ? <p className="muted">Loading...</p> : list.length === 0 ? <p className="muted">No requests yet.</p> : <div className="list">{list.map((o) => <div key={o.id} className="rowi">
-        <button type="button" onClick={() => setSel(o)} style={{flex:1,minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
-          <div className="grow"><b>{o.id} - {(o.form||{}).name||"Client"}</b><small className="muted">{(o.form||{}).email||""} / {o.serviceTitle} / {fmtDate(o.createdAt||o.created_at)} / {idr((o.estimate||{}).total||0)}</small></div>
+    load(); let channel=null;
+    if (_sbClient) channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
+    return ()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
+  },[connStatus]);
+  const deleteClientOrder = async (order) => {
+    if(!window.confirm("Permanently delete commission "+order.id+" for "+((order.form||{}).name||"this client")+"? This cannot be undone.")) return;
+    setDeleting(order.id); setErr("");
+    try { await Store.deleteOrder(order.id); if(sel&&sel.id===order.id)setSel(null); await load(); }
+    catch(e) { setErr("Could not delete commission "+order.id+": "+(e.message||"")); }
+    finally { setDeleting(""); }
+  };
+  if(sel) return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
+  const n=(st)=>(list||[]).filter(o=>st.includes(o.status)).length;
+  const stats=[["Total",list?list.length:0],["Pending",n(["Pending Review"])],["Accepted",n(["Paid","Awaiting Payment"])],["In progress",n(["In Progress","Waiting for Feedback","Revision"])],["Completed",n(["Completed"])],["Rejected",n(["Rejected","Cancelled"])]];
+  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}<NotifPanel />
+    <div className="grid">{stats.map(([l,v])=><div key={l} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
+    <section className="card"><div className="card-head"><h2>Client requests</h2><Btn kind="ghost" size="sm" onClick={load}>Refresh</Btn></div>
+      {list===null?<p className="muted">Loading...</p>:list.length===0?<p className="muted">No requests yet.</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
+        <button type="button" onClick={()=>setSel(o)} style={{flex:"1 1 240px",minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
+          <div className="grow"><b>{o.id} · {(o.form||{}).name||"Client"}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||"Commission"} · {fmtDate(o.createdAt||o.created_at)} · {idr((o.estimate||{}).total||0)}</small></div>
         </button>
-        <span className="tag">{o.status}</span>
-        <button className="ib bad" type="button" disabled={deleting===o.id} title="Delete commission" aria-label={"Delete commission "+o.id} onClick={async()=>{if(!window.confirm("Permanently delete commission "+o.id+"? This cannot be undone."))return;setDeleting(o.id);setErr("");try{await Store.deleteOrder(o.id);await load();}catch(e){setErr("Could not delete commission: "+(e.message||""));}finally{setDeleting("");}}}><Icon name="trash"/></button>
-      </div>)}</div>}</section>
-    </div>
-  );
+        <span className="tag">{o.status||"Pending Review"}</span>
+        <div className="btns" style={{gap:6,flex:"0 0 auto"}}>
+          <Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?"Deleting...":"Delete"}</Btn>
+        </div>
+      </article>)}</div>}
+    </section>
+  </div>;
 }
 
 function ReviewsPanel() {
@@ -3086,6 +4135,8 @@ function App() {
         const result = await Store.api("get_site", {});
         if (active && result.site && typeof result.site === "object") {
           const remote = mergeDeep(DEFAULT_SITE, result.site);
+          if (!remote.profile.about.cardImage && remote.appearance.banner) remote.profile.about.cardImage = remote.appearance.banner;
+          remote.appearance.banner = remote.profile.about.cardImage || "";
           setSaved(remote);
           setSite(remote);
         }
@@ -3145,7 +4196,13 @@ function App() {
     let active=true;
     if (!creatorOn) { setDraftLoaded(false); return; }
     if (!publishedLoaded) return;
-    Store.api("get_draft_site",{},true).then(r=>{ if(!active)return; if(r.site?.builder) setSite(p=>mergeDeep(p,{builder:r.site.builder})); setDraftLoaded(true); }).catch(()=>{ if(active)setDraftLoaded(true); });
+    Store.api("get_draft_site",{},true).then(r=>{
+      if(!active)return;
+      if(r.site && typeof r.site === "object" && !Array.isArray(r.site)) {
+        setSite(p=>mergeDeep(p,r.site));
+      }
+      setDraftLoaded(true);
+    }).catch(()=>{ if(active)setDraftLoaded(true); });
     return ()=>{active=false;};
   },[creatorOn,publishedLoaded]);
   useEffect(() => {
@@ -3195,15 +4252,69 @@ function App() {
   };
 
   const view = route === "creator" && !creatorOn ? "home" : route;
+  const isTextEditing = creatorOn && editing && view !== "creator";
+  const mainRef = useRef(null);
+  const [editText, setEditText] = useState(null);
+
+  useEffect(() => {
+    const root = mainRef.current;
+    if (!root) return;
+    const overrides = site.textOverrides || {};
+    const selector = "h1,h2,h3,h4,p,.tag,small,span,b,strong,a,button,label,li,summary,blockquote";
+    const applyOverrides = () => {
+      root.querySelectorAll(selector).forEach((el) => {
+        if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]")) return;
+        const textNodes = Array.from(el.childNodes).filter((node) => node.nodeType === 3 && node.nodeValue.trim());
+        if (!textNodes.length || document.activeElement === el) return;
+        const current = textNodes.map((node) => node.nodeValue).join("");
+        if (!current.trim()) return;
+        if (el.dataset.orig === undefined || (el.dataset.shown !== undefined && current !== el.dataset.shown)) el.dataset.orig = current;
+        const original = el.dataset.orig;
+        const shown = Object.prototype.hasOwnProperty.call(overrides, original) ? overrides[original] : original;
+        if (current !== shown) {
+          textNodes[0].nodeValue = shown;
+          textNodes.slice(1).forEach((node) => { node.nodeValue = ""; });
+        }
+        el.dataset.shown = shown;
+        if (isTextEditing) el.dataset.ed = "1";
+        else if (el.dataset.ed) delete el.dataset.ed;
+      });
+    };
+    applyOverrides();
+    const observer = new MutationObserver(applyOverrides);
+    observer.observe(root, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [site.textOverrides, isTextEditing, view]);
+
+  const onEditTextClick = (event) => {
+    if (!isTextEditing) return;
+    const el = event.target.closest && event.target.closest("[data-ed]");
+    if (!el || el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]")) return;
+    event.preventDefault(); event.stopPropagation();
+    setEditText({ orig: el.dataset.orig || el.textContent, val: el.dataset.shown || el.textContent });
+  };
+  const saveTextEdit = (restore) => {
+    if (!editText) return;
+    const { orig, val } = editText;
+    const next = (val || "").trim();
+    upd((n) => {
+      n.textOverrides = n.textOverrides || {};
+      if (restore || !next || next === orig) delete n.textOverrides[orig];
+      else n.textOverrides[orig] = next;
+    });
+    setEditText(null);
+  };
+
   return (
-    <CreatorCtx.Provider value={{ site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing: creatorOn && editing, setEditing }}>
+    <CreatorCtx.Provider value={{ creatorOn, site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing: creatorOn && editing, setEditing }}>
       <div className="shell">
         <Sidebar route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <main className="main">
           <TopBar route={view} go={go} query={query} setQuery={(v) => { setQuery(v); if (v) setCat("all"); }} />
           {creatorOn && view!=="creator" && <div className="creator-bar-wrap"><CreatorBar go={go} /></div>}
-          <div className="main-inner" key={view}>
+          <div className="main-inner" key={view} ref={mainRef} onClickCapture={onEditTextClick}>
+            {BUILDER_PAGES.some(([id])=>id===view) && <PageBuilderBlocks page={view} />}
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
@@ -3217,12 +4328,20 @@ function App() {
             {view.startsWith("service-") && <ServiceDetail id={view.slice(8)} go={go} />}
             {view.startsWith("order-") && <OrderFlow id={view.slice(6)} go={go} />}
             {view === "creator" && creatorOn && <CreatorPage />}
-            {BUILDER_PAGES.some(([id])=>id===view) && <PageBuilderBlocks page={view} />}
           </div>
         </main>
         {openId && <Lightbox id={openId} close={close} step={step} />}
         {gate && <AccessModal onClose={() => setGate(false)} onSuccess={onGateOk} />}
         {toast && <div className="toast" role="status">{toast}</div>}
+        {editText && <div className="text-edit-dock" role="dialog" aria-label="Edit page text" data-no-edit="true">
+          <b>Edit page text</b>
+          <textarea autoFocus rows={3} value={editText.val} onChange={(e) => setEditText({ ...editText, val: e.target.value })} />
+          <div className="btns">
+            <button className="btn peach sm" onClick={() => saveTextEdit(false)}>Save text</button>
+            <button className="btn ghost sm" onClick={() => saveTextEdit(true)}>Restore original</button>
+            <button className="btn ghost sm" onClick={() => setEditText(null)}>Cancel</button>
+          </div>
+        </div>}
       </div>
     </CreatorCtx.Provider>
   );

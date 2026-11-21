@@ -63,7 +63,9 @@ has passed the full staging test plan.
 - A new commission is written to `commission_requests` and `order_tracks` first.
 - The Edge Function then sends the studio notification to the configured
   `email_config.artistEmail`, falling back to **mmaackia@gmail.com** when blank.
-- The client confirmation remains controlled by `email_config.sendClient`.
+- The client confirmation is always sent; there is no client-notification opt-out toggle in Creator settings.
+- Proposal, progress, status, manual email, and finished-art delivery events send an email to both the client and the Creator.
+- Finished-art images stay in the private `references` bucket. Tracking requests receive one-hour signed URLs only after the client supplies the matching Request ID and email; Creator preview links require an authenticated Creator session.
 - The Edge Function reads `GAS_WEBHOOK_URL` and `GAS_WEBHOOK_SECRET` only from
   Supabase Edge Function secrets.
 - The `notifications` table records recipient, status, attempt count, message, and
@@ -91,19 +93,63 @@ Do not consider the migration complete until these tests pass on the staging dep
    can access. Confirm the commission appears in the Creator Dashboard and that the
    studio notification arrives. Confirm the client email arrives when
    `sendClient=true`.
-5. **Notification history:** verify both notification rows show `sent`, the expected
-   recipient, an incremented attempt count, and a successful timestamp.
-6. **Duplicate guard:** resend the same Apps Script payload with the same
+5. **Lifecycle updates:** send a proposal, post a progress update, change status, and deliver Finished Art. Verify each event sends one email to the client and one to the Creator.
+6. **Finished Art preview:** upload an image, confirm Creator preview is visible before sending, then deliver it. Verify the client tracking page can view/download the file using a signed URL.
+7. **Notification history:** verify notification rows show `sent`, the expected recipient, an incremented attempt count, and a successful timestamp.
+8. **Duplicate guard:** resend the same Apps Script payload with the same
    `idempotencyKey` using a controlled test request. It must report
    `duplicate: true` and must not send another email.
-7. **Failure and retry:** temporarily use an invalid webhook URL in staging secrets,
+9. **Failure and retry:** temporarily use an invalid webhook URL in staging secrets,
    submit a controlled request, and verify the commission remains saved while its
    notification is marked `failed`. Restore the correct URL, then use **Retry failed**
    and confirm the same notification row becomes `sent`.
-8. **Client opt-out:** set `sendClient=false`, submit a test request, and verify only
-   the studio notification is attempted.
-9. **Security:** confirm no secret appears in `index.html`, browser DevTools requests,
+10. **Security:** confirm no secret appears in `index.html`, browser DevTools requests,
    or repository source. Do not disable RLS or expose the service-role key.
 
 After testing, remove the legacy `RESEND_API_KEY` Supabase secret if no other function
 uses it. Do not change Production or the `main` branch during staging validation.
+
+
+## 7. Local development environment
+
+The website calls the Supabase Edge Function directly. It does not send email from a Vercel API route, and private mail webhook credentials must never be placed in Vercel client-side variables or variables exposed with a `VITE_`/`NEXT_PUBLIC_` prefix.
+
+For local Edge Function testing, create a local-only env file such as `supabase/.env.local` and pass it to the Supabase CLI with `supabase functions serve commission-api --env-file supabase/.env.local`:
+
+```dotenv
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<local-project-service-role-key>
+GAS_WEBHOOK_URL=https://script.google.com/macros/s/<deployment-id>/exec
+GAS_WEBHOOK_SECRET=<same-random-secret-as-Apps-Script>
+```
+
+Keep that file out of Git. `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are supplied by the Supabase Edge Function runtime in the hosted project; for local CLI execution, provide the local project values.
+
+## 8. Hosting environment checklist
+
+For each hosted Supabase environment, configure these under **Supabase → Edge Functions → Secrets**:
+
+- `GAS_WEBHOOK_URL` — deployed Google Apps Script Web App URL ending in `/exec`.
+- `GAS_WEBHOOK_SECRET` — same secret as the Apps Script Script Properties.
+
+The hosted function runtime also requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; Supabase provides these automatically for deployed Edge Functions. Do not add the mail webhook URL or secret to Vercel. No Vercel email environment variables are used by this integration. The browser uses only the public Supabase project URL and publishable/anon key embedded in the site.
+
+
+## 9. Commission state synchronization and emailHash ownership
+
+The emailHash column is generated by the Supabase Edge Function, not Google Apps Script. The canonical input is the trimmed, lower-case client email plus the commission ID, separated by a pipe, hashed with SHA-256:
+
+SHA256(normalizedEmail + "|" + commissionId)
+
+The Apps Script Web App in supabase/apps-script/Code.gs is mail-only. It receives a signed webhook payload and calls MailApp.sendEmail(); it must not insert or update order_tracks.
+
+Creator saves now go through the authenticated creator_save_commission Edge Function action and the sync_commission_state Postgres function. That transaction updates commission_requests, commission_management, and order_tracks together. It accepts only an allowlisted tracking patch and explicitly rejects attempts to change emailHash. Do not use a browser-side upsert for order_tracks.
+
+Client proposal acceptance/decline uses the same transaction so the client response cannot leave the request and tracking status out of sync.
+
+Commission status/payment persistence is completed before notification delivery starts. If Apps Script or email configuration fails, the saved commission state remains committed and the Creator receives a separate email error that can be retried from Notification History.
+
+The client review flow remains attached to commission_id. The Edge Function verifies the same normalized-email hash and requires order_tracks.status = Completed; the client can submit one review per commission, which enters moderation as pending.
+
+
+When the Creator changes the separate payment field to Paid while the commission status is Awaiting Payment, the save endpoint advances the workflow status to Paid as well. This makes the Payment step and payment badge agree on the client tracking page. Later workflow statuses such as In Progress and Completed are preserved.

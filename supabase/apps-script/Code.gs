@@ -6,6 +6,11 @@
  *   Who has access: Anyone
  *
  * Authentication is performed with a shared secret in the JSON request body.
+ *
+ * This webhook ONLY sends email. It does not insert or update order_tracks and
+ * must never generate or write emailHash. The Supabase commission-api owns
+ * normalized-email hashing and all commission/tracking database writes.
+ *
  * Do not store the secret in source control or expose it to the browser.
  */
 
@@ -45,14 +50,18 @@ function doPost(e) {
     const to = String(payload.to || "").trim().toLowerCase();
     const subject = String(payload.subject || "").trim().slice(0, 240);
     const html = String(payload.html || "");
-    const text = String(payload.text || "Malkiaa Studio notification.");
+    const text = String(payload.text || "").trim();
     const fromName = String(payload.fromName || "Malkiaa Studio").trim().slice(0, 100);
     const idempotencyKey = String(payload.idempotencyKey || "").trim();
+    const replyTo = String(payload.replyTo || "mmaackia@gmail.com").trim().toLowerCase();
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
       return jsonResponse({ ok: false, status: "failed", message: "A valid recipient email is required." });
     }
-    if (!subject || !html || html.length > 100000 || !idempotencyKey || idempotencyKey.length > 180) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyTo)) {
+      return jsonResponse({ ok: false, status: "failed", message: "A valid reply-to email is required." });
+    }
+    if (!subject || !html || html.length > 100000 || !text || text.length > 20000 || !idempotencyKey || idempotencyKey.length > 180) {
       return jsonResponse({ ok: false, status: "failed", message: "Required email fields are missing or invalid." });
     }
 
@@ -77,15 +86,30 @@ function doPost(e) {
       });
     }
 
+    const remainingQuota = MailApp.getRemainingDailyQuota();
+    if (remainingQuota < 1) {
+      return jsonResponse({ ok: false, status: "failed", message: "Gmail recipient quota is exhausted. Retry after the quota resets." });
+    }
+
     MailApp.sendEmail({
       to: to,
       subject: subject,
       body: text,
       htmlBody: html,
-      name: fromName
+      name: fromName,
+      replyTo: replyTo
     });
 
     const sentAt = new Date().toISOString();
+    console.log("Malkiaa email accepted by MailApp", JSON.stringify({
+      orderId: String(payload.orderId || "").slice(0, 40),
+      kind: String(payload.kind || "").slice(0, 80),
+      recipientDomain: to.split("@")[1] || "",
+      recipientMasked: maskEmail(to),
+      quotaBefore: remainingQuota,
+      quotaAfter: MailApp.getRemainingDailyQuota(),
+      sentAt: sentAt
+    }));
     // Persist only successful sends. Failed attempts remain eligible for retry.
     props.setProperty(key, sentAt);
 
@@ -115,6 +139,13 @@ function constantTimeEquals(a, b) {
     diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
   return diff === 0;
+}
+
+function maskEmail(email) {
+  const parts = String(email || "").split("@");
+  if (parts.length !== 2) return "invalid";
+  const local = parts[0];
+  return (local.length > 2 ? local.slice(0, 2) + "***" : "*") + "@" + parts[1];
 }
 
 function sha256Hex(value) {
