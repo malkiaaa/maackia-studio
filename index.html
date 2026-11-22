@@ -4254,7 +4254,7 @@ function AdoptableEditor({ initial, onCancel, onApply, lang = "en", settings = {
         <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
         <AdoptableGalleryEditor images={Array.isArray(draft.gallery) ? draft.gallery : []} onChange={(value) => set("gallery", value)} lang={lang} />
         <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
-        <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={draft.deliverables} fallbackItems={settings.defaultDeliverables} onChange={(value) => set("deliverables", value)} lang={lang} allowInherit />
+        <AdoptableListEditor label={lang === "id" ? "Yang didapat client" : "What you get"} items={draft.deliverables} fallbackItems={settings.defaultDeliverables} onChange={(value) => set("deliverables", value)} lang={lang} allowInherit />
         <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={draft.importantNotes} fallbackItems={settings.defaultNotes} onChange={(value) => set("importantNotes", value)} lang={lang} allowInherit />
         <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={draft.artistTerms} fallbackItems={settings.defaultTerms} onChange={(value) => set("artistTerms", value)} lang={lang} allowInherit />
       </div>
@@ -4352,7 +4352,7 @@ function AdoptablesPanel() {
           <h2>{lang === "id" ? "Default global" : "Global defaults"}</h2>
           <p className="adoptable-settings-help">{lang === "id" ? "Daftar ini digunakan oleh item yang tidak memiliki daftar khusus. ID item stabil dipakai untuk menjaga terjemahan saat urutan berubah." : "These lists are used by items without their own overrides. Stable item IDs keep translations attached when list order changes."}</p>
           <div className="form" style={{ marginTop: 14 }}>
-            <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={settings.defaultDeliverables || []} onChange={(value) => updateDefault("defaultDeliverables", value)} lang={lang} />
+            <AdoptableListEditor label={lang === "id" ? "Yang didapat client" : "What you get"} items={settings.defaultDeliverables || []} onChange={(value) => updateDefault("defaultDeliverables", value)} lang={lang} />
             <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={settings.defaultNotes || []} onChange={(value) => updateDefault("defaultNotes", value)} lang={lang} />
             <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={settings.defaultTerms || []} onChange={(value) => updateDefault("defaultTerms", value)} lang={lang} />
           </div>
