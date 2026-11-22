@@ -3864,7 +3864,7 @@ function SupabasePanel() {
 
 
 /* ============================================================ ADOPTABLES — Creator Dashboard editor */
-function AdoptableGalleryEditor({ images, onChange }) {
+function AdoptableGalleryEditor({ images, onChange, lang = "en" }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const ref = useRef(null);
@@ -3872,18 +3872,25 @@ function AdoptableGalleryEditor({ images, onChange }) {
     const file = event.target.files && event.target.files[0];
     event.target.value = "";
     if (!file) return;
-    if (images.length >= 6) { setError("Gallery limit reached: maximum 6 images."); return; }
+    if (images.length >= 6) { setError(lang === "id" ? "Batas galeri tercapai: maksimal 6 gambar." : "Gallery limit reached: maximum 6 images."); return; }
     setBusy(true); setError("");
     try {
       const url = await storeImage(file, 1800);
-      if (!safeImg(url)) throw new Error("Upload returned an invalid image URL.");
+      if (!safeImg(url)) throw new Error(lang === "id" ? "Unggahan menghasilkan URL gambar yang tidak valid." : "Upload returned an invalid image URL.");
       onChange(images.concat([url]).slice(0, 6));
     } catch (uploadError) {
-      setError(uploadError && uploadError.message ? uploadError.message : "Could not upload this gallery image.");
+      const reason = uploadError && uploadError.message ? uploadError.message : "Could not upload this gallery image.";
+      setError(lang === "id" ? reason
+        .replace("Use a PNG, JPG, WebP or GIF image.", "Gunakan gambar PNG, JPG, WebP, atau GIF.")
+        .replace("Image is too large after compression. Use a smaller image.", "Ukuran gambar terlalu besar setelah kompresi. Gunakan gambar yang lebih kecil.")
+        .replace("Upload completed without a permanent file URL.", "Unggahan selesai tanpa URL file permanen.")
+        .replace("Upload returned an invalid image URL.", "Unggahan menghasilkan URL gambar yang tidak valid.")
+        .replace("Could not upload this gallery image.", "Gambar galeri tidak dapat diunggah.")
+        : reason);
     } finally { setBusy(false); }
   };
   return <div className="field full">
-    <span>Gallery (maximum 6 images)</span>
+    <span>{lang === "id" ? "Galeri (maksimal 6 gambar)" : "Gallery (maximum 6 images)"}</span>
     <div className="adoptable-gallery-editor">
       {images.map((url, index) => <div className="adoptable-gallery-edit-item" key={url + index}>
         <img src={safeImg(url) || placeholder(index, "Gallery")} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />
@@ -3893,14 +3900,14 @@ function AdoptableGalleryEditor({ images, onChange }) {
           <button type="button" className="ib bad" onClick={() => onChange(images.filter((_, i) => i !== index))} aria-label={"Remove gallery image " + (index + 1)}><Icon name="trash" /></button>
         </div>
       </div>)}
-      {images.length < 6 && <button type="button" className="adoptable-gallery-add" disabled={busy} onClick={() => ref.current && ref.current.click()}><Icon name="plus" />{busy ? "Uploading…" : "Add gallery image"}</button>}
+      {images.length < 6 && <button type="button" className="adoptable-gallery-add" disabled={busy} onClick={() => ref.current && ref.current.click()}><Icon name="plus" />{busy ? (lang === "id" ? "Mengunggah…" : "Uploading…") : (lang === "id" ? "Tambah gambar galeri" : "Add gallery image")}</button>}
     </div>
     <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={addImage} />
-    <small className="muted">{images.length} / 6 images · uploads use the same image storage as portfolio images.</small>
+    <small className="muted">{images.length} / 6 {lang === "id" ? "gambar · unggahan menggunakan penyimpanan gambar portofolio." : "images · uploads use the same image storage as portfolio images."}</small>
     {error && <div className="err" role="alert">{error}</div>}
   </div>;
 }
-function AdoptableEditor({ initial, onCancel, onApply }) {
+function AdoptableEditor({ initial, onCancel, onApply, lang = "en" }) {
   const [draft, setDraft] = useState(() => ({ ...clone(initial), gallery: Array.isArray(initial.gallery) ? initial.gallery.slice(0, 6) : [], status: initial.status || "available", visible: initial.visible !== false }));
   const validationErrors = validateAdoptableItem(draft, safeImg);
   const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
@@ -3922,10 +3929,13 @@ function AdoptableEditor({ initial, onCancel, onApply }) {
         <Field label="Visibility"><label className="adoptable-toggle"><input type="checkbox" checked={draft.visible === true} onChange={(event) => set("visible", event.target.checked)} />Visible to public</label><small className="muted">Off = hidden from the public page and navigation. This is separate from Sold status.</small></Field>
         <ImagePicker label="Card thumbnail" value={draft.thumbnail || ""} onChange={(value) => set("thumbnail", value)} maxDim={1200} />
         <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
-        <AdoptableGalleryEditor images={Array.isArray(draft.gallery) ? draft.gallery : []} onChange={(value) => set("gallery", value)} />
+        <AdoptableGalleryEditor images={Array.isArray(draft.gallery) ? draft.gallery : []} onChange={(value) => set("gallery", value)} lang={lang} />
         <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
       </div>
-      {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
+      {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{lang === "id" ? error
+            .replace("Gallery can contain a maximum of 6 images.", "Galeri dapat berisi maksimal 6 gambar.")
+            .replace(/Gallery image (\\d+) must be a valid image URL\\./, "Gambar galeri $1 harus menggunakan URL gambar yang valid.")
+            : error}</li>)}</ul></div>}
       <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
         <Btn kind="ghost" onClick={onCancel}>Cancel</Btn>
         <Btn kind="cyan" onClick={() => onApply(draft)} disabled={validationErrors.length > 0}>Save item</Btn>
@@ -3934,7 +3944,7 @@ function AdoptableEditor({ initial, onCancel, onApply }) {
   );
 }
 function AdoptablesPanel() {
-  const { site, upd } = useCreator();
+  const { site, upd, lang } = useCreator();
   const [editing, setEditing] = useState(null);
   const items = Array.isArray(site.adoptables) ? site.adoptables : [];
   const settings = site.adoptableSettings || {};
@@ -3950,7 +3960,7 @@ function AdoptablesPanel() {
   };
   return (
     <div className="panel">
-      {editing ? <AdoptableEditor key={editing.id} initial={editing} onCancel={() => setEditing(null)} onApply={apply} /> : <>
+      {editing ? <AdoptableEditor key={editing.id} initial={editing} onCancel={() => setEditing(null)} onApply={apply} lang={lang} /> : <>
         <section className="card">
           <div className="card-head"><div><h2>Adoptables ({items.length})</h2><p className="muted" style={{ fontSize: ".85rem" }}>Fixed price · one design, one owner · IDR and USD</p></div><Btn size="sm" icon="plus" onClick={() => setEditing(blank())}>Add adoptable</Btn></div>
           <p className="muted" style={{ marginBottom: 12 }}>New items start hidden. Visibility controls public listing; Available / Reserved / Sold controls claim status.</p>
@@ -5470,7 +5480,7 @@ function App() {
   };
 
   return (
-    <CreatorCtx.Provider value={{ creatorOn, site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing: creatorOn && editing, setEditing }}>
+    <CreatorCtx.Provider value={{ creatorOn, site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, lang, editing: creatorOn && editing, setEditing }}>
       <div className="shell">
         <Sidebar route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
