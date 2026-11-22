@@ -4203,7 +4203,7 @@ function OrderFlow({ id, go, lang }) {
       {Store.mode() === "local" && <div className="note info" style={{ margin: "12px auto", maxWidth: 520 }}>Demo mode: saved only in this browser. The artist has not received it.</div>}
       {Store.mode() !== "local" && <div className="note info" role="status" style={{ margin: "12px auto", maxWidth: 560, textAlign: "left" }}><b style={{ display: "block", marginBottom: 4 }}>Please check your email</b><p>Your order confirmation will be sent to the email address you provided. Please check your Inbox. If you can't find it, check your Spam/Junk folder. If our email is there, select <b>“Not Spam”</b> so future messages from Malkiaa Studio are more likely to reach your Inbox.</p></div>}
       <div className="kv" style={{ maxWidth: 420, margin: "16px auto", textAlign: "left" }}>
-        <div className="kv-row"><Icon name="check" /><div><span>Request ID</span><b>{done.id}</b></div></div><div className="kv-row"><Icon name="pen" /><div><span>Service</span>{done.serviceTitle}</div></div>
+        <div className="kv-row"><Icon name="check" /><div><span>Request ID</span><b>{done.id}</b></div></div><div className="kv-row"><Icon name="pen" /><div><span>Service</span><span data-no-public-translate="true">{done.serviceTitle}</span></div></div>
         <div className="kv-row"><Icon name="file" /><div><span>Submitted</span>{fmtDate(done.createdAt)}</div></div><div className="kv-row"><Icon name="star" /><div><span>Estimated price</span>{idr(done.estimate)}{done.custom ? " + custom" : ""}</div></div><div className="kv-row"><Icon name="flow" /><div><span>Status</span>{done.status}</div></div></div>
       <p className="muted">Keep your Request ID and the email you used. You need both to track your order.</p>
       <div className="btns" style={{ justifyContent: "center", marginTop: 12 }}><Btn onClick={() => go("track")}>Track my order</Btn><Btn kind="ghost" onClick={() => go("home")}>Home</Btn></div>
@@ -4279,7 +4279,7 @@ function CommissionBoard() {
           {items.map((item) => <section className="card span-6" key={item.id}>
             <div className="meta" style={{ justifyContent: "space-between" }}><span className="tag">{item.id}</span><span className="tag">{item.status || "Pending Review"}</span></div>
             <h3 style={{ marginTop: 12 }}>{item.clientName || "Client"}</h3>
-            <p className="muted" style={{ marginTop: 4 }}>{item.serviceTitle || "Commission"}</p>
+            <p className="muted" data-no-public-translate="true" style={{ marginTop: 4 }}>{item.serviceTitle || "Commission"}</p>
             <small className="muted" style={{ display: "block", marginTop: 12 }}>Submitted {fmtDate(item.createdAt)}</small>
           </section>)}
         </div>}
@@ -4331,7 +4331,7 @@ function Track() {
       {t && <div className="track-layout" style={{ display:"grid", gap:16, marginTop:18 }}>
         <section className="card track-overview" style={{ borderTop:"5px solid var(--cyan)" }}>
           <div className="card-head track-overview-head">
-            <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
+            <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 data-no-public-translate="true" style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
             <div className="meta track-overview-badges"><span className="tag">{t.status || "Pending Review"}</span><span className="tag">Payment: {t.payment || "Unpaid"}</span></div>
           </div>
           <div className="stages track-overview-stages" aria-label="Commission progress">{TL.map((a,i)=><div key={a[0]} className={"stage" + (i === idx ? " is-active" : "")} aria-current={i === idx ? "step" : undefined}>{a[0]}</div>)}</div>
@@ -4341,7 +4341,7 @@ function Track() {
         <section className="card">
           <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>01 · PRICE & PROPOSAL</small><h2 style={{ marginTop:4 }}>Proposal</h2></div><span className="tag">{p ? "Available" : "Awaiting artist"}</span></div>
           {p ? <>
-            <div className="list">{(p.lines||[]).map((l,i)=><div key={i} className="rowi"><b className="grow">{l[0]}</b><span>{l[2]||idr(l[1])}</span></div>)}</div>
+            <div className="list">{(p.lines||[]).map((l,i)=><div key={i} className="rowi"><b className="grow" data-no-public-translate="true">{l[0]}</b><span>{l[2]||idr(l[1])}</span></div>)}</div>
             <div className="srow tot" style={{ marginTop:8 }}><b>Final price</b><b>{idr(p.finalPrice)}</b></div>
             {p.delivery && <p style={{ marginTop:10 }}><b>Estimated delivery:</b> {p.delivery}</p>}
             {p.notes && <p style={{ marginTop:8, whiteSpace:"pre-line" }}>{p.notes}</p>}
@@ -4912,7 +4912,7 @@ function App() {
     const selector = "h1,h2,h3,h4,p,.tag,.note,.err,.stage,.service-gallery-empty,small,span,b,strong,a,button,label,li,summary,blockquote";
     const applyOverrides = () => {
       root.querySelectorAll(selector).forEach((el) => {
-        if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]")) return;
+        if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit],[data-no-public-translate]")) return;
         const textNodes = Array.from(el.childNodes).filter((node) => node.nodeType === 3 && node.nodeValue.trim());
         if (!textNodes.length || document.activeElement === el) return;
         const current = textNodes.map((node) => node.nodeValue).join("");
@@ -4933,7 +4933,7 @@ function App() {
       });
       if (!creatorOn && view !== "about") {
         root.querySelectorAll("[placeholder],[aria-label],[title]").forEach((el) => {
-          if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]")) return;
+          if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit],[data-no-public-translate]")) return;
           [["placeholder","i18nPlaceholder"],["aria-label","i18nAriaLabel"],["title","i18nTitle"]].forEach(([attr,key]) => {
             if (!el.hasAttribute(attr)) return;
             if (el.dataset[key] === undefined) el.dataset[key] = el.getAttribute(attr) || "";
