@@ -1423,7 +1423,7 @@ function loadSaved() {
   try {
     const el = document.getElementById("site-data");
     const o = JSON.parse((el && el.textContent) || "{}");
-    const s = mergeDeep(DEFAULT_SITE, o);
+    const s = ensureWorkflowIds(mergeDeep(DEFAULT_SITE, o));
     if (!s.profile.about.cardImage && s.appearance.banner) s.profile.about.cardImage = s.appearance.banner;
     s.appearance.banner = s.profile.about.cardImage || "";
     s.pricing.forEach((g) => g.items.forEach((it) => { if (!it.id) it.id = uid("p"); if (it.image === undefined) it.image = ""; if (it.exampleId === undefined) it.exampleId = ""; }));
@@ -1454,10 +1454,11 @@ function buildDoc(site) {
     S + ' type="application/json" id="site-data">' + json + E +
     S + ' type="text/babel" data-presets="react" id="app-src">' + src + E + SKEL_POST;
 }
-async function publishSite(site) {
-  // Vercel-hosted site content is stored centrally in Supabase, not through
-  // the Claude Artifact publishing API.
-  return Store.api("save_site", { site }, true);
+async async function publishSite(site) {
+  // Refresh published content before save; preserve server i18n by stable item ID.
+  const latest = await Store.api("get_site", {}, true);
+  const payload = preserveI18nById(latest.site || {}, plain(site));
+  return Store.api("save_site", { site: payload }, true);
 }
 function explain(e) {
   const c = e && e.code;
@@ -3651,6 +3652,88 @@ const SVC_DEF = {
   notes: ["No NSFW", "No political content", "Character references are required", "Additional complexity may affect pricing"],
 };
 const X = (s) => ({ ...SVC_DEF, desc: s.detail || s.short || "", ...s });
+
+const SVC_DEFAULT_I18N = {
+  fields: { license: "Penggunaan pribadi sudah termasuk. Lisensi komersial tersedia.", delivery: "Akan dikonfirmasi dalam proposal.", files: "PNG dan JPG" },
+  tiers: { t1: "Kepala / Ikon", t2: "Setengah badan atas", t3: "Setengah badan", t4: "Seluruh badan" },
+  addons: {
+    ad1: { name: "Latar belakang dengan rendering", desc: "Latar belakang dengan rendering untuk karya kamu." },
+    ad2: { name: "Karakter tambahan", desc: "Setiap karakter tambahan dalam satu karya." },
+    ad3: { name: "Detail tambahan", desc: "Detail ekstra untuk karakter atau adegan kamu." },
+    ad4: { name: "Animasi", desc: "Animasi sederhana. Harga ditentukan sesuai permintaan." },
+  },
+  includes: {
+    "deliverable-finished-illustration": "Ilustrasi final", "deliverable-png": "File PNG", "deliverable-jpg": "File JPG",
+    "deliverable-wip": "Pembaruan proses pengerjaan", "deliverable-revisions": "Revisi sesuai Ketentuan Layanan"
+  },
+  notes: {
+    "note-no-nsfw": "Tidak menerima konten NSFW", "note-no-politics": "Tidak menerima konten politik",
+    "note-references": "Referensi karakter wajib disertakan", "note-complexity": "Kompleksitas tambahan dapat memengaruhi harga"
+  }
+};
+const SVC_DEFAULT_TEXT_IDS = {
+  includes: {
+    "Finished illustration": "deliverable-finished-illustration", "PNG file": "deliverable-png", "JPG file": "deliverable-jpg",
+    "WIP updates": "deliverable-wip", "Revisions according to the Terms of Service": "deliverable-revisions"
+  },
+  notes: {
+    "No NSFW": "note-no-nsfw", "No political content": "note-no-politics",
+    "Character references are required": "note-references", "Additional complexity may affect pricing": "note-complexity"
+  }
+};
+const i18nText = (item, key, lang, fallback) => {
+  const value = lang === "id" ? item?.i18n?.id?.[key] : null;
+  return typeof value === "string" && value.trim() ? value : fallback;
+};
+const serviceText = (service, key, lang) => {
+  const x = X(service), custom = i18nText(service, key, lang, "");
+  if (custom) return custom;
+  if (lang === "id" && x[key] === SVC_DEF[key] && SVC_DEFAULT_I18N.fields[key]) return SVC_DEFAULT_I18N.fields[key];
+  return x[key] == null ? "" : String(x[key]);
+};
+const serviceItemText = (service, kind, item, key, lang) => {
+  const custom = i18nText(item, key, lang, "");
+  if (custom) return custom;
+  if (lang !== "id") return item && item[key] != null ? String(item[key]) : "";
+  const def = SVC_DEF[kind]?.find((entry) => entry.id === item?.id);
+  if (def && def[key] === item[key] && SVC_DEFAULT_I18N[kind]?.[item.id]) {
+    const translated = SVC_DEFAULT_I18N[kind][item.id];
+    return typeof translated === "string" ? translated : translated[key] || String(item[key] || "");
+  }
+  return item && item[key] != null ? String(item[key]) : "";
+};
+const serviceListText = (service, kind, value, lang) => {
+  if (lang !== "id") return value;
+  const key = SVC_DEFAULT_TEXT_IDS[kind]?.[value], overrideKey = key || ("text:" + value);
+  const override = service?.i18n?.id?.[kind]?.[overrideKey];
+  if (typeof override === "string" && override.trim()) return override;
+  return key ? (SVC_DEFAULT_I18N[kind]?.[key] || value) : value;
+};
+const preserveI18nById = (serverValue, localValue) => {
+  if (Array.isArray(localValue)) {
+    const serverItems = Array.isArray(serverValue) ? serverValue : [];
+    return localValue.map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+      const match = item.id == null ? null : serverItems.find((candidate) => candidate && candidate.id === item.id);
+      return preserveI18nById(match || {}, item);
+    });
+  }
+  if (!localValue || typeof localValue !== "object") return localValue;
+  const server = serverValue && typeof serverValue === "object" && !Array.isArray(serverValue) ? serverValue : {};
+  const result = { ...localValue };
+  if (server.i18n || localValue.i18n) result.i18n = mergeDeep(server.i18n || {}, localValue.i18n || {});
+  Object.keys(localValue).forEach((key) => { if (key !== "i18n") result[key] = preserveI18nById(server[key], localValue[key]); });
+  return result;
+};
+const ensureWorkflowIds = (site) => {
+  ["steps", "stages"].forEach((key) => {
+    const items = site?.workflow?.[key];
+    if (Array.isArray(items)) items.forEach((item) => { if (item && typeof item === "object" && !item.id) item.id = uid("wf"); });
+  });
+  return site;
+};
+const serviceTextKey = (kind, value) => SVC_DEFAULT_TEXT_IDS[kind]?.[value] || ("text:" + value);
+
 const startPrice = (s) => { const p = X(s).tiers.map((t) => t.price).filter((v) => v > 0); return p.length ? Math.min(...p) : null; };
 const spCls = (st) => "sp " + st.split(" ")[0].toLowerCase();
 const licList = () => CONFIG.licenses || [];
@@ -4604,7 +4687,7 @@ function App() {
         if (!sb) { if(active)setPublishedLoaded(true); return; }
         const result = await Store.api("get_site", {});
         if (active && result.site && typeof result.site === "object") {
-          const remote = mergeDeep(DEFAULT_SITE, result.site);
+          const remote = ensureWorkflowIds(mergeDeep(DEFAULT_SITE, result.site));
           if (!remote.profile.about.cardImage && remote.appearance.banner) remote.profile.about.cardImage = remote.appearance.banner;
           remote.appearance.banner = remote.profile.about.cardImage || "";
           setSaved(remote);
@@ -4675,7 +4758,7 @@ function App() {
     Store.api("get_draft_site",{},true).then(r=>{
       if(!active)return;
       if(r.site && typeof r.site === "object" && !Array.isArray(r.site)) {
-        setSite(p=>mergeDeep(p,r.site));
+        setSite(p=>ensureWorkflowIds(mergeDeep(p,r.site)));
       }
       setDraftLoaded(true);
     }).catch(()=>{ if(active)setDraftLoaded(true); });
