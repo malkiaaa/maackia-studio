@@ -3739,10 +3739,16 @@ const preserveI18nById = (serverValue, localValue) => {
   Object.keys(localValue).forEach((key) => { if (key !== "i18n") result[key] = preserveI18nById(server[key], localValue[key]); });
   return result;
 };
+const stableWorkflowId = (kind, item) => {
+  const source = String(item?.title || "") + "\u241f" + String(item?.body || "");
+  let hash = 2166136261;
+  for (let i = 0; i < source.length; i++) { hash ^= source.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+  return "wf-" + kind + "-" + (hash >>> 0).toString(36);
+};
 const ensureWorkflowIds = (site) => {
   ["steps", "stages"].forEach((key) => {
     const items = site?.workflow?.[key];
-    if (Array.isArray(items)) items.forEach((item) => { if (item && typeof item === "object" && !item.id) item.id = uid("wf"); });
+    if (Array.isArray(items)) items.forEach((item) => { if (item && typeof item === "object" && !item.id) item.id = stableWorkflowId(key, item); });
   });
   return site;
 };
