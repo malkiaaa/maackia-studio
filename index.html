@@ -3665,7 +3665,7 @@ function SupabasePanel() {
 
 /* ============================================================ ADOPTABLES — Creator Dashboard editor */
 function AdoptableEditor({ initial, onCancel, onApply }) {
-  const [draft, setDraft] = useState(() => clone(initial));
+  const [draft, setDraft] = useState(() => ({ ...clone(initial), visible: initial.visible !== false }));
   const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
   const setIdText = (key, value) => setDraft((current) => ({ ...current, i18n: { ...(current.i18n || {}), id: { ...((current.i18n || {}).id || {}), [key]: value } } }));
   return (
@@ -3719,7 +3719,7 @@ function AdoptablesPanel() {
             {items.map((item, index) => (
               <div className="rowi" key={item.id}>
                 <div className="thumb">{safeImg(item.thumbnail || item.image) ? <img src={safeImg(item.thumbnail || item.image)} alt="" /> : <Icon name="image" />}</div>
-                <div className="grow"><b>{item.name || "Untitled adoptable"}</b><span className="muted" style={{ fontSize: ".8rem" }}>{item.status || "available"} · {item.visible === true ? "Public" : "Hidden"} · {item.id}</span></div>
+                <div className="grow"><b>{item.name || "Untitled adoptable"}</b><span className="muted" style={{ fontSize: ".8rem" }}>{item.status || "available"} · {item.visible !== false ? "Public" : "Hidden"} · {item.id}</span></div>
                 <div className="acts">
                   <button className="ib" disabled={index === 0} onClick={() => upd((next) => { next.adoptables = move(next.adoptables, index, -1); })} aria-label="Move up"><Icon name="up" /></button>
                   <button className="ib" disabled={index === items.length - 1} onClick={() => upd((next) => { next.adoptables = move(next.adoptables, index, 1); })} aria-label="Move down"><Icon name="down" /></button>
