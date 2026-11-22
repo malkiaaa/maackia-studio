@@ -1454,8 +1454,58 @@ const ss = {
   set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
   del: (k) => { try { sessionStorage.removeItem(k); } catch (e) {} },
 };
-const safeUrl = (u) => (/^https?:\/\//i.test((u || "").trim()) ? u.trim() : "");
+const safeUrl = (u) => {
+  const value = String(u || "").trim();
+  if (/^https?:\/\//i.test(value)) return value;
+  const match = /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(value);
+  if (match && ["home","about","gallery","adoptables","services","track","board","workflow","terms","contact"].includes(match[1])) return value;
+  return "";
+};
 const safeImg = (u) => { u = (u || "").trim(); return /^(https:\/\/|\/_blob\/|data:image\/(png|jpeg|webp|gif);base64,)/i.test(u) ? u : ""; };
+
+/* ADOPTABLES PURE LOGIC START */
+function filterPublicAdoptables(items, settings = {}) {
+  return (Array.isArray(items) ? items : []).filter((item) =>
+    item && item.visible !== false && (item.status !== "sold" || settings.showSold !== false)
+  );
+}
+function mergePublishAdoptables(serverValue, localValue) {
+  const server = serverValue && typeof serverValue === "object" && !Array.isArray(serverValue) ? serverValue : {};
+  const local = localValue && typeof localValue === "object" && !Array.isArray(localValue) ? localValue : {};
+  const payload = { ...local };
+  ["adoptables", "adoptableSettings"].forEach((key) => {
+    if (!Object.prototype.hasOwnProperty.call(payload, key) && Object.prototype.hasOwnProperty.call(server, key)) payload[key] = server[key];
+  });
+  const serverItems = Array.isArray(server.adoptables) ? server.adoptables : [];
+  const localItems = Array.isArray(payload.adoptables) ? payload.adoptables : null;
+  return { payload, needsConfirmation: serverItems.length > 0 && !!localItems && localItems.length === 0 };
+}
+function stripAdoptableDraftFields(site) {
+  const result = site && typeof site === "object" ? JSON.parse(JSON.stringify(site)) : {};
+  delete result.adoptables;
+  delete result.adoptableSettings;
+  return result;
+}
+function validateAdoptableItem(item, imageValidator) {
+  const errors = [];
+  const value = item && typeof item === "object" ? item : {};
+  if (!String(value.name || "").trim()) errors.push("Name is required.");
+  if (value.visible !== false) {
+    if (typeof imageValidator !== "function" || !imageValidator(value.thumbnail)) errors.push("A valid card thumbnail is required when the item is visible.");
+    if (typeof imageValidator !== "function" || !imageValidator(value.image)) errors.push("A valid full-size image is required when the item is visible.");
+  }
+  ["idr", "usd"].forEach((currency) => {
+    const price = value.price && value.price[currency];
+    if (price === null || price === undefined || (typeof price === "string" && price.trim() === "")) return;
+    if (!((typeof price === "number" || typeof price === "string") && Number.isFinite(Number(price)) && Number(price) >= 0)) errors.push("Price " + currency.toUpperCase() + " must be a non-negative number or blank.");
+  });
+  if (!["available", "reserved", "sold"].includes(value.status)) errors.push("Status must be Available, Reserved, or Sold.");
+  return errors;
+}
+function isAdoptableRouteVisible(route, items, settings = {}) {
+  return !(route === "adoptables" || String(route || "").startsWith("adoptable-")) || filterPublicAdoptables(items, settings).length > 0;
+}
+/* ADOPTABLES PURE LOGIC END */
 const hexLum = (hex) => {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); if (!m) return 0.5;
   const n = parseInt(m[1], 16), c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
@@ -1520,7 +1570,14 @@ async function publishSite(site) {
     throw new Error("The latest published site data is missing or invalid. Publish was canceled; no changes were saved.");
   }
   // Preserve server i18n by stable item ID before the full-object save.
-  const payload = preserveI18nById(current, plain(site));
+  const mergedAdoptables = mergePublishAdoptables(current, plain(site));
+  if (mergedAdoptables.needsConfirmation) {
+    const confirmed = typeof window !== "undefined" && window.confirm(
+      "This publish will remove every currently published Adoptables item. This cannot be undone from the public page. Continue?"
+    );
+    if (!confirmed) throw new Error("Publish canceled. Published Adoptables were kept unchanged.");
+  }
+  const payload = preserveI18nById(current, mergedAdoptables.payload);
   const result = await Store.api("save_site", { site: payload }, true);
   return { result, site: payload };
 }
@@ -1611,7 +1668,7 @@ const PAGES = [
 const ROUTES = PAGES.map((p) => p.id).concat(["creator"]);
 function publicAdoptables() {
   const settings = CONFIG.adoptableSettings || {};
-  return (Array.isArray(CONFIG.adoptables) ? CONFIG.adoptables : []).filter((item) => item && item.visible !== false && (item.status !== "sold" || settings.showSold !== false));
+  return filterPublicAdoptables(CONFIG.adoptables, settings);
 }
 function hasPublicAdoptables() { return publicAdoptables().length > 0; }
 const ICONS = {
@@ -2706,8 +2763,8 @@ function adoptableStatusLabel(status, lang) {
 }
 function adoptablePrice(item, currency, lang) {
   const raw = item && item.price ? item.price[currency.toLowerCase()] : null;
-  if (raw === null || raw === undefined || raw === "") return lang === "id" ? "Harga belum ditentukan" : "Price not set";
-  if (typeof raw !== "number" && !/^\d+(\.\d+)?$/.test(String(raw))) return String(raw);
+  if (raw === null || raw === undefined || (typeof raw === "string" && raw.trim() === "")) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
+  if (!((typeof raw === "number" || typeof raw === "string") && Number.isFinite(Number(raw)) && Number(raw) >= 0)) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
   return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(Number(raw));
 }
 function AdoptableCard({ item, currency, lang, go }) {
@@ -3666,6 +3723,7 @@ function SupabasePanel() {
 /* ============================================================ ADOPTABLES — Creator Dashboard editor */
 function AdoptableEditor({ initial, onCancel, onApply }) {
   const [draft, setDraft] = useState(() => ({ ...clone(initial), visible: initial.visible !== false }));
+  const validationErrors = validateAdoptableItem(draft, safeImg);
   const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
   const setIdText = (key, value) => setDraft((current) => ({ ...current, i18n: { ...(current.i18n || {}), id: { ...((current.i18n || {}).id || {}), [key]: value } } }));
   return (
@@ -3687,9 +3745,10 @@ function AdoptableEditor({ initial, onCancel, onApply }) {
         <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
         <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
       </div>
+      {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
       <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
         <Btn kind="ghost" onClick={onCancel}>Cancel</Btn>
-        <Btn kind="cyan" onClick={() => onApply(draft)} disabled={!String(draft.name || "").trim()}>Save item</Btn>
+        <Btn kind="cyan" onClick={() => onApply(draft)} disabled={validationErrors.length > 0}>Save item</Btn>
       </div>
     </section>
   );
@@ -5041,7 +5100,7 @@ function App() {
     Store.api("get_draft_site",{},true).then(r=>{
       if(!active)return;
       if(r.site && typeof r.site === "object" && !Array.isArray(r.site)) {
-        setSite(p=>ensureWorkflowIds(mergeDeep(p,r.site)));
+        setSite(p=>ensureWorkflowIds(mergeDeep(p,stripAdoptableDraftFields(r.site))));
       }
       setDraftLoaded(true);
     }).catch(()=>{ if(active)setDraftLoaded(true); });
@@ -5068,7 +5127,7 @@ function App() {
   const dirty = useMemo(() => JSON.stringify(site) !== JSON.stringify(saved), [site, saved]);
   useEffect(() => {
     if(!creatorOn||!draftLoaded||!dirty)return;
-    const timer=setTimeout(()=>{ Store.api("save_draft_site",{site:plain(site)},true).catch(e=>setMsg({err:"Draft autosave failed: "+(e.message||"Please retry.")})); },1100);
+    const timer=setTimeout(()=>{ Store.api("save_draft_site",{site:stripAdoptableDraftFields(site)},true).catch(e=>setMsg({err:"Draft autosave failed: "+(e.message||"Please retry.")})); },1100);
     return ()=>clearTimeout(timer);
   },[creatorOn,draftLoaded,site,dirty]);
   const doPublish = async (data) => {
@@ -5084,7 +5143,7 @@ function App() {
   };
   const save = () => doPublish(site);
   const savePart = (path) => { const base = clone(saved); setPath(base, path, clone(getPath(site, path))); return doPublish(base); };
-  const discard = () => { setSite(saved); setMsg(null); Store.api("save_draft_site",{site:plain(saved)},true).catch(()=>{}); };
+  const discard = () => { setSite(saved); setMsg(null); Store.api("save_draft_site",{site:stripAdoptableDraftFields(saved)},true).catch(()=>{}); };
   const exit = async () => { loggingOut.current = true; await Auth.signOut(); ss.del("mk-tab"); setAuth({ loading: false, owner: false }); setSite(saved); setMsg(null); go("home"); setToast("You have been signed out."); loggingOut.current = false; };
 
   const openGate = () => { if (creatorOn) { go("creator"); return; } setGate(true); };
@@ -5093,7 +5152,11 @@ function App() {
     setAuth({ loading: false, owner: true }); setEditing(true); setGate(false); return "";
   };
 
-  const view = route === "creator" && !creatorOn ? "home" : route;
+  useEffect(() => {
+    if (publishedLoaded && !isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings)) go("home");
+  }, [publishedLoaded, route, site.adoptables, site.adoptableSettings, go]);
+  const view = route === "creator" && !creatorOn ? "home"
+    : (!isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings) ? "home" : route);
   const isTextEditing = creatorOn && editing && view !== "creator";
   const mainRef = useRef(null);
   // Scroll motion is deliberately scoped to public content and disabled in Creator mode.
