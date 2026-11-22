@@ -2938,11 +2938,35 @@ function Commission({ go, cur, setCur, lang }) {
 }
 
 
+const DEFAULT_ARTIST_TERMS = {
+  en: [
+    { title: "Copyright & Ownership", body: "I keep the copyright to the artwork; you own the character design." },
+    { title: "Personal & Commercial Use", body: "Personal use only (OC, roleplay, fanart, display). Commercial use requires my written permission." },
+    { title: "Credit", body: "Please credit me when sharing the original artwork." },
+    { title: "NFT & AI Training", body: "No NFT use and no use for training AI." },
+    { title: "Refunds", body: "No refunds once the files have been delivered." },
+    { title: "Resale & Transfer", body: "Resale or transfer of ownership requires telling me first." },
+    { title: "Right to Decline", body: "I may decline a sale to any buyer." },
+  ],
+  id: [
+    { title: "Hak Cipta & Kepemilikan", body: "Hak cipta gambar tetap milikku; kamu memiliki desain karakternya." },
+    { title: "Penggunaan Pribadi & Komersial", body: "Hanya untuk penggunaan pribadi (OC, roleplay, fanart, dipamerkan). Penggunaan komersial memerlukan izin tertulis dariku." },
+    { title: "Kredit", body: "Mohon cantumkan kredit untukku saat membagikan gambar aslinya." },
+    { title: "NFT & Pelatihan AI", body: "Tidak boleh dipakai untuk NFT atau melatih AI." },
+    { title: "Pengembalian Dana", body: "Tidak ada refund setelah file dikirim." },
+    { title: "Penjualan Ulang & Pengalihan", body: "Penjualan ulang atau pemindahan kepemilikan wajib diberitahukan kepadaku dulu." },
+    { title: "Hak Menolak Penjualan", body: "Aku berhak menolak penjualan kepada siapa pun." },
+  ],
+};
+
 function Terms({ lang, setLang, go }) {
-  const secs = CONFIG.terms[lang];
+  // Display defaults only when the selected language has no saved terms.
+  // This is a read-only fallback: it never writes to site_content or item i18n data.
+  const savedSections = Array.isArray(CONFIG.terms?.[lang]) ? CONFIG.terms[lang] : [];
+  const secs = savedSections.length ? savedSections : (DEFAULT_ARTIST_TERMS[lang] || DEFAULT_ARTIST_TERMS.en);
   return (
     <div className="page">
-      <PageHead crumb="TERMS & CONDITIONS" title="Terms & Conditions">{T("terms_sub")}</PageHead>
+      <PageHead crumb={lang === "id" ? "KETENTUAN ARTIS" : "ARTIST TERMS"} title={lang === "id" ? "Ketentuan Artis" : "Artist Terms"}>{T("terms_sub")}</PageHead>
       <div className="seg" role="group" aria-label="Language" style={{ marginBottom: 18 }}>
         <button aria-pressed={lang === "en"} onClick={() => setLang("en")}>English</button>
         <button aria-pressed={lang === "id"} onClick={() => setLang("id")}>Indonesia</button>
