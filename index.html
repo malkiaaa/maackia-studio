@@ -4490,7 +4490,7 @@ function CreatorPage() {
       </div>
       {tab === "overview" && <Overview setTab={pick} />}
       {tab === "profile" && <ProfilePanel />}
-      {tab === "orders" && <OrdersPanel />}
+      {tab === "orders" && <OrdersPanel lang={lang} />}
       {tab === "reviews" && <ReviewsPanel />}
       {tab === "media" && <MediaPanel />}
       {tab === "contact" && <ContactPanel />}
@@ -5250,7 +5250,7 @@ function CommissionBoard({lang="id"}) {
   const [items,setItems]=useState(null),[msg,setMsg]=useState("");
   const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
   const schedules=normalizeCommissionSchedule(CONFIG.commissionSchedule||[]);
-  useEffect(()=>{let active=true;(async()=>{try{const result=await Store.api("public_board",{});if(active)setItems(Array.isArray(result.items)?result.items:[]);}catch(e){if(active)setMsg("The public commission board is temporarily unavailable. Please try again later.");}})();return()=>{active=false;};},[]);
+  useEffect(()=>{let active=true;(async()=>{try{const result=await Store.api("public_board",{});if(active)setItems(Array.isArray(result.items)?result.items:[]);}catch(e){if(active)setMsg(lang==="id"?"Jadwal commission sementara tidak tersedia. Silakan coba lagi nanti.":"The public commission board is temporarily unavailable. Please try again later.");}})();return()=>{active=false;};},[lang]);
   const records=(items||[]).map(item=>{const schedule=schedules.find(r=>r.requestId===item.id);return schedule?{...item,...schedule}:null;}).filter(Boolean);
   const now=new Date(),today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
   const year=month.getFullYear(),monthIndex=month.getMonth(),first=new Date(year,monthIndex,1),last=new Date(year,monthIndex+1,0);
