@@ -1458,7 +1458,8 @@ async async function publishSite(site) {
   // Refresh published content before save; preserve server i18n by stable item ID.
   const latest = await Store.api("get_site", {}, true);
   const payload = preserveI18nById(latest.site || {}, plain(site));
-  return Store.api("save_site", { site: payload }, true);
+  const result = await Store.api("save_site", { site: payload }, true);
+  return { result, site: payload };
 }
 function explain(e) {
   const c = e && e.code;
@@ -3061,7 +3062,7 @@ function ListEditor({ path, label, bodyLabel = "Text" }) {
           <div className="btns" style={{ marginTop: 10, justifyContent: "flex-end" }}>
             <button className="ib" disabled={i === 0} onClick={() => upd((n) => { setPath(n, path, move(getPath(n, path), i, -1)); })} aria-label="Move up"><Icon name="up" /></button>
             <button className="ib" disabled={i === items.length - 1} onClick={() => upd((n) => { setPath(n, path, move(getPath(n, path), i, 1)); })} aria-label="Move down"><Icon name="down" /></button>
-            <ConfirmDelete onYes={() => upd((n) => { getPath(n, path).splice(i, 1); })} label="Delete" />
+            <ConfirmDelete onYes={() => upd((n) => { const list = getPath(n, path); if (isWorkflow) setPath(n, path, list.filter((entry) => entry.id !== s.id)); else list.splice(i, 1); })} label="Delete" />
           </div>
         </div>
       ))}
@@ -4132,7 +4133,7 @@ function Sum({ s, sel, lang }) {
     <div className="card osum">
       <h3 style={{ marginBottom: 8 }}>Price estimate</h3>
       {c.lines.length === 0 && <p className="muted">Choose a commission type to see prices.</p>}
-      {c.lines.map((l, i) => { const tier = X(s).tiers.find((item) => item.name === l[0]); const addon = X(s).addons.find((item) => l[0] === item.name || l[0].startsWith(item.name + " x")); const label = tier ? serviceItemText(s, "tiers", tier, "name", lang) : addon ? serviceItemText(s, "addons", addon, "name", lang) + l[0].slice(addon.name.length) : l[0]; return <div key={i} className="srow"><span>{label}</span><b>{l[2] || (i ? "+ " : "") + idr(l[1])}</b></div>; })}
+      {c.lines.map((l, i) => { const tier = X(s).tiers.find((item) => item.name === l[0]); const addon = X(s).addons.find((item) => l[0] === item.name || l[0].startsWith(item.name)); const label = tier ? serviceItemText(s, "tiers", tier, "name", lang) : addon ? serviceItemText(s, "addons", addon, "name", lang) + l[0].slice(addon.name.length) : l[0]; return <div key={i} className="srow"><span>{label}</span><b>{l[2] || (i ? "+ " : "") + idr(l[1])}</b></div>; })}
       {c.lines.length > 0 && <div className="srow"><span>Subtotal</span><b>{idr(c.sub)}</b></div>}
       {c.lic && <div className="srow"><span>{i18nText(c.lic, "label", lang, c.lic.label)}</span><b>{c.lc ? "Custom quote" : c.lv ? "+ " + idr(c.lv) : "Included"}</b></div>}
       <div className="srow tot"><span>Estimated total</span><b>{idr(c.total)}{c.custom ? " + custom" : ""}</b></div>
@@ -4233,7 +4234,7 @@ function OrderFlow({ id, go, lang }) {
     <div key="4"><p className="muted" style={{ marginBottom: 12 }}>Tell me how the artwork will be used. Commercial use may cost extra, based on the artist's terms.</p><div className="list">{licList().map((l) => <label key={l.id} className="switch"><span><b>{i18nText(l, "label", lang, l.label)}</b><small className="muted" style={{ display: "block" }}>{l.type === "custom" ? "Custom quote" : l.type === "percent" ? "+" + l.value + "%" : l.value ? "+" + idr(l.value) : "Included"}{l.terms ? " - " + i18nText(l, "terms", lang, l.terms) : ""}</small></span><input type="radio" name="lic" checked={f.license === l.id} onChange={() => set("license")(l.id)} /></label>)}</div></div>,
     <div className="form" key="5"><Field label="Preferred deadline" hint="A preferred deadline is not a guaranteed completion date. The final date is confirmed in your proposal."><input type="date" className="in" value={f.deadline} onChange={(e) => set("deadline")(e.target.value)} /></Field>{radios("rush", "Is this a rush order?", ["No", "Yes"])}{tx("platform", "Preferred communication platform", { ph: "Email, Discord, Instagram..." })}{tx("commNote", "Additional communication details", { ml: true, full: true })}</div>,
     <div className="form" key="6">{radios("display", "May I publicly display or share the commissioned artwork with credit? *", ["Yes, you may share it with credit.", "No, please keep my commission private.", "Discuss with me first."])}{tx("more", "Anything else you'd like me to know?", { ml: true, full: true })}</div>,
-    <div key="7"><div className="list">{[["Client", f.name + " (" + f.email + ")", 0], ["Service", s.title + (x.tiers.find((t) => t.id === f.tier) ? " - " + x.tiers.find((t) => t.id === f.tier).name : ""), 1], ["Character", (f.cname || "Not set") + ", " + f.chars + " character(s)", 1], ["References", f.files.length + " file(s)" + (f.urls.trim() ? " and links" : ""), 2], ["Add-ons", c.lines.slice(1).map((l) => l[0]).join(", ") || "None", 3], ["License", c.lic ? c.lic.label : "-", 4], ["Deadline", (f.deadline || "None") + ", rush: " + f.rush, 5], ["Public display", f.display || "-", 6]].map(([k, v, n]) => <div key={k} className="rowi"><div className="grow"><small className="muted">{k}</small><div style={{ overflowWrap: "anywhere" }}>{k === "Service" ? serviceText(s, "title", lang) + (x.tiers.find((t) => t.id === f.tier) ? " - " + serviceItemText(s, "tiers", x.tiers.find((t) => t.id === f.tier), "name", lang) : "") : k === "License" && c.lic ? i18nText(c.lic, "label", lang, c.lic.label) : k === "Add-ons" ? c.lines.slice(1).map((line) => { const addon = x.addons.find((item) => line[0] === item.name || line[0].startsWith(item.name + " x")); return addon ? serviceItemText(s, "addons", addon, "name", lang) + line[0].slice(addon.name.length) : line[0]; }).join(", ") || "None" : v}</div></div><Btn kind="ghost" size="sm" onClick={() => setStep(n)}>Edit</Btn></div>)}</div>
+    <div key="7"><div className="list">{[["Client", f.name + " (" + f.email + ")", 0], ["Service", s.title + (x.tiers.find((t) => t.id === f.tier) ? " - " + x.tiers.find((t) => t.id === f.tier).name : ""), 1], ["Character", (f.cname || "Not set") + ", " + f.chars + " character(s)", 1], ["References", f.files.length + " file(s)" + (f.urls.trim() ? " and links" : ""), 2], ["Add-ons", c.lines.slice(1).map((l) => l[0]).join(", ") || "None", 3], ["License", c.lic ? c.lic.label : "-", 4], ["Deadline", (f.deadline || "None") + ", rush: " + f.rush, 5], ["Public display", f.display || "-", 6]].map(([k, v, n]) => <div key={k} className="rowi"><div className="grow"><small className="muted">{k}</small><div style={{ overflowWrap: "anywhere" }}>{k === "Service" ? serviceText(s, "title", lang) + (x.tiers.find((t) => t.id === f.tier) ? " - " + serviceItemText(s, "tiers", x.tiers.find((t) => t.id === f.tier), "name", lang) : "") : k === "License" && c.lic ? i18nText(c.lic, "label", lang, c.lic.label) : k === "Add-ons" ? c.lines.slice(1).map((line) => { const addon = x.addons.find((item) => line[0] === item.name || line[0].startsWith(item.name)); return addon ? serviceItemText(s, "addons", addon, "name", lang) + line[0].slice(addon.name.length) : line[0]; }).join(", ") || "None" : v}</div></div><Btn kind="ghost" size="sm" onClick={() => setStep(n)}>Edit</Btn></div>)}</div>
       <label className="switch" style={{ marginTop: 14 }}><span>I have read and agree to the Terms of Service.</span><input type="checkbox" checked={f.tos} onChange={(e) => set("tos")(e.target.checked)} /></label>{err.tos && <div className="err">{err.tos}</div>}
       <StoreBanner />{fail && <div className="note bad" style={{ marginTop: 12 }} role="alert">{fail}</div>}</div>,
   ];
@@ -4816,8 +4817,8 @@ function App() {
   const doPublish = async (data) => {
     setSaving(true); setMsg(null);
     try {
-      await publishSite(data);
-      const next = clone(data);
+      const published = await publishSite(data);
+      const next = clone(published.site || data);
       setSaved(next);
       setSite(next);
       setMsg({ ok: "Saved. Visitors will see the update." });
