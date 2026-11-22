@@ -1454,7 +1454,7 @@ const ss = {
   set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
   del: (k) => { try { sessionStorage.removeItem(k); } catch (e) {} },
 };
-const safeUrl = (u) => safeAdoptableClaimUrl(u);
+const safeUrl = (u) => (/^https?:\/\//i.test((u || "").trim()) ? u.trim() : "");
 const safeImg = (u) => { u = (u || "").trim(); return /^(https:\/\/|\/_blob\/|data:image\/(png|jpeg|webp|gif);base64,)/i.test(u) ? u : ""; };
 
 /* ADOPTABLES PURE LOGIC START */
@@ -2825,7 +2825,7 @@ function AdoptableDetail({ id, go, currency, lang }) {
   const item = publicAdoptables().find((entry) => entry.id === id);
   if (!item) return <div className="page"><PageHead crumb="ADOPTABLES" title={lang === "id" ? "Tidak ditemukan" : "Not found"} /><section className="card"><p>{lang === "id" ? "Adoptable ini tidak tersedia atau tautannya tidak valid." : "This adoptable is unavailable or the link is invalid."}</p><div style={{ marginTop: 14 }}><Btn kind="ghost" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali ke Adoptables" : "Back to Adoptables"}</Btn></div></section></div>;
   const status = item.status || "available";
-  const claimUrl = safeUrl(CONFIG.adoptableSettings && CONFIG.adoptableSettings.claim && CONFIG.adoptableSettings.claim.url);
+  const claimUrl = safeAdoptableClaimUrl(CONFIG.adoptableSettings && CONFIG.adoptableSettings.claim && CONFIG.adoptableSettings.claim.url);
   const claim = status === "available";
   const claimInternalRoute = claimUrl && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimUrl);
   return (
