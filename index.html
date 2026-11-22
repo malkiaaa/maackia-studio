@@ -1267,6 +1267,47 @@ html.is-android .home-dashboard > .home-intro-card::before {
   background-size:100% 100% !important;
   background-repeat:no-repeat !important;
 }
+
+/* Adoptables */
+.adoptables-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.adoptable-currency{display:flex;gap:6px}
+.adoptables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:16px}
+.adoptable-card{padding:14px;border-radius:22px;display:flex;flex-direction:column;gap:12px}
+.adoptable-thumb{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:4/5;overflow:hidden;border:0;border-radius:16px;padding:0;background:var(--powder);cursor:pointer}
+.adoptable-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s,filter .25s}
+.adoptable-thumb:hover img{transform:scale(1.035)}
+.adoptable-card.is-sold .adoptable-thumb img,.adoptable-detail.is-sold .adoptable-detail-image img{filter:grayscale(.22) brightness(.68)}
+.adoptable-sold-badge,.adoptable-reserved-badge{position:absolute;top:12px;left:12px;padding:6px 11px;border-radius:999px;background:rgba(47,79,94,.88);color:#fff;font-size:.72rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.adoptable-reserved-badge{background:rgba(138,100,24,.92)}
+.adoptable-card-body{display:flex;flex-direction:column;gap:9px;flex:1}
+.adoptable-card-body h3{font-size:1.08rem;overflow-wrap:anywhere}
+.adoptable-status.available{color:var(--ok)}.adoptable-status.reserved{color:var(--warn)}.adoptable-status.sold{color:var(--bad)}
+.adoptable-price,.adoptable-detail-price{font-size:1.02rem;font-weight:900}
+.adoptable-detail{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:22px;align-items:start}
+.adoptable-detail-image{position:relative;overflow:hidden;border-radius:20px;background:var(--powder);min-height:260px}
+.adoptable-detail-image img{width:100%;height:auto;max-height:78vh;object-fit:contain;display:block}
+.adoptable-detail-copy{display:flex;flex-direction:column;align-items:flex-start;gap:14px;min-width:0}
+.adoptable-detail-copy h2{font-size:1.65rem;overflow-wrap:anywhere}
+.adoptable-description,.adoptable-notes{white-space:pre-wrap;overflow-wrap:anywhere}
+.adoptable-notes{padding:14px;border-radius:14px;background:var(--powder);width:100%}
+.adoptable-notes p{margin-top:5px}
+.adoptable-back{margin-bottom:12px}
+.adoptable-toggle{display:flex;align-items:center;gap:9px;font-weight:800;padding:9px 0}
+.adoptable-toggle input{width:18px;height:18px;accent-color:var(--cyan)}
+@media(max-width:767px){
+ .adoptables-toolbar{align-items:flex-start}
+ .adoptables-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .adoptable-card{padding:9px;border-radius:17px;gap:9px}
+ .adoptable-thumb{border-radius:12px}
+ .adoptable-card-body h3{font-size:.95rem}
+ .adoptable-card-body .btns{gap:6px}
+ .adoptable-card-body .btn{padding:7px 10px;font-size:.74rem}
+ .adoptable-detail{grid-template-columns:minmax(0,1fr);gap:16px;padding:14px}
+ .adoptable-detail-image{min-height:180px}
+ .adoptable-detail-image img{max-height:none}
+}
+@media(max-width:360px){.adoptables-grid{grid-template-columns:minmax(0,1fr)}}
+
 </style>
 
 <div id="root"></div>
@@ -1299,6 +1340,8 @@ const DEFAULT_SITE = {
   },
   commissionStatus: "OPEN",
   defaultCurrency: "IDR",
+  adoptables: [],
+  adoptableSettings: { model: "fixed", claim: { mode: "contact", url: "" }, currencies: ["IDR", "USD"], showSold: true, edition: "single_owner" },
   mascot: { image: "" },
   appearance: { accent: "#B9D8F7", banner: "", widgets: { intro: true, featured: true, latest: true, services: true, status: true, quick: true } },
   socials: [
@@ -1556,6 +1599,7 @@ const PAGES = [
   { id: "home", label: "Home", icon: "home" },
   { id: "about", label: "About Me", icon: "user" },
   { id: "gallery", label: "Portfolio", icon: "image" },
+  { id: "adoptables", label: "Adoptables", icon: "shapes" },
   { id: "services", label: "Commission Services", icon: "sparkles" },
   { id: "track", label: "Track Order", icon: "check" },
   { id: "board", label: "Commission Board", icon: "flow" },
@@ -1565,6 +1609,11 @@ const PAGES = [
   { id: "commission", label: "Price List", icon: "pen", hidden: true },
 ];
 const ROUTES = PAGES.map((p) => p.id).concat(["creator"]);
+function publicAdoptables() {
+  const settings = CONFIG.adoptableSettings || {};
+  return (Array.isArray(CONFIG.adoptables) ? CONFIG.adoptables : []).filter((item) => item && item.visible !== false && (item.status !== "sold" || settings.showSold !== false));
+}
+function hasPublicAdoptables() { return publicAdoptables().length > 0; }
 const ICONS = {
   home: <><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></>,
   user: <><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></>,
@@ -1955,7 +2004,7 @@ function translatePublicText(value, language) {
 const T = (k) => { const d = TEXT_DEFS.find((x) => x[0] === k); const v = CONFIG.texts && CONFIG.texts[k]; return typeof v === "string" && v.trim() ? v : d ? d[2] : ""; };
 
 function useHashRoute() {
-  const read = () => { const h = (window.location.hash || "").replace("#", ""); return ROUTES.includes(h) || /^(service|order)-[A-Za-z0-9_-]+$/.test(h) ? h : "home"; };
+  const read = () => { const h = (window.location.hash || "").replace("#", ""); return ROUTES.includes(h) || /^(service|order|adoptable)-[A-Za-z0-9_-]+$/.test(h) ? h : "home"; };
   const [route, setRoute] = useState(read);
   useEffect(() => {
     const on = () => { setRoute(read()); window.scrollTo({ top: 0 }); };
@@ -2064,7 +2113,7 @@ function AvatarTrigger({ go, openGate, size }) {
   );
 }
 function NavList({ route, go, onPick, creatorOn }) {
-  const items = (creatorOn ? PAGES.concat([{ id: "creator", label: "Creator Dashboard", icon: "star" }]) : PAGES).filter((p) => !p.hidden);
+  const items = (creatorOn ? PAGES.concat([{ id: "creator", label: "Creator Dashboard", icon: "star" }]) : PAGES).filter((p) => !p.hidden && (p.id !== "adoptables" || hasPublicAdoptables()));
   return (
     <nav className="nav" aria-label="Main">
       {items.map((p) => (
@@ -2645,6 +2694,104 @@ function Contact() {
   );
 }
 
+
+/* ============================================================ ADOPTABLES — public pages */
+function adoptableText(item, key, lang) {
+  const translated = lang === "id" && item && item.i18n && item.i18n.id && item.i18n.id[key];
+  return typeof translated === "string" && translated.trim() ? translated : (item && item[key]) || "";
+}
+function adoptableStatusLabel(status, lang) {
+  const labels = { available: lang === "id" ? "Tersedia" : "Available", reserved: lang === "id" ? "Dipesan" : "Reserved", sold: lang === "id" ? "Terjual" : "Sold" };
+  return labels[status] || status;
+}
+function adoptablePrice(item, currency, lang) {
+  const raw = item && item.price ? item.price[currency.toLowerCase()] : null;
+  if (raw === null || raw === undefined || raw === "") return lang === "id" ? "Harga belum ditentukan" : "Price not set";
+  if (typeof raw !== "number" && !/^\d+(\.\d+)?$/.test(String(raw))) return String(raw);
+  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(Number(raw));
+}
+function AdoptableCard({ item, currency, lang, go }) {
+  const name = adoptableText(item, "name", lang) || "Untitled adoptable";
+  const status = item.status || "available";
+  return (
+    <article className={"card adoptable-card" + (status === "sold" ? " is-sold" : "")}>
+      <button className="adoptable-thumb" onClick={() => go("adoptable-" + item.id)} aria-label={"View " + name}>
+        {safeImg(item.thumbnail || item.image) ? <img src={safeImg(item.thumbnail || item.image)} alt={name} loading="lazy" /> : <span className="muted">Image coming soon</span>}
+        {status === "sold" && <span className="adoptable-sold-badge">{adoptableStatusLabel("sold", lang)}</span>}
+        {status === "reserved" && <span className="adoptable-reserved-badge">{adoptableStatusLabel("reserved", lang)}</span>}
+      </button>
+      <div className="adoptable-card-body">
+        <div className="meta"><span className={"tag adoptable-status " + status}>{adoptableStatusLabel(status, lang)}</span>{(item.tags || []).slice(0, 3).map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
+        <h3>{name}</h3>
+        <b className="adoptable-price">{adoptablePrice(item, currency, lang)}</b>
+        <div className="btns">
+          <Btn kind="ghost" size="sm" onClick={() => go("adoptable-" + item.id)}>{lang === "id" ? "Lihat detail" : "View details"}</Btn>
+          {status === "available"
+            ? <Btn kind="peach" size="sm" onClick={() => go("adoptable-" + item.id)}>{lang === "id" ? "Klaim" : "Claim"}</Btn>
+            : <Btn kind="ghost" size="sm" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (lang === "id" ? "Tidak tersedia" : "Unavailable")}</Btn>}
+        </div>
+      </div>
+    </article>
+  );
+}
+function AdoptablesPage({ go, currency, setCurrency, lang }) {
+  const [filter, setFilter] = useState("all");
+  const settings = CONFIG.adoptableSettings || {};
+  const items = publicAdoptables().filter((item) => filter === "all" || item.status === filter)
+    .slice().sort((a, b) => ({ available: 0, reserved: 1, sold: 2 }[a.status || "available"] - ({ available: 0, reserved: 1, sold: 2 }[b.status || "available"])));
+  const showSold = settings.showSold !== false;
+  return (
+    <div className="page">
+      <PageHead crumb="ADOPTABLES" title="Adoptables">{lang === "id" ? "Desain karakter original yang tersedia untuk dimiliki." : "Original character designs available for a new owner."}</PageHead>
+      <section className="card">
+        <div className="adoptables-toolbar">
+          <div className="filters" role="group" aria-label="Filter adoptables">
+            {[["all", lang === "id" ? "Semua" : "All"], ["available", adoptableStatusLabel("available", lang)], ["reserved", adoptableStatusLabel("reserved", lang)], ...(showSold ? [["sold", adoptableStatusLabel("sold", lang)]] : [])].map(([value, label]) => (
+              <button key={value} className="chip" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>
+            ))}
+          </div>
+          <div className="adoptable-currency" role="group" aria-label="Currency">
+            {["IDR", "USD"].map((value) => <button key={value} className="chip" aria-pressed={currency === value} onClick={() => setCurrency(value)}>{value}</button>)}
+          </div>
+        </div>
+        {items.length ? <div className="adoptables-grid">{items.map((item) => <AdoptableCard key={item.id} item={item} currency={currency} lang={lang} go={go} />)}</div>
+          : <div className="empty"><Icon name="shapes" /><p style={{ marginTop: 8 }}>{lang === "id" ? "Belum ada adoptable pada kategori ini." : "No adoptables in this category yet."}</p>{filter !== "all" && <div style={{ marginTop: 12 }}><Btn kind="ghost" size="sm" onClick={() => setFilter("all")}>{lang === "id" ? "Tampilkan semua" : "Show all"}</Btn></div>}</div>}
+      </section>
+    </div>
+  );
+}
+function AdoptableDetail({ id, go, currency, lang }) {
+  const item = publicAdoptables().find((entry) => entry.id === id);
+  if (!item) return <div className="page"><PageHead crumb="ADOPTABLES" title={lang === "id" ? "Tidak ditemukan" : "Not found"} /><section className="card"><p>{lang === "id" ? "Adoptable ini tidak tersedia atau tautannya tidak valid." : "This adoptable is unavailable or the link is invalid."}</p><div style={{ marginTop: 14 }}><Btn kind="ghost" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali ke Adoptables" : "Back to Adoptables"}</Btn></div></section></div>;
+  const status = item.status || "available";
+  const claimUrl = safeUrl(CONFIG.adoptableSettings && CONFIG.adoptableSettings.claim && CONFIG.adoptableSettings.claim.url);
+  const claim = status === "available";
+  return (
+    <div className="page">
+      <div className="adoptable-back"><Btn kind="ghost" size="sm" icon="left" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali" : "Back"}</Btn></div>
+      <PageHead crumb="ADOPTABLES" title={adoptableText(item, "name", lang) || "Untitled adoptable"} />
+      <section className={"card adoptable-detail" + (status === "sold" ? " is-sold" : "")}>
+        <div className="adoptable-detail-image">
+          {safeImg(item.image || item.thumbnail) ? <img src={safeImg(item.image || item.thumbnail)} alt={adoptableText(item, "name", lang)} /> : <div className="empty"><Icon name="image" /></div>}
+          {status === "sold" && <span className="adoptable-sold-badge">{adoptableStatusLabel("sold", lang)}</span>}
+          {status === "reserved" && <span className="adoptable-reserved-badge">{adoptableStatusLabel("reserved", lang)}</span>}
+        </div>
+        <div className="adoptable-detail-copy">
+          <div className="meta"><span className={"tag adoptable-status " + status}>{adoptableStatusLabel(status, lang)}</span>{(item.tags || []).map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
+          <h2>{adoptableText(item, "name", lang) || "Untitled adoptable"}</h2>
+          <div className="adoptable-detail-price">{adoptablePrice(item, currency, lang)}</div>
+          {adoptableText(item, "description", lang) && <p className="adoptable-description">{adoptableText(item, "description", lang)}</p>}
+          {adoptableText(item, "notes", lang) && <div className="adoptable-notes"><b>{lang === "id" ? "Catatan" : "Notes"}</b><p>{adoptableText(item, "notes", lang)}</p></div>}
+          {claim && (claimUrl
+            ? <Btn kind="peach" href={claimUrl}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>
+            : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>)}
+          {!claim && <Btn kind="ghost" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (lang === "id" ? "Sedang dipesan" : "Reserved")}</Btn>}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 /* ============================================================ creator access modal */
 function AccessModal({ onClose, onSuccess }) {
   const [email, setEmail] = useState("");
@@ -2701,6 +2848,7 @@ const TABS = [
   { id: "profile", label: "Edit Profile", icon: "user" },
   { id: "media", label: "All images", icon: "image" },
   { id: "gallery", label: "Gallery", icon: "image" },
+  { id: "adoptables", label: "Adoptables", icon: "shapes" },
   { id: "commission", label: "Commission", icon: "pen" },
   { id: "services", label: "Services", icon: "sparkles" },
   { id: "terms", label: "Terms", icon: "file" },
@@ -3514,6 +3662,87 @@ function SupabasePanel() {
   );
 }
 
+
+/* ============================================================ ADOPTABLES — Creator Dashboard editor */
+function AdoptableEditor({ initial, onCancel, onApply }) {
+  const [draft, setDraft] = useState(() => clone(initial));
+  const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
+  const setIdText = (key, value) => setDraft((current) => ({ ...current, i18n: { ...(current.i18n || {}), id: { ...((current.i18n || {}).id || {}), [key]: value } } }));
+  return (
+    <section className="card">
+      <div className="card-head"><h2>{initial.name ? "Edit adoptable" : "New adoptable"}</h2><Btn kind="ghost" size="sm" onClick={onCancel}>Cancel</Btn></div>
+      <div className="note info">New items are private by default. Turn on “Visible to public” when the listing is ready.</div>
+      <div className="form">
+        <TextIn label="Name (English)" value={draft.name || ""} onChange={(value) => set("name", value)} />
+        <TextIn label="Name (Indonesian)" value={draft.i18n?.id?.name || ""} onChange={(value) => setIdText("name", value)} />
+        <TextIn label="Description (English)" value={draft.description || ""} onChange={(value) => set("description", value)} multiline className="full" />
+        <TextIn label="Description (Indonesian)" value={draft.i18n?.id?.description || ""} onChange={(value) => setIdText("description", value)} multiline className="full" />
+        <TextIn label="Notes (English)" value={draft.notes || ""} onChange={(value) => set("notes", value)} multiline className="full" />
+        <TextIn label="Notes (Indonesian)" value={draft.i18n?.id?.notes || ""} onChange={(value) => setIdText("notes", value)} multiline className="full" />
+        <Field label="Price (IDR)"><input className="in" inputMode="numeric" value={draft.price?.idr == null ? "" : String(draft.price.idr)} onChange={(event) => set("price", { ...(draft.price || {}), idr: parsePrice(event.target.value) })} placeholder="350000" /></Field>
+        <Field label="Price (USD)"><input className="in" inputMode="decimal" value={draft.price?.usd == null ? "" : String(draft.price.usd)} onChange={(event) => set("price", { ...(draft.price || {}), usd: parsePrice(event.target.value) })} placeholder="25" /></Field>
+        <Field label="Status"><select className="in" value={draft.status || "available"} onChange={(event) => set("status", event.target.value)}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option></select></Field>
+        <Field label="Visibility"><label className="adoptable-toggle"><input type="checkbox" checked={draft.visible === true} onChange={(event) => set("visible", event.target.checked)} />Visible to public</label><small className="muted">Off = hidden from the public page and navigation. This is separate from Sold status.</small></Field>
+        <ImagePicker label="Card thumbnail" value={draft.thumbnail || ""} onChange={(value) => set("thumbnail", value)} maxDim={1200} />
+        <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
+        <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
+      </div>
+      <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
+        <Btn kind="ghost" onClick={onCancel}>Cancel</Btn>
+        <Btn kind="cyan" onClick={() => onApply(draft)} disabled={!String(draft.name || "").trim()}>Save item</Btn>
+      </div>
+    </section>
+  );
+}
+function AdoptablesPanel() {
+  const { site, upd } = useCreator();
+  const [editing, setEditing] = useState(null);
+  const items = Array.isArray(site.adoptables) ? site.adoptables : [];
+  const settings = site.adoptableSettings || {};
+  const blank = () => ({ id: uid("adp"), name: "", thumbnail: "", image: "", price: { idr: null, usd: null }, status: "available", visible: false, tags: [], description: "", notes: "", i18n: { id: { name: "", description: "", notes: "" } } });
+  const apply = (item) => {
+    upd((next) => {
+      next.adoptables = Array.isArray(next.adoptables) ? next.adoptables : [];
+      const index = next.adoptables.findIndex((entry) => entry.id === item.id);
+      if (index >= 0) next.adoptables[index] = item;
+      else next.adoptables.unshift(item);
+    });
+    setEditing(null);
+  };
+  return (
+    <div className="panel">
+      {editing ? <AdoptableEditor key={editing.id} initial={editing} onCancel={() => setEditing(null)} onApply={apply} /> : <>
+        <section className="card">
+          <div className="card-head"><div><h2>Adoptables ({items.length})</h2><p className="muted" style={{ fontSize: ".85rem" }}>Fixed price · one design, one owner · IDR and USD</p></div><Btn size="sm" icon="plus" onClick={() => setEditing(blank())}>Add adoptable</Btn></div>
+          <p className="muted" style={{ marginBottom: 12 }}>New items start hidden. Visibility controls public listing; Available / Reserved / Sold controls claim status.</p>
+          <div className="list">
+            {items.map((item, index) => (
+              <div className="rowi" key={item.id}>
+                <div className="thumb">{safeImg(item.thumbnail || item.image) ? <img src={safeImg(item.thumbnail || item.image)} alt="" /> : <Icon name="image" />}</div>
+                <div className="grow"><b>{item.name || "Untitled adoptable"}</b><span className="muted" style={{ fontSize: ".8rem" }}>{item.status || "available"} · {item.visible === true ? "Public" : "Hidden"} · {item.id}</span></div>
+                <div className="acts">
+                  <button className="ib" disabled={index === 0} onClick={() => upd((next) => { next.adoptables = move(next.adoptables, index, -1); })} aria-label="Move up"><Icon name="up" /></button>
+                  <button className="ib" disabled={index === items.length - 1} onClick={() => upd((next) => { next.adoptables = move(next.adoptables, index, 1); })} aria-label="Move down"><Icon name="down" /></button>
+                  <button className="ib" onClick={() => setEditing(clone(item))} aria-label="Edit adoptable"><Icon name="pen" /></button>
+                  <ConfirmDelete onYes={() => upd((next) => { next.adoptables = next.adoptables.filter((entry) => entry.id !== item.id); })} label="Delete adoptable" />
+                </div>
+              </div>
+            ))}
+            {!items.length && <p className="muted">No adoptables yet. Add the first item when ready.</p>}
+          </div>
+        </section>
+        <section className="card">
+          <h2 style={{ marginBottom: 12 }}>Adoptables settings</h2>
+          <div className="form">
+            <TextIn label="Claim / Contact URL (optional)" value={settings.claim?.url || ""} onChange={(value) => upd((next) => { next.adoptableSettings = next.adoptableSettings || {}; next.adoptableSettings.claim = { ...(next.adoptableSettings.claim || {}), mode: "contact", url: value }; })} className="full" />
+            <Field label="Sold archive"><label className="adoptable-toggle"><input type="checkbox" checked={settings.showSold !== false} onChange={(event) => upd((next) => { next.adoptableSettings = { ...(next.adoptableSettings || {}), showSold: event.target.checked }; })} />Show sold items as archive</label><small className="muted">When enabled, Sold items remain public, dimmed, and non-claimable.</small></Field>
+          </div>
+        </section>
+      </>}
+    </div>
+  );
+}
+
 function CreatorPage() {
   const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t==="offers"?"services":t; });
   const pick = (t) => { const next = t === "offers" ? "services" : t; setTab(next); ss.set("mk-tab", next); window.scrollTo({ top: 0 }); };
@@ -3532,6 +3761,7 @@ function CreatorPage() {
       {tab === "contact" && <ContactPanel />}
       {tab === "texts" && <TextsPanel />}
       {tab === "gallery" && <GalleryPanel />}
+      {tab === "adoptables" && <AdoptablesPanel />}
       {tab === "commission" && <CommissionPanel />}
       {tab === "services" && <ServicesPanel />}
       {tab === "terms" && <TermsPanel />}
@@ -5009,6 +5239,8 @@ function App() {
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
+            {view === "adoptables" && <AdoptablesPage go={go} currency={cur} setCurrency={setCur} lang={lang} />}
+            {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
             {view === "services" && <Services go={go} setCat={setCat} lang={lang} />}
             {view === "board" && <CommissionBoard />}
