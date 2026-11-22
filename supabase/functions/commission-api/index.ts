@@ -1060,9 +1060,6 @@ Deno.serve(async (req) => {
       const email = clean(body?.email, 254).toLowerCase();
       const response = clean(body?.response, 20);
       const note = clean(body?.text, 1000);
-      if (!id || !email || !["Accepted", "Declined"].includes(response)) {
-        return json({ error: "Invalid proposal response." }, 400);
-      }
 
       // [CHANGED] Two independent 5-attempt / 15-minute buckets:
       // one keyed by Request ID (across IPs), one keyed by IP (across orders).
@@ -1076,7 +1073,8 @@ Deno.serve(async (req) => {
         "unknown",
         100,
       );
-      const requestBucketHash = await sha256("respond-request-id|" + id);
+      const rateLimitId = id || "RESPOND-MISSING-ID";
+      const requestBucketHash = await sha256("respond-request-id|" + rateLimitId);
       const requestBucketEmailHash = await sha256("respond-request-id");
       const ipHash = await sha256("respond-ip|" + ipAddress);
       const ipBucketEmailHash = await sha256("respond-ip");
@@ -1084,7 +1082,7 @@ Deno.serve(async (req) => {
         db.rpc("record_track_attempt", {
           p_ip_hash: requestBucketHash,
           p_email_hash: requestBucketEmailHash,
-          p_request_id: id,
+          p_request_id: rateLimitId,
         }),
         db.rpc("record_track_attempt", {
           p_ip_hash: ipHash,
@@ -1101,6 +1099,12 @@ Deno.serve(async (req) => {
       }
       if (requestRate.data.allowed !== true || ipRate.data.allowed !== true) {
         return json({ error: "Terlalu banyak percobaan. Coba lagi dalam 15 menit." }, 429);
+      }
+
+      // [CHANGED] Count malformed decisions too; requests without an ID share
+      // a bounded sentinel bucket while the IP bucket still applies.
+      if (!id || !email || !["Accepted", "Declined"].includes(response)) {
+        return json({ error: "Invalid proposal response." }, 400);
       }
 
       // [CHANGED] Keep the Request ID + matching email check before any decision.
