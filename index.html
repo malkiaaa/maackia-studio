@@ -1649,7 +1649,7 @@ function resolveAdoptableList(item, field, settings, defaultField) {
   const own = item && item[field];
   if (Array.isArray(own) && own.length) return own;
   const configured = settings && settings[defaultField];
-  if (Array.isArray(configured)) return configured;
+  if (Array.isArray(configured) && configured.length) return configured;
   if (defaultField === "defaultTerms") return [
     { id: "term-copyright", text: "I keep the copyright to the artwork; you own the character design.", i18n: { id: { text: "Hak cipta gambar tetap milik saya; client memiliki desain karakternya." } } },
     { id: "term-personal-use", text: "Personal use only (OC, roleplay, fanart, display). Commercial use requires my written permission.", i18n: { id: { text: "Hanya untuk penggunaan pribadi (OC, roleplay, fanart, dipamerkan). Penggunaan komersial memerlukan izin tertulis dari saya." } } },
@@ -1659,7 +1659,7 @@ function resolveAdoptableList(item, field, settings, defaultField) {
     { id: "term-resale-transfer", text: "Resale or transfer of ownership requires telling me first.", i18n: { id: { text: "Penjualan ulang atau pemindahan kepemilikan wajib diberitahukan kepada saya terlebih dahulu." } } },
     { id: "term-decline-sale", text: "I may decline a sale to any buyer.", i18n: { id: { text: "Saya berhak menolak penjualan kepada siapa pun." } } },
   ];
-  return [];
+  return Array.isArray(configured) ? configured : [];
 }
 function validateAdoptableList(items, label) {
   const errors = [];
