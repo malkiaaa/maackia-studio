@@ -1607,15 +1607,20 @@ function buildAdoptableClaimHref(settings, itemName, lang = "en", values = {}) {
   const claim = settings && settings.claim ? settings.claim : {};
   if (claim.mode === "email") {
     if (!validAdoptableEmail(claim.email)) return "";
-    const localizedName = cleanAdoptableMailValue(itemName, 100);
-    const subject = lang === "id" ? "Klaim adoptable: " + localizedName : "Adoptable claim: " + localizedName;
-    const prefix = "mailto:" + claim.email + "?subject=" + encodeAdoptableMailtoSubject(subject) + "&body=";
+    let localizedName = cleanAdoptableMailValue(itemName, 100);
+    const makePrefix = () => "mailto:" + claim.email + "?subject=" + encodeAdoptableMailtoSubject((lang === "id" ? "Klaim adoptable: " : "Adoptable claim: ") + localizedName) + "&body=";
+    let prefix = makePrefix();
     let name = cleanAdoptableMailValue(values.name == null ? itemName : values.name, 100);
     let price = cleanAdoptableMailValue(values.price, 60);
     const url = cleanAdoptableMailValue(values.url, 240);
     const fit = () => adoptableClaimTemplate(settings, lang, { name, price, url });
     let body = fit();
     let href = prefix + encodeAdoptableMailtoBody(body);
+    while (href.length > 1800 && localizedName.length) {
+      localizedName = Array.from(localizedName).slice(0, Math.max(0, Array.from(localizedName).length - 10)).join("");
+      prefix = makePrefix();
+      href = prefix + encodeAdoptableMailtoBody(body);
+    }
     while (href.length > 1800 && (name.length || price.length)) {
       if (name.length >= price.length && name.length) name = Array.from(name).slice(0, Math.max(0, Array.from(name).length - 10)).join("");
       else price = Array.from(price).slice(0, Math.max(0, Array.from(price).length - 8)).join("");
@@ -3320,12 +3325,12 @@ function CreatorBar({ go }) {
 function Field({ label, hint, className = "", children }) {
   return <div className={"field " + className}><span>{label}</span>{children}{hint && <small>{hint}</small>}</div>;
 }
-function TextIn({ label, value, onChange, hint, className, placeholder, multiline, id }) {
+function TextIn({ label, value, onChange, hint, className, placeholder, multiline, id, maxLength }) {
   return (
     <Field label={label} hint={hint} className={className}>
       {multiline
-        ? <textarea id={id} className="in" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-        : <input id={id} className="in" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />}
+        ? <textarea id={id} className="in" maxLength={maxLength} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+        : <input id={id} className="in" maxLength={maxLength} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />}
     </Field>
   );
 }
@@ -4321,11 +4326,11 @@ function AdoptablesPanel() {
             {mode === "email" ? <>
               <TextIn label={lang === "id" ? "Alamat email klaim" : "Claim email address"} value={claim.email || ""} onChange={(value) => updateClaim({ mode: "email", email: value })} className="full" />
               {claim.email && !validAdoptableEmail(claim.email) && <p className="err full" role="alert">{lang === "id" ? "Format email tidak valid. Tombol klaim akan kembali ke halaman Contact." : "Invalid email format. The claim button will fall back to the Contact page."}</p>}
-              <small className="adoptable-settings-help full">{lang === "id" ? "Alamat email tidak ditanam sebagai default. Isi alamatmu di sini setelah perubahan di-merge." : "No email address is hardcoded. Enter your address here after this change is merged."}</small>
+              <small className="adoptable-settings-help full">{lang === "id" ? "Alamat klaim dibaca dari data situs; alamat email tidak ditanam di kode default." : "The claim address is read from site data; no email address is hardcoded in the default."}</small>
             </> : <TextIn label={lang === "id" ? "URL Contact (opsional)" : "Claim / Contact URL (optional)"} value={claim.url || ""} onChange={(value) => updateClaim({ mode: "contact", url: value })} className="full" />}
             <div className="adoptable-bilingual-pair full">
-              <TextIn label={lang === "id" ? "Template klaim (Indonesia)" : "Claim template (Indonesian)"} value={claimTemplates.id || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, id: value })} multiline />
-              <TextIn label={lang === "id" ? "Template klaim (English)" : "Claim template (English)"} value={claimTemplates.en || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, en: value })} multiline />
+              <TextIn label={lang === "id" ? "Template klaim (Indonesia)" : "Claim template (Indonesian)"} value={claimTemplates.id || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, id: value })} multiline maxLength={500} />
+              <TextIn label={lang === "id" ? "Template klaim (English)" : "Claim template (English)"} value={claimTemplates.en || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, en: value })} multiline maxLength={500} />
             </div>
             <small className="adoptable-settings-help full">{lang === "id" ? "Placeholder yang didukung: {nama}, {harga}, {url}. Maksimal 500 karakter per bahasa; baris baru akan dienkode saat membuka email." : "Supported placeholders: {nama}, {harga}, {url}. Maximum 500 characters per language; line breaks are encoded when opening email."}</small>
             <Field label={lang === "id" ? "Arsip terjual" : "Sold archive"}><label className="adoptable-toggle"><input type="checkbox" checked={settings.showSold !== false} onChange={(event) => upd((next) => { next.adoptableSettings = { ...(next.adoptableSettings || {}), showSold: event.target.checked }; })} />{lang === "id" ? "Tampilkan item terjual sebagai arsip" : "Show sold items as archive"}</label><small className="muted">{lang === "id" ? "Jika aktif, item terjual tetap terlihat, diredupkan, dan tidak dapat diklaim." : "When enabled, Sold items remain public, dimmed, and non-claimable."}</small></Field>
