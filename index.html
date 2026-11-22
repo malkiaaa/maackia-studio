@@ -1383,7 +1383,33 @@ const DEFAULT_SITE = {
   commissionStatus: "OPEN",
   defaultCurrency: "IDR",
   adoptables: [],
-  adoptableSettings: { model: "fixed", claim: { mode: "contact", url: "" }, currencies: ["IDR", "USD"], showSold: true, edition: "single_owner" },
+  adoptableSettings: {
+    model: "fixed",
+    claim: { mode: "contact", url: "" },
+    currencies: ["IDR", "USD"],
+    showSold: true,
+    edition: "single_owner",
+    defaultDeliverables: [
+      { id: "deliverable-ownership", text: "Full ownership of the character design", i18n: { id: { text: "Kepemilikan penuh atas desain karakter" } } },
+      { id: "deliverable-illustration", text: "Final illustration (high-resolution file)", i18n: { id: { text: "Ilustrasi final (file resolusi tinggi)" } } },
+      { id: "deliverable-reference-sheet", text: "Character reference sheet", i18n: { id: { text: "Reference sheet karakter" } } },
+      { id: "deliverable-personal-license", text: "Personal-use license", i18n: { id: { text: "Lisensi penggunaan pribadi" } } },
+    ],
+    defaultNotes: [
+      { id: "note-one-of-a-kind", text: "Each design is one-of-a-kind and sold once.", i18n: { id: { text: "Setiap desain unik dan hanya dijual satu kali." } } },
+      { id: "note-claim-email", text: "To claim, send me an email. I'll contact you to arrange payment and delivery.", i18n: { id: { text: "Untuk klaim, kirim email kepadaku. Aku akan menghubungimu untuk mengatur pembayaran dan pengiriman." } } },
+      { id: "note-reservation", text: "The design is reserved for 24 hours after I reply, pending payment.", i18n: { id: { text: "Desain dipesan selama 24 jam setelah aku membalas, sambil menunggu pembayaran." } } },
+    ],
+    defaultTerms: [
+      { id: "term-copyright", text: "I keep the copyright to the artwork; you own the character design.", i18n: { id: { text: "Hak cipta gambar tetap milikku; kamu memiliki desain karakternya." } } },
+      { id: "term-personal-use", text: "Personal use only (OC, roleplay, fanart, display). Commercial use requires my written permission.", i18n: { id: { text: "Hanya untuk penggunaan pribadi (OC, roleplay, fanart, dipamerkan). Penggunaan komersial memerlukan izin tertulis dariku." } } },
+      { id: "term-credit", text: "Please credit me when sharing the original artwork.", i18n: { id: { text: "Mohon cantumkan kredit untukku saat membagikan gambar aslinya." } } },
+      { id: "term-no-nft-ai", text: "No NFT use and no use for training AI.", i18n: { id: { text: "Tidak boleh dipakai untuk NFT atau melatih AI." } } },
+      { id: "term-no-refund", text: "No refunds once the files have been delivered.", i18n: { id: { text: "Tidak ada refund setelah file dikirim." } } },
+      { id: "term-resale-transfer", text: "Resale or transfer of ownership requires telling me first.", i18n: { id: { text: "Penjualan ulang atau pemindahan kepemilikan wajib diberitahukan kepadaku dulu." } } },
+      { id: "term-decline-sale", text: "I may decline a sale to any buyer.", i18n: { id: { text: "Aku berhak menolak penjualan kepada siapa pun." } } },
+    ],
+  },
   mascot: { image: "" },
   appearance: { accent: "#B9D8F7", banner: "", widgets: { intro: true, featured: true, latest: true, services: true, status: true, quick: true } },
   socials: [
@@ -1506,6 +1532,59 @@ function safeAdoptableClaimUrl(input) {
   const match = /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(value);
   return match && ["home","about","gallery","adoptables","services","track","board","workflow","terms","contact"].includes(match[1]) ? value : "";
 }
+function validAdoptableEmail(input) {
+  const email = String(input || "");
+  if (!email || /[\r\n\u0000-\u001f\u007f?&#]/.test(email) || email.length > 254) return false;
+  return /^[A-Z0-9.!#$%&'*+\/_~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$/i.test(email);
+}
+function buildAdoptableClaimHref(settings, itemName) {
+  const claim = settings && settings.claim ? settings.claim : {};
+  if (claim.mode === "email") {
+    if (!validAdoptableEmail(claim.email)) return "";
+    return "mailto:" + claim.email + "?subject=" + encodeURIComponent("Klaim adoptable: " + String(itemName || ""));
+  }
+  return safeAdoptableClaimUrl(claim.url);
+}
+function adoptableListText(entry, lang) {
+  const english = entry && typeof entry.text === "string" ? entry.text : "";
+  const translated = lang === "id" && entry && entry.i18n && entry.i18n.id && typeof entry.i18n.id.text === "string"
+    ? entry.i18n.id.text.trim() : "";
+  return translated || english;
+}
+function resolveAdoptableList(item, field, settings, defaultField) {
+  const own = item && item[field];
+  return Array.isArray(own) && own.length ? own : (Array.isArray(settings && settings[defaultField]) ? settings[defaultField] : []);
+}
+function validateAdoptableList(items, label) {
+  const errors = [];
+  const list = Array.isArray(items) ? items : [];
+  if (list.length > 12) errors.push(label + " can contain a maximum of 12 items.");
+  list.forEach((entry, index) => {
+    if (!entry || typeof entry !== "object" || typeof entry.id !== "string" || !entry.id.trim()) errors.push(label + " item " + (index + 1) + " needs a stable ID.");
+    if (!entry || typeof entry.text !== "string" || !entry.text.trim()) errors.push(label + " item " + (index + 1) + " needs English text.");
+    if (entry && typeof entry.text === "string" && entry.text.length > 500) errors.push(label + " item " + (index + 1) + " exceeds 500 characters.");
+    const idText = entry && entry.i18n && entry.i18n.id && entry.i18n.id.text;
+    if (typeof idText === "string" && idText.length > 500) errors.push(label + " item " + (index + 1) + " Indonesian text exceeds 500 characters.");
+  });
+  return errors;
+}
+function validateAdoptableContent(site) {
+  const settings = site && site.adoptableSettings || {};
+  const errors = [];
+  [["defaultDeliverables","Default deliverables"],["defaultNotes","Default important notes"],["defaultTerms","Default artist terms"]]
+    .forEach(([key,label]) => errors.push(...validateAdoptableList(settings[key], label)));
+  (Array.isArray(site && site.adoptables) ? site.adoptables : []).forEach((item) => {
+    errors.push(...validateAdoptableList(item && item.deliverables, (item && item.name || "Adoptable") + " deliverables"));
+    errors.push(...validateAdoptableList(item && item.importantNotes, (item && item.name || "Adoptable") + " important notes"));
+    errors.push(...validateAdoptableList(item && item.artistTerms, (item && item.name || "Adoptable") + " artist terms"));
+  });
+  return errors;
+}
+function adoptablePriceValue(raw, currency, lang) {
+  const amount = normalizeAdoptablePrice(raw);
+  if (amount === null) return null;
+  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
+}
 function normalizeAdoptablePrice(raw) {
   if (raw === null || raw === undefined || (typeof raw === "string" && raw.trim() === "")) return null;
   return (typeof raw === "number" || typeof raw === "string") && Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : null;
@@ -1533,10 +1612,15 @@ function mergePublishAdoptables(serverValue, localValue) {
     const serverById = new Map(serverItems.filter((item) => item && item.id).map((item) => [item.id, item]));
     payload.adoptables = localItems.map((item) => {
       const previous = item && item.id ? serverById.get(item.id) : null;
-      // Preserve gallery when an older editor/tab submits an item shape that predates the gallery field.
-      return previous && item && !Object.prototype.hasOwnProperty.call(item, "gallery")
-        ? { ...item, gallery: Array.isArray(previous.gallery) ? previous.gallery.slice(0, 6) : [] }
-        : item;
+      if (!previous || !item) return item;
+      const preserved = { ...item };
+      // Preserve additive Adoptables fields when an older editor/tab submits a pre-field item shape.
+      ["gallery", "deliverables", "importantNotes", "artistTerms"].forEach((key) => {
+        if (!Object.prototype.hasOwnProperty.call(item, key) && Object.prototype.hasOwnProperty.call(previous, key)) {
+          preserved[key] = Array.isArray(previous[key]) ? previous[key].slice() : previous[key];
+        }
+      });
+      return preserved;
     });
   }
   return { payload, needsConfirmation: serverItems.length > 0 && !!localItems && localItems.length === 0 };
@@ -1559,6 +1643,9 @@ function validateAdoptableItem(item, imageValidator) {
   if (gallery.length > 6) errors.push("Gallery can contain a maximum of 6 images.");
   gallery.forEach((url, index) => {
     if (typeof imageValidator !== "function" || !imageValidator(url)) errors.push("Gallery image " + (index + 1) + " must be a valid image URL.");
+  });
+  [["deliverables","Deliverables"],["importantNotes","Important notes"],["artistTerms","Artist terms"]].forEach(([key,label]) => {
+    errors.push(...validateAdoptableList(value[key], label));
   });
   ["idr", "usd"].forEach((currency) => {
     const price = value.price && value.price[currency];
@@ -1645,6 +1732,8 @@ async function publishSite(site) {
     if (!confirmed) throw new Error("Publish canceled. Published Adoptables were kept unchanged.");
   }
   const payload = preserveI18nById(current, mergedAdoptables.payload);
+  const adoptableErrors = validateAdoptableContent(payload);
+  if (adoptableErrors.length) throw new Error("Adoptables validation failed: " + adoptableErrors.join(" "));
   const result = await Store.api("save_site", { site: payload }, true);
   return { result, site: payload };
 }
