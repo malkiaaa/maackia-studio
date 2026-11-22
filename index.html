@@ -3885,6 +3885,7 @@ function AdoptableGalleryEditor({ images, onChange, lang = "en" }) {
         .replace("Image is too large after compression. Use a smaller image.", "Ukuran gambar terlalu besar setelah kompresi. Gunakan gambar yang lebih kecil.")
         .replace("Upload completed without a permanent file URL.", "Unggahan selesai tanpa URL file permanen.")
         .replace("Upload returned an invalid image URL.", "Unggahan menghasilkan URL gambar yang tidak valid.")
+        .replace("Could not read image.", "Gambar tidak dapat dibaca.")
         .replace("Could not upload this gallery image.", "Gambar galeri tidak dapat diunggah.")
         : reason);
     } finally { setBusy(false); }
@@ -3895,9 +3896,9 @@ function AdoptableGalleryEditor({ images, onChange, lang = "en" }) {
       {images.map((url, index) => <div className="adoptable-gallery-edit-item" key={url + index}>
         <img src={safeImg(url) || placeholder(index, "Gallery")} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />
         <div className="btns">
-          <button type="button" className="ib" disabled={index === 0} onClick={() => onChange(move(images, index, -1))} aria-label={"Move gallery image " + (index + 1) + " up"}><Icon name="up" /></button>
-          <button type="button" className="ib" disabled={index === images.length - 1} onClick={() => onChange(move(images, index, 1))} aria-label={"Move gallery image " + (index + 1) + " down"}><Icon name="down" /></button>
-          <button type="button" className="ib bad" onClick={() => onChange(images.filter((_, i) => i !== index))} aria-label={"Remove gallery image " + (index + 1)}><Icon name="trash" /></button>
+          <button type="button" className="ib" disabled={index === 0} onClick={() => onChange(move(images, index, -1))} aria-label={lang === "id" ? "Pindahkan gambar galeri " + (index + 1) + " ke atas" : "Move gallery image " + (index + 1) + " up"}><Icon name="up" /></button>
+          <button type="button" className="ib" disabled={index === images.length - 1} onClick={() => onChange(move(images, index, 1))} aria-label={lang === "id" ? "Pindahkan gambar galeri " + (index + 1) + " ke bawah" : "Move gallery image " + (index + 1) + " down"}><Icon name="down" /></button>
+          <button type="button" className="ib bad" onClick={() => onChange(images.filter((_, i) => i !== index))} aria-label={lang === "id" ? "Hapus gambar galeri " + (index + 1) : "Remove gallery image " + (index + 1)}><Icon name="trash" /></button>
         </div>
       </div>)}
       {images.length < 6 && <button type="button" className="adoptable-gallery-add" disabled={busy} onClick={() => ref.current && ref.current.click()}><Icon name="plus" />{busy ? (lang === "id" ? "Mengunggah…" : "Uploading…") : (lang === "id" ? "Tambah gambar galeri" : "Add gallery image")}</button>}
@@ -3934,7 +3935,7 @@ function AdoptableEditor({ initial, onCancel, onApply, lang = "en" }) {
       </div>
       {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{lang === "id" ? error
             .replace("Gallery can contain a maximum of 6 images.", "Galeri dapat berisi maksimal 6 gambar.")
-            .replace(/Gallery image (\\d+) must be a valid image URL\\./, "Gambar galeri $1 harus menggunakan URL gambar yang valid.")
+            .replace(/Gallery image (\d+) must be a valid image URL\./, "Gambar galeri $1 harus menggunakan URL gambar yang valid.")
             : error}</li>)}</ul></div>}
       <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
         <Btn kind="ghost" onClick={onCancel}>Cancel</Btn>
