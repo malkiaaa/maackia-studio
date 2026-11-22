@@ -2964,14 +2964,18 @@ function CommissionPanel() {
         <section key={g.id} className="card">
           <div className="form">
             <TextIn label="Group name" value={g.title} onChange={sets(["pricing", gi, "title"])} />
+            <TextIn label="Indonesian group name" value={g.i18n?.id?.title || ""} onChange={(v) => upd((n) => { const group = n.pricing.find((item) => item.id === g.id); group.i18n = group.i18n || {}; group.i18n.id = group.i18n.id || {}; group.i18n.id.title = v; })} />
             <TextIn label="Group description" value={g.note} onChange={sets(["pricing", gi, "note"])} />
+            <TextIn label="Indonesian group description" value={g.i18n?.id?.note || ""} onChange={(v) => upd((n) => { const group = n.pricing.find((item) => item.id === g.id); group.i18n = group.i18n || {}; group.i18n.id = group.i18n.id || {}; group.i18n.id.note = v; })} />
           </div>
           <div className="list" style={{ marginTop: 14 }}>
             {g.items.map((it, ii) => (
               <div key={it.id} className="card" style={{ padding: 16, boxShadow: "none", background: "var(--bg)" }}>
                 <div className="form">
                   <TextIn label="Service name" value={it.name} onChange={sets(["pricing", gi, "items", ii, "name"])} />
+                  <TextIn label="Indonesian service name" value={it.i18n?.id?.name || ""} onChange={(v) => upd((n) => { const item = n.pricing.find((group) => group.id === g.id)?.items.find((entry) => entry.id === it.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.name = v; })} />
                   <TextIn label="Short description" value={it.desc} onChange={sets(["pricing", gi, "items", ii, "desc"])} />
+                  <TextIn label="Indonesian short description" value={it.i18n?.id?.desc || ""} onChange={(v) => upd((n) => { const item = n.pricing.find((group) => group.id === g.id)?.items.find((entry) => entry.id === it.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.desc = v; })} />
                   <Field label="Price IDR" hint="Empty = Not available. Text is allowed."><input className="in" value={it.idr === null || it.idr === undefined ? "" : String(it.idr)} onChange={(e) => sets(["pricing", gi, "items", ii, "idr"])(parsePrice(e.target.value))} inputMode="text" placeholder="150000" /></Field>
                   <Field label="Price USD" hint="Empty = Not available. Text is allowed."><input className="in" value={it.usd === null || it.usd === undefined ? "" : String(it.usd)} onChange={(e) => sets(["pricing", gi, "items", ii, "usd"])(parsePrice(e.target.value))} inputMode="text" placeholder="18" /></Field>
                   <Field label="Example artwork from gallery">
@@ -3013,9 +3017,12 @@ function ServicesPanel() {
         <section key={s.id} className="card">
           <div className="form">
             <TextIn label="Service name" value={s.title} onChange={sets(["services", i, "title"])} />
+            <TextIn label="Indonesian title" value={s.i18n?.id?.title || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === s.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.title = v; })} />
             <Field label="Icon"><select className="in" value={s.icon} onChange={(e) => sets(["services", i, "icon"])(e.target.value)}>{SERVICE_ICONS.map((n) => <option key={n} value={n}>{n}</option>)}</select></Field>
             <TextIn label="Short description" value={s.short} onChange={sets(["services", i, "short"])} className="full" />
+            <TextIn label="Indonesian short description" value={s.i18n?.id?.short || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === s.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.short = v; })} className="full" />
             <TextIn label="Detailed description" value={s.detail} onChange={sets(["services", i, "detail"])} multiline className="full" />
+            <TextIn label="Indonesian detailed description" value={s.i18n?.id?.detail || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === s.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.detail = v; })} multiline className="full" />
             <Field label="Example category"><select className="in" value={s.category} onChange={(e) => sets(["services", i, "category"])(e.target.value)}>{site.categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></Field>
             <ImagePicker label="Cover image (shown on service card)" value={s.image} onChange={sets(["services", i, "image"])} maxDim={1400} />
             <TextIn label="External booking URL (optional)" value={s.orderUrl || ""} onChange={sets(["services", i, "orderUrl"])} placeholder="https://..." className="full" hint="If set, Request Commission opens this link. Otherwise it opens the built-in request form." />
@@ -3038,14 +3045,18 @@ function ServicesPanel() {
 function ListEditor({ path, label, bodyLabel = "Text" }) {
   const { site, upd } = useCreator();
   const items = getPath(site, path);
-  const sets = (i, k) => (v) => upd((n) => { getPath(n, path)[i][k] = v; });
+  const isWorkflow = path[0] === "workflow";
+  const updateItem = (item, key, value) => upd((n) => { const list = getPath(n, path); const target = isWorkflow ? list.find((entry) => entry.id === item.id) : list[items.indexOf(item)]; if (target) target[key] = value; });
+  const updateI18n = (item, key, value) => upd((n) => { const target = getPath(n, path).find((entry) => entry.id === item.id); if (!target) return; target.i18n = target.i18n || {}; target.i18n.id = target.i18n.id || {}; target.i18n.id[key] = value; });
   return (
     <div className="list">
       {items.map((s, i) => (
-        <div key={i} className="card" style={{ padding: 16, boxShadow: "none", background: "var(--bg)" }}>
+        <div key={isWorkflow ? s.id : i} className="card" style={{ padding: 16, boxShadow: "none", background: "var(--bg)" }}>
           <div className="form">
-            <TextIn label={label} value={s.title} onChange={sets(i, "title")} className="full" />
-            <TextIn label={bodyLabel} value={s.body} onChange={sets(i, "body")} multiline className="full" />
+            <TextIn label={label} value={s.title} onChange={(v) => updateItem(s, "title", v)} className="full" />
+            <TextIn label={bodyLabel} value={s.body} onChange={(v) => updateItem(s, "body", v)} multiline className="full" />
+            {isWorkflow && <TextIn label="Indonesian title" value={s.i18n?.id?.title || ""} onChange={(v) => updateI18n(s, "title", v)} className="full" />}
+            {isWorkflow && <TextIn label="Indonesian description" value={s.i18n?.id?.body || ""} onChange={(v) => updateI18n(s, "body", v)} multiline className="full" />}
           </div>
           <div className="btns" style={{ marginTop: 10, justifyContent: "flex-end" }}>
             <button className="ib" disabled={i === 0} onClick={() => upd((n) => { setPath(n, path, move(getPath(n, path), i, -1)); })} aria-label="Move up"><Icon name="up" /></button>
@@ -3054,7 +3065,7 @@ function ListEditor({ path, label, bodyLabel = "Text" }) {
           </div>
         </div>
       ))}
-      <div><Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { getPath(n, path).push({ title: "", body: "" }); })}>Add</Btn></div>
+      <div><Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { getPath(n, path).push(isWorkflow ? { id: uid("wf"), title: "", body: "" } : { title: "", body: "" }); })}>Add</Btn></div>
     </div>
   );
 }
@@ -3090,7 +3101,9 @@ function WorkflowPanel() {
         <h2 style={{ marginBottom: 12 }}>Notes</h2>
         <div className="form">
           <TextIn label="Revision information" value={site.workflow.revisionNote} onChange={sets(["workflow", "revisionNote"])} multiline className="full" />
+          <TextIn label="Indonesian revision information" value={site.workflow.i18n?.id?.revisionNote || ""} onChange={(v) => upd((n) => { n.workflow.i18n = n.workflow.i18n || {}; n.workflow.i18n.id = n.workflow.i18n.id || {}; n.workflow.i18n.id.revisionNote = v; })} multiline className="full" />
           <TextIn label="Additional notes" value={site.workflow.notes} onChange={sets(["workflow", "notes"])} multiline className="full" />
+          <TextIn label="Indonesian additional notes" value={site.workflow.i18n?.id?.notes || ""} onChange={(v) => upd((n) => { n.workflow.i18n = n.workflow.i18n || {}; n.workflow.i18n.id = n.workflow.i18n.id || {}; n.workflow.i18n.id.notes = v; })} multiline className="full" />
         </div>
       </section>
     </div>
@@ -4389,15 +4402,22 @@ function ServicePricingEditor({ service, index }) {
       <div className="form">
         <Field label="Availability"><select className="in" value={x.status} onChange={(e) => mut((s2) => { s2.status = e.target.value; })}>{SVC_STATUS.map((o) => <option key={o}>{o}</option>)}</select></Field>
         <TextIn label="License info (shown on card)" value={x.license} onChange={(v) => mut((s2) => { s2.license = v; })} />
+        <TextIn label="Indonesian license info" value={service.i18n?.id?.license || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.license = v; })} />
         <TextIn label="Estimated turnaround time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} />
+        <TextIn label="Indonesian turnaround time" value={service.i18n?.id?.delivery || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.delivery = v; })} />
         <TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
+        <TextIn label="Indonesian files and format" value={service.i18n?.id?.files || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.files = v; })} />
         <TextIn label="Usage / license terms for this service" value={x.usageTerms || ""} onChange={(v) => mut((s2) => { s2.usageTerms = v; })} multiline className="full" placeholder="Personal use, commercial use, redistribution, credit..." />
+        <TextIn label="Indonesian usage / license terms" value={service.i18n?.id?.usageTerms || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.usageTerms = v; })} multiline className="full" />
         <TextIn label="Additional service terms" value={x.serviceTerms || ""} onChange={(v) => mut((s2) => { s2.serviceTerms = v; })} multiline className="full" placeholder="What clients should know before ordering..." />
+        <TextIn label="Indonesian additional service terms" value={service.i18n?.id?.serviceTerms || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.serviceTerms = v; })} multiline className="full" />
         {list("Deliverables / What the client receives", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add a deliverable")}
+        <div className="field full"><span>Indonesian deliverables</span>{x.includes.map((value) => <TextIn key={value} label={value} value={service.i18n?.id?.includes?.[serviceTextKey("includes", value)] || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.includes = item.i18n.id.includes || {}; item.i18n.id.includes[serviceTextKey("includes", value)] = v; })} />)}</div>
         {list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
+        <div className="field full"><span>Indonesian notes</span>{x.notes.map((value) => <TextIn key={value} label={value} value={service.i18n?.id?.notes?.[serviceTextKey("notes", value)] || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.notes = item.i18n.id.notes || {}; item.i18n.id.notes[serviceTextKey("notes", value)] = v; })} />)}</div>
         <Field label="Base prices (0 = custom quote)" className="full">
           <div className="list">{x.tiers.map((t, ti) => <div key={t.id} className="rowi">
-            <input className="in" value={t.name} onChange={(e) => mut((s2) => { s2.tiers[ti].name = e.target.value; })} aria-label="Name" />
+            <div className="grow" style={{ display: "grid", gap: 6 }}><input className="in" value={t.name} onChange={(e) => mut((s2) => { const item = s2.tiers.find((entry) => entry.id === t.id); item.name = e.target.value; })} aria-label="Name" /><input className="in" value={t.i18n?.id?.name || ""} onChange={(e) => mut((s2) => { const item = s2.tiers.find((entry) => entry.id === t.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.name = e.target.value; })} aria-label="Indonesian title" placeholder="Indonesian title" /></div>
             <input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers[ti].price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} />
             <ConfirmDelete onYes={() => mut((s2) => { s2.tiers.splice(ti, 1); })} label="Delete base price" />
           </div>)}</div>
@@ -4406,8 +4426,10 @@ function ServicePricingEditor({ service, index }) {
         <Field label="Add-ons" className="full">
           <div className="list">{x.addons.map((a, ai) => <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}>
             <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
-              <input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons[ai].name = e.target.value; })} aria-label="Name" />
-              <input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons[ai].desc = e.target.value; })} placeholder="Description" aria-label="Description" />
+              <input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).name = e.target.value; })} aria-label="Name" />
+              <input className="in" value={a.i18n?.id?.name || ""} onChange={(e) => mut((s2) => { const item = s2.addons.find((entry) => entry.id === a.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.name = e.target.value; })} placeholder="Indonesian title" aria-label="Indonesian title" />
+              <input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).desc = e.target.value; })} placeholder="Description" aria-label="Description" />
+              <input className="in" value={a.i18n?.id?.desc || ""} onChange={(e) => mut((s2) => { const item = s2.addons.find((entry) => entry.id === a.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.desc = e.target.value; })} placeholder="Indonesian description" aria-label="Indonesian description" />
             </div>
             <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons[ai].type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
             <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={a.price} disabled={a.type === "custom"} onChange={(e) => mut((s2) => { s2.addons[ai].price = Number(e.target.value) || 0; })} aria-label="Price" />
@@ -4432,7 +4454,9 @@ function LicensesEditor() {
       <div className="list">{(site.licenses || []).map((l, i) => <div key={l.id} className="rowi" style={{ flexWrap: "wrap" }}>
         <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
           <input className="in" value={l.label} onChange={(e) => sets(["licenses", i, "label"])(e.target.value)} aria-label="Name" />
+          <input className="in" value={l.i18n?.id?.label || ""} onChange={(e) => upd((n) => { const item = n.licenses.find((entry) => entry.id === l.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.label = e.target.value; })} placeholder="Indonesian title" aria-label="Indonesian title" />
           <input className="in" value={l.terms || ""} onChange={(e) => sets(["licenses", i, "terms"])(e.target.value)} placeholder="Terms" aria-label="Terms" />
+          <input className="in" value={l.i18n?.id?.terms || ""} onChange={(e) => upd((n) => { const item = n.licenses.find((entry) => entry.id === l.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.terms = e.target.value; })} placeholder="Indonesian terms" aria-label="Indonesian terms" />
         </div>
         <select className="in" style={{ maxWidth: 140 }} value={l.type} onChange={(e) => sets(["licenses", i, "type"])(e.target.value)}><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
         <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={l.value} disabled={l.type === "custom"} onChange={(e) => sets(["licenses", i, "value"])(Number(e.target.value) || 0)} aria-label="Value" />
