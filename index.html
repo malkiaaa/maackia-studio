@@ -1568,6 +1568,11 @@ function safeAdoptableClaimUrl(input) {
 }
 function validAdoptableEmail(input) {
   const email = String(input || "");
+  if (!email || /[\r\n\u0000-\u001f\u007f?&#%]/.test(email) || email.length > 254) return false;
+  const parts = email.split("@");
+  if (parts.length !== 2 || !parts[0] || parts[0].length > 64 || parts[0].startsWith(".") || parts[0].endsWith(".") || parts[0].includes("..")) return false;
+  return /^[A-Z0-9.!#function validAdoptableEmail(input) {
+  const email = String(input || "");
   if (!email || /[\r\n\u0000-\u001f\u007f?&#]/.test(email) || email.length > 254) return false;
   return /^[A-Z0-9.!#$%&'*+\/_~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$/i.test(email);
 }
@@ -1576,6 +1581,21 @@ function buildAdoptableClaimHref(settings, itemName) {
   if (claim.mode === "email") {
     if (!validAdoptableEmail(claim.email)) return "";
     return "mailto:" + claim.email + "?subject=" + encodeURIComponent("Klaim adoptable: " + String(itemName || ""));
+  }
+  return safeAdoptableClaimUrl(claim.url);
+}'*+\/_~-]+$/i.test(parts[0]) &&
+    /^[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$/i.test(parts[1]);
+}
+function encodeAdoptableMailtoSubject(value) {
+  return encodeURIComponent(String(value || "")).replace(/[!'()*]/g, (character) =>
+    "%" + character.charCodeAt(0).toString(16).toUpperCase()
+  );
+}
+function buildAdoptableClaimHref(settings, itemName) {
+  const claim = settings && settings.claim ? settings.claim : {};
+  if (claim.mode === "email") {
+    if (!validAdoptableEmail(claim.email)) return "";
+    return "mailto:" + claim.email + "?subject=" + encodeAdoptableMailtoSubject("Klaim adoptable: " + String(itemName || ""));
   }
   return safeAdoptableClaimUrl(claim.url);
 }
