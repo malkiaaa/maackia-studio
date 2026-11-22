@@ -4024,12 +4024,11 @@ const Store = {
     const now = new Date().toISOString();
     const tier = X(s).tiers.find((t) => t.id === f.tier);
     const est = { lines: c.lines, licenseLabel: c.lic ? c.lic.label : "", licenseAmount: c.lv, licenseCustom: c.lc, total: c.total, custom: c.custom };
-    const formPayload = { ...f, want: String(f.want || ""), tier: String(f.tier || ""), license: String(f.license || ""), addons: { ...(f.addons || {}) } };
-    const order = { id, created_at: now, createdAt: now, status: "Pending Review", payment: "Unpaid", serviceId: s.id, serviceTitle: s.title, tierName: tier ? tier.name : "", form: formPayload, estimate: est, notes: "", finalPrice: null, extraLines: "" };
+    const order = { id, created_at: now, createdAt: now, status: "Pending Review", payment: "Unpaid", serviceId: s.id, serviceTitle: s.title, tierName: tier ? tier.name : "", form: f, estimate: est, notes: "", finalPrice: null, extraLines: "" };
     const track = { id, createdAt: now, created_at: now, serviceTitle: s.title, status: "Pending Review", payment: "Unpaid", estimate: est.total, custom: c.custom, emailHash: await sha(f.email.trim().toLowerCase() + "|" + id), proposal: null, updates: [], finalFiles: [] };
     // 1. Save to DB first — commission is never lost even if email fails
     if (sb) {
-      const fingerprint = await sha(JSON.stringify({ serviceId: s.id, form: formPayload }));
+      const fingerprint = await sha(JSON.stringify({ serviceId: s.id, form: f }));
       const storageKey = "mk-submit-idem-" + fingerprint;
       let idempotencyKey = ss.get(storageKey);
       if (!idempotencyKey) {
