@@ -1419,7 +1419,11 @@ const DEFAULT_SITE = {
   adoptables: [],
   adoptableSettings: {
     model: "fixed",
-    claim: { mode: "contact", url: "", email: "" },
+    claim: { mode: "email", url: "", email: "" },
+    claimTemplates: {
+      id: "Halo Malkiaa Studio,\n\nSaya ingin mengklaim adoptable berikut:\n- Karakter: {nama}\n- Harga: {harga}\n- Link: {url}\n\nData saya:\n- Nama / username:\n- Kontak (Discord / IG / WhatsApp):\n- Metode pembayaran:\n- Catatan (opsional):\n\nSaya sudah membaca Terms of Service dan paham bahwa klaim baru sah setelah dikonfirmasi dan dibayar.\n\nTerima kasih!",
+      en: "Hello Malkiaa Studio,\n\nI would like to claim the following adoptable:\n- Character: {nama}\n- Price: {harga}\n- Link: {url}\n\nMy details:\n- Name / username:\n- Contact (Discord / IG / WhatsApp):\n- Payment method:\n- Notes (optional):\n\nI have read the Terms of Service and understand that the claim is only valid after it has been confirmed and paid.\n\nThank you!",
+    },
     currencies: ["IDR", "USD"],
     showSold: true,
     edition: "single_owner",
@@ -1579,11 +1583,54 @@ function encodeAdoptableMailtoSubject(value) {
     "%" + character.charCodeAt(0).toString(16).toUpperCase()
   );
 }
-function buildAdoptableClaimHref(settings, itemName) {
+function cleanAdoptableMailValue(value, maxLength = 100) {
+  return Array.from(String(value == null ? "" : value).replace(/[\\r\\n\\u0000-\\u001f\\u007f]/g, " ").replace(/\\s+/g, " ").trim()).slice(0, maxLength).join("");
+}
+function adoptableClaimTemplate(settings, lang, values = {}) {
+  const templates = settings && settings.claimTemplates && typeof settings.claimTemplates === "object" ? settings.claimTemplates : {};
+  const selected = lang === "id" ? templates.id : templates.en;
+  const fallback = lang === "id" ? "Halo Malkiaa Studio,\n\nSaya ingin mengklaim adoptable berikut:\n- Karakter: {nama}\n- Harga: {harga}\n- Link: {url}\n\nData saya:\n- Nama / username:\n- Kontak (Discord / IG / WhatsApp):\n- Metode pembayaran:\n- Catatan (opsional):\n\nSaya sudah membaca Terms of Service dan paham bahwa klaim baru sah setelah dikonfirmasi dan dibayar.\n\nTerima kasih!" : "Hello Malkiaa Studio,\n\nI would like to claim the following adoptable:\n- Character: {nama}\n- Price: {harga}\n- Link: {url}\n\nMy details:\n- Name / username:\n- Contact (Discord / IG / WhatsApp):\n- Payment method:\n- Notes (optional):\n\nI have read the Terms of Service and understand that the claim is only valid after it has been confirmed and paid.\n\nThank you!";
+  const template = (typeof selected === "string" && selected.trim() ? selected : fallback).slice(0, 500);
+  const replacements = {
+    nama: cleanAdoptableMailValue(values.name, 100),
+    harga: cleanAdoptableMailValue(values.price, 60),
+    url: cleanAdoptableMailValue(values.url, 240)
+  };
+  return template.replace(/\\{(nama|harga|url)\\}/g, (_, key) => replacements[key]);
+}
+function encodeAdoptableMailtoBody(value) {
+  return encodeURIComponent(String(value || "").replace(/\\r\\n|\\r|\\n/g, "\\r\\n")).replace(/[!'()*]/g, (character) =>
+    "%" + character.charCodeAt(0).toString(16).toUpperCase()
+  );
+}
+function buildAdoptableClaimHref(settings, itemName, lang = "en", values = {}) {
   const claim = settings && settings.claim ? settings.claim : {};
   if (claim.mode === "email") {
     if (!validAdoptableEmail(claim.email)) return "";
-    return "mailto:" + claim.email + "?subject=" + encodeAdoptableMailtoSubject("Klaim adoptable: " + String(itemName || ""));
+    const localizedName = cleanAdoptableMailValue(itemName, 100);
+    const subject = lang === "id" ? "Klaim adoptable: " + localizedName : "Adoptable claim: " + localizedName;
+    const prefix = "mailto:" + claim.email + "?subject=" + encodeAdoptableMailtoSubject(subject) + "&body=";
+    let name = cleanAdoptableMailValue(values.name == null ? itemName : values.name, 100);
+    let price = cleanAdoptableMailValue(values.price, 60);
+    const url = cleanAdoptableMailValue(values.url, 240);
+    const fit = () => adoptableClaimTemplate(settings, lang, { name, price, url });
+    let body = fit();
+    let href = prefix + encodeAdoptableMailtoBody(body);
+    while (href.length > 1800 && (name.length || price.length)) {
+      if (name.length >= price.length && name.length) name = Array.from(name).slice(0, Math.max(0, Array.from(name).length - 10)).join("");
+      else price = Array.from(price).slice(0, Math.max(0, Array.from(price).length - 8)).join("");
+      body = fit();
+      href = prefix + encodeAdoptableMailtoBody(body);
+    }
+    if (href.length > 1800) {
+      const chars = Array.from(body);
+      while (href.length > 1800 && chars.length) {
+        chars.splice(Math.max(0, chars.length - 12), 12);
+        body = chars.join("");
+        href = prefix + encodeAdoptableMailtoBody(body);
+      }
+    }
+    return href.length <= 1800 ? href : "";
   }
   return safeAdoptableClaimUrl(claim.url);
 }
@@ -3091,15 +3138,42 @@ function AdoptablesPage({ go, currency, setCurrency, lang, owner = false }) {
     </div>
   );
 }
-function AdoptableDetail({ id, go, currency, lang, owner = false }) {
+function AdoptableDetail({ id, go, currency, lang, owner = false, setToast = () => {} }) {
   // Owner-only UI preview; this is NOT confidentiality protection because published site_content is delivered to public clients.
   const source = owner ? (Array.isArray(CONFIG.adoptables) ? CONFIG.adoptables : []) : publicAdoptables();
   const item = source.find((entry) => entry.id === id && (owner || entry.visible !== false));
   if (!item) return <div className="page"><PageHead crumb="ADOPTABLES" title={lang === "id" ? "Tidak ditemukan" : "Not found"} /><section className="card"><p>{lang === "id" ? "Adoptable ini tidak tersedia atau tautannya tidak valid." : "This adoptable is unavailable or the link is invalid."}</p><div style={{ marginTop: 14 }}><Btn kind="ghost" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali ke Adoptables" : "Back to Adoptables"}</Btn></div></section></div>;
   const status = item.status || "available";
   const settings = CONFIG.adoptableSettings || {};
-  const claimHref = buildAdoptableClaimHref(settings, item.name);
+  const localizedName = adoptableText(item, "name", lang) || "Untitled adoptable";
+  const displayPrice = formatAdoptableDetailPrice(currency === "USD" ? item.price && item.price.usd : item.price && item.price.idr, currency, lang);
+  const pageUrl = typeof window !== "undefined" ? window.location.href : "";
+  const claimValues = { name: localizedName, price: displayPrice, url: pageUrl };
+  const claimTemplate = adoptableClaimTemplate(settings, lang, claimValues);
+  const claimHref = buildAdoptableClaimHref(settings, localizedName, lang, claimValues);
   const claim = status === "available" && item.visible !== false;
+  const copyClaimTemplate = async () => {
+    let copied = false;
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        await navigator.clipboard.writeText(claimTemplate);
+        copied = true;
+      }
+    } catch (error) {}
+    if (!copied) {
+      const field = document.createElement("textarea");
+      field.value = claimTemplate;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
+      document.body.removeChild(field);
+    }
+    if (copied) setToast("Template disalin");
+    else setToast(lang === "id" ? "Tidak dapat menyalin template" : "Could not copy the template");
+  };
   const claimInternalRoute = claimHref && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimHref);
   const mainImage = safeImg(item.image || item.thumbnail);
   const gallery = Array.isArray(item.gallery) ? item.gallery.map(safeImg).filter(Boolean).slice(0, 6) : [];
@@ -3148,11 +3222,14 @@ function AdoptableDetail({ id, go, currency, lang, owner = false }) {
             <summary>{lang === "id" ? "Ketentuan artis" : "Artist terms"}</summary>
             <ul className="adoptable-terms-list">{artistTerms.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul>
           </details>}
-          {claim && (claimHref && claimInternalRoute
-            ? <Btn kind="peach" onClick={() => go(claimInternalRoute[1])}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
-            : claimHref
-              ? <Btn kind="peach" href={claimHref}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
-              : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>)}
+          {claim && <div className="btns" style={{ flexWrap: "wrap", gap: 8 }}>
+            {claimHref && claimInternalRoute
+              ? <Btn kind="peach" onClick={() => go(claimInternalRoute[1])}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
+              : claimHref
+                ? <Btn kind="peach" href={claimHref}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
+                : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>}
+            <Btn kind="ghost" onClick={copyClaimTemplate}>{lang === "id" ? "Salin template" : "Copy template"}</Btn>
+          </div>}
           {!claim && <Btn kind="ghost" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (item.visible === false ? (lang === "id" ? "Belum dipublikasikan" : "Not published") : (lang === "id" ? "Sedang dipesan" : "Reserved"))}</Btn>}
         </div>
       </section>
@@ -4209,6 +4286,7 @@ function AdoptablesPanel() {
     setEditing(null);
   };
   const mode = claim.mode === "email" ? "email" : "contact";
+  const claimTemplates = settings.claimTemplates || {};
   return (
     <div className="panel">
       {editing ? <AdoptableEditor key={editing.id} initial={editing} onCancel={() => setEditing(null)} onApply={apply} lang={lang} settings={settings} /> : <>
@@ -4245,6 +4323,11 @@ function AdoptablesPanel() {
               {claim.email && !validAdoptableEmail(claim.email) && <p className="err full" role="alert">{lang === "id" ? "Format email tidak valid. Tombol klaim akan kembali ke halaman Contact." : "Invalid email format. The claim button will fall back to the Contact page."}</p>}
               <small className="adoptable-settings-help full">{lang === "id" ? "Alamat email tidak ditanam sebagai default. Isi alamatmu di sini setelah perubahan di-merge." : "No email address is hardcoded. Enter your address here after this change is merged."}</small>
             </> : <TextIn label={lang === "id" ? "URL Contact (opsional)" : "Claim / Contact URL (optional)"} value={claim.url || ""} onChange={(value) => updateClaim({ mode: "contact", url: value })} className="full" />}
+            <div className="adoptable-bilingual-pair full">
+              <TextIn label={lang === "id" ? "Template klaim (Indonesia)" : "Claim template (Indonesian)"} value={claimTemplates.id || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, id: value })} multiline />
+              <TextIn label={lang === "id" ? "Template klaim (English)" : "Claim template (English)"} value={claimTemplates.en || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, en: value })} multiline />
+            </div>
+            <small className="adoptable-settings-help full">{lang === "id" ? "Placeholder yang didukung: {nama}, {harga}, {url}. Maksimal 500 karakter per bahasa; baris baru akan dienkode saat membuka email." : "Supported placeholders: {nama}, {harga}, {url}. Maximum 500 characters per language; line breaks are encoded when opening email."}</small>
             <Field label={lang === "id" ? "Arsip terjual" : "Sold archive"}><label className="adoptable-toggle"><input type="checkbox" checked={settings.showSold !== false} onChange={(event) => upd((next) => { next.adoptableSettings = { ...(next.adoptableSettings || {}), showSold: event.target.checked }; })} />{lang === "id" ? "Tampilkan item terjual sebagai arsip" : "Show sold items as archive"}</label><small className="muted">{lang === "id" ? "Jika aktif, item terjual tetap terlihat, diredupkan, dan tidak dapat diklaim." : "When enabled, Sold items remain public, dimmed, and non-claimable."}</small></Field>
           </div>
         </section>
@@ -5763,7 +5846,7 @@ function App() {
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
             {view === "adoptables" && <AdoptablesPage go={go} currency={cur} setCurrency={setCur} lang={lang} owner={creatorOn} />}
-            {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} owner={creatorOn} />}
+            {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} owner={creatorOn} setToast={setToast} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
             {view === "services" && <Services go={go} setCat={setCat} lang={lang} />}
             {view === "board" && <CommissionBoard />}
