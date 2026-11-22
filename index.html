@@ -4162,7 +4162,21 @@ function AdoptablesPanel() {
   const [editing, setEditing] = useState(null);
   const items = Array.isArray(site.adoptables) ? site.adoptables : [];
   const settings = site.adoptableSettings || {};
-  const blank = () => ({ id: uid("adp"), name: "", thumbnail: "", image: "", gallery: [], price: { idr: null, usd: null }, status: "available", visible: false, tags: [], description: "", notes: "", i18n: { id: { name: "", description: "", notes: "" } } });
+  const claim = settings.claim || {};
+  const updateClaim = (patch) => upd((next) => {
+    next.adoptableSettings = next.adoptableSettings || {};
+    next.adoptableSettings.claim = { ...(next.adoptableSettings.claim || {}), ...patch };
+  });
+  const updateDefault = (key, value) => upd((next) => {
+    next.adoptableSettings = next.adoptableSettings || {};
+    next.adoptableSettings[key] = value;
+  });
+  const blank = () => ({
+    id: uid("adp"), name: "", thumbnail: "", image: "", gallery: [],
+    price: { idr: null, usd: null }, status: "available", visible: false,
+    tags: [], description: "", notes: "", deliverables: [], importantNotes: [], artistTerms: [],
+    i18n: { id: { name: "", description: "", notes: "" } }
+  });
   const apply = (item) => {
     upd((next) => {
       next.adoptables = Array.isArray(next.adoptables) ? next.adoptables : [];
@@ -4172,16 +4186,17 @@ function AdoptablesPanel() {
     });
     setEditing(null);
   };
+  const mode = claim.mode === "email" ? "email" : "contact";
   return (
     <div className="panel">
-      {editing ? <AdoptableEditor key={editing.id} initial={editing} onCancel={() => setEditing(null)} onApply={apply} lang={lang} /> : <>
+      {editing ? <AdoptableEditor key={editing.id} initial={editing} onCancel={() => setEditing(null)} onApply={apply} lang={lang} settings={settings} /> : <>
         <section className="card">
           <div className="card-head"><div><h2>Adoptables ({items.length})</h2><p className="muted" style={{ fontSize: ".85rem" }}>Fixed price · one design, one owner · IDR and USD</p></div><Btn size="sm" icon="plus" onClick={() => setEditing(blank())}>Add adoptable</Btn></div>
           <p className="muted" style={{ marginBottom: 12 }}>New items start hidden. Visibility controls public listing; Available / Reserved / Sold controls claim status.</p>
           <div className="list">
             {items.map((item, index) => (
               <div className="rowi" key={item.id}>
-                <div className="thumb">{safeImg(item.thumbnail || item.image) ? <img src={safeImg(item.thumbnail || item.image)} alt="" /> : <Icon name="image" />}</div>
+                <div className="thumb">{safeImg(item.thumbnail || item.image) ? <img src={safeImg(item.thumbnail || item.image)} alt="" loading="lazy" /> : <Icon name="image" />}</div>
                 <div className="grow"><b>{item.name || "Untitled adoptable"}</b><span className="muted" style={{ fontSize: ".8rem" }}>{item.status || "available"} · {item.visible !== false ? "Public" : "Hidden"} · {item.id}</span></div>
                 <div className="acts">
                   <button className="ib" disabled={index === 0} onClick={() => upd((next) => { next.adoptables = move(next.adoptables, index, -1); })} aria-label="Move up"><Icon name="up" /></button>
@@ -4195,10 +4210,29 @@ function AdoptablesPanel() {
           </div>
         </section>
         <section className="card">
-          <h2 style={{ marginBottom: 12 }}>Adoptables settings</h2>
+          <h2 style={{ marginBottom: 12 }}>{lang === "id" ? "Pengaturan Adoptables" : "Adoptables settings"}</h2>
           <div className="form">
-            <TextIn label="Claim / Contact URL (optional)" value={settings.claim?.url || ""} onChange={(value) => upd((next) => { next.adoptableSettings = next.adoptableSettings || {}; next.adoptableSettings.claim = { ...(next.adoptableSettings.claim || {}), mode: "contact", url: value }; })} className="full" />
-            <Field label="Sold archive"><label className="adoptable-toggle"><input type="checkbox" checked={settings.showSold !== false} onChange={(event) => upd((next) => { next.adoptableSettings = { ...(next.adoptableSettings || {}), showSold: event.target.checked }; })} />Show sold items as archive</label><small className="muted">When enabled, Sold items remain public, dimmed, and non-claimable.</small></Field>
+            <Field label={lang === "id" ? "Metode klaim" : "Claim method"}>
+              <select className="in" value={mode} onChange={(event) => updateClaim({ mode: event.target.value })}>
+                <option value="contact">{lang === "id" ? "Halaman Contact" : "Contact page"}</option>
+                <option value="email">{lang === "id" ? "Email" : "Email"}</option>
+              </select>
+            </Field>
+            {mode === "email" ? <>
+              <TextIn label={lang === "id" ? "Alamat email klaim" : "Claim email address"} value={claim.email || ""} onChange={(value) => updateClaim({ mode: "email", email: value })} className="full" placeholder="name@example.com" />
+              {claim.email && !validAdoptableEmail(claim.email) && <p className="err full" role="alert">{lang === "id" ? "Format email tidak valid. Tombol klaim akan kembali ke halaman Contact." : "Invalid email format. The claim button will fall back to the Contact page."}</p>}
+              <small className="adoptable-settings-help full">{lang === "id" ? "Alamat email tidak ditanam sebagai default. Isi alamatmu di sini setelah perubahan di-merge." : "No email address is hardcoded. Enter your address here after this change is merged."}</small>
+            </> : <TextIn label={lang === "id" ? "URL Contact (opsional)" : "Claim / Contact URL (optional)"} value={claim.url || ""} onChange={(value) => updateClaim({ mode: "contact", url: value })} className="full" />}
+            <Field label={lang === "id" ? "Arsip terjual" : "Sold archive"}><label className="adoptable-toggle"><input type="checkbox" checked={settings.showSold !== false} onChange={(event) => upd((next) => { next.adoptableSettings = { ...(next.adoptableSettings || {}), showSold: event.target.checked }; })} />{lang === "id" ? "Tampilkan item terjual sebagai arsip" : "Show sold items as archive"}</label><small className="muted">{lang === "id" ? "Jika aktif, item terjual tetap terlihat, diredupkan, dan tidak dapat diklaim." : "When enabled, Sold items remain public, dimmed, and non-claimable."}</small></Field>
+          </div>
+        </section>
+        <section className="card">
+          <h2>{lang === "id" ? "Default global" : "Global defaults"}</h2>
+          <p className="adoptable-settings-help">{lang === "id" ? "Daftar ini digunakan oleh item yang tidak memiliki daftar khusus. ID item stabil dipakai untuk menjaga terjemahan saat urutan berubah." : "These lists are used by items without their own overrides. Stable item IDs keep translations attached when list order changes."}</p>
+          <div className="form" style={{ marginTop: 14 }}>
+            <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={settings.defaultDeliverables || []} onChange={(value) => updateDefault("defaultDeliverables", value)} lang={lang} />
+            <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={settings.defaultNotes || []} onChange={(value) => updateDefault("defaultNotes", value)} lang={lang} />
+            <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={settings.defaultTerms || []} onChange={(value) => updateDefault("defaultTerms", value)} lang={lang} />
           </div>
         </section>
       </>}
