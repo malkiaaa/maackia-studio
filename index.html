@@ -4479,6 +4479,7 @@ function AdoptablesPanel() {
 }
 
 function CreatorPage() {
+  const {lang}=useCreator();
   const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t==="offers"?"services":t; });
   const pick = (t) => { const next = t === "offers" ? "services" : t; setTab(next); ss.set("mk-tab", next); window.scrollTo({ top: 0 }); };
   return (
