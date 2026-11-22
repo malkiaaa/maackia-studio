@@ -1384,6 +1384,82 @@ html.is-android .home-dashboard > .home-intro-card::before {
 @media(max-width:767px){.adoptable-bilingual-pair{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:767px){.adoptable-list-editor-row{grid-template-columns:minmax(0,1fr)}}
 
+
+/* Commission Board calendar and scheduled order list */
+.commission-board-page{width:100%;min-width:0;max-width:100%;overflow-x:clip}
+.schedule-section{width:100%;max-width:100%;min-width:0;margin-top:18px;padding:clamp(14px,2vw,24px);border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#F4FBFF 0%,#FFFFFF 72%,#F7FCFF 100%);box-shadow:var(--shadow)}
+.schedule-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.schedule-heading h2{font-size:clamp(1.25rem,2vw,1.55rem);color:#294B60}
+.schedule-heading p{margin-top:5px;color:#4F6F7E;font-size:14px}
+.schedule-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.schedule-controls label{display:flex;flex-direction:column;gap:5px;min-width:130px;flex:0 1 190px;color:#36566A;font-size:12px;font-weight:900;letter-spacing:.08em}
+.schedule-controls select{width:100%;min-height:46px;padding:8px 34px 8px 12px;border:1px solid #B9D8E8;border-radius:12px;background:#FFFFFF;color:#294B60;font:700 14px var(--font-body);color-scheme:light}
+.schedule-month-arrows{display:flex;align-items:center;gap:10px;margin-left:auto;min-height:46px;color:#294B60}
+.schedule-month-arrows b{min-width:120px;text-align:center;font-size:14px}
+.schedule-month-arrows button{width:46px;height:46px;display:grid;place-items:center;border:1px solid #B9D8E8;border-radius:12px;background:#FFFFFF;color:#294B60;font:700 25px/1 var(--font-body);cursor:pointer}
+.schedule-calendar{width:100%;max-width:900px;min-width:0;margin:0 auto}
+.schedule-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;width:100%;min-width:0}
+.schedule-weekday{min-width:0;min-height:36px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#E5F4FA;color:#294B60;font-size:14px;font-weight:900;text-align:center}
+.schedule-day{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:5px;min-width:0;min-height:54px;padding:6px;border:1px solid #DCEBF2;border-radius:10px;background:#FFFFFF;color:#294B60;overflow:hidden}
+.schedule-day-blank{background:transparent;border-color:transparent}
+.schedule-day-number{font-size:14px;font-weight:800;line-height:1.2}
+.schedule-day.is-today{border:2px solid #4386A5;background:#EAF7FC;padding:5px}
+.schedule-day-markers{display:flex;align-items:center;gap:3px;width:100%;min-width:0;overflow:hidden}
+.schedule-day-markers i{display:block;width:100%;height:6px;min-width:3px;border-radius:99px}
+.schedule-day-markers small{flex:none;font-size:10px;font-weight:900;color:#294B60}
+.schedule-orders{margin-top:20px}
+.schedule-orders-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:100%}
+.schedule-order-card{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:0;padding:14px 16px;border:1px solid #DCEBF2;border-left:5px solid var(--cyan);border-radius:16px;background:#FFFFFF;color:#294B60;box-shadow:0 6px 18px -14px rgba(41,75,96,.35)}
+.schedule-order-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.schedule-order-id{font-size:14px;overflow-wrap:anywhere}
+.schedule-order-card .status-badge{flex:none}
+.schedule-order-client{font-size:17px;line-height:1.25;color:#294B60}
+.schedule-order-service{font-size:14px;color:#4F6F7E;overflow-wrap:anywhere}
+.schedule-order-dates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 0}
+.schedule-order-dates>div{display:flex;flex-direction:column;gap:3px;min-width:0;padding:8px 9px;border-radius:10px;background:#F0F8FC}
+.schedule-order-dates dt{font-size:12px;font-weight:800;color:#4F6F7E}
+.schedule-order-dates dd{margin:0;font-size:14px;font-weight:800;color:#294B60;overflow-wrap:anywhere}
+.schedule-public-note{margin-top:2px;padding:9px 11px;border-radius:10px;background:#F8F4FF;color:#44365D;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.schedule-no-orders{padding:20px 14px;border:1px dashed #B9D8E8;border-radius:14px;background:#F8FCFE;color:#36566A;font-size:14px;font-weight:800;text-align:center}
+:root[data-theme="dark"] .schedule-section,:root[data-theme="dark"] .schedule-order-card{color:#294B60}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .schedule-section,:root:not([data-theme="light"]) .schedule-order-card{color:#294B60}
+}
+@media(min-width:1024px){.schedule-orders-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1023px){
+  .schedule-section{padding:16px}
+  .schedule-calendar{max-width:820px}
+  .schedule-controls label{flex-basis:150px}
+}
+@media(max-width:639px){
+  .schedule-section{padding:12px;border-radius:18px}
+  .schedule-heading{margin-bottom:12px}
+  .schedule-controls{gap:8px}
+  .schedule-controls label{flex:1 1 calc(50% - 8px);min-width:0}
+  .schedule-month-arrows{width:100%;justify-content:space-between;margin-left:0}
+  .schedule-calendar-grid{gap:3px}
+  .schedule-weekday{min-height:32px;font-size:12px;border-radius:7px}
+  .schedule-day{min-height:48px;padding:5px 3px;border-radius:7px;gap:4px}
+  .schedule-day.is-today{padding:4px 2px}
+  .schedule-day-number{font-size:14px}
+  .schedule-day-markers{gap:2px}
+  .schedule-day-markers i{height:5px;min-width:2px}
+  .schedule-day-markers small{font-size:9px}
+  .schedule-orders-grid{grid-template-columns:minmax(0,1fr)}
+  .schedule-order-dates{gap:6px}
+  .schedule-order-dates>div{padding:7px 6px}
+  .schedule-order-dates dt{font-size:11px}
+  .schedule-order-dates dd{font-size:13px}
+}
+@media(max-width:380px){
+  .schedule-calendar-grid{gap:2px}
+  .schedule-day{min-height:46px;padding:4px 2px}
+  .schedule-day-number{font-size:13px}
+  .schedule-order-card{padding:12px}
+  .schedule-order-dates{gap:4px}
+  .schedule-order-dates dt{font-size:10px}
+  .schedule-order-dates dd{font-size:12px}
+}
 </style>
 
 <div id="root"></div>
@@ -5154,24 +5230,70 @@ function OrderFlow({ id, go, lang }) {
 
 /* ---- visitor: public commission board */
 function CommissionBoard() {
-  const [items,setItems]=useState(null),[msg,setMsg]=useState(""),[month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
+  const [items,setItems]=useState(null),[msg,setMsg]=useState("");
+  const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
   const lang=(()=>{try{return localStorage.getItem("malkiaa-language")==="en"?"en":"id";}catch(e){return"id";}})();
   const schedules=normalizeCommissionSchedule(CONFIG.commissionSchedule||[]);
   useEffect(()=>{let active=true;(async()=>{try{const result=await Store.api("public_board",{});if(active)setItems(Array.isArray(result.items)?result.items:[]);}catch(e){if(active)setMsg("The public commission board is temporarily unavailable. Please try again later.");}})();return()=>{active=false;};},[]);
-  const records=(items||[]).map(item=>{const s=schedules.find(r=>r.requestId===item.id);return s?{...item,...s}:null;}).filter(Boolean);
-  const now=new Date(),today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0"),first=new Date(month.getFullYear(),month.getMonth(),1),last=new Date(month.getFullYear(),month.getMonth()+1,0),monthKey=month.getFullYear()+"-"+String(month.getMonth()+1).padStart(2,"0")+"-",endKey=monthKey+String(last.getDate()).padStart(2,"0");
-  const visible=records.filter(r=>r.startDate<=endKey&&r.endDate>=monthKey+"01"),days=Array.from({length:last.getDate()},(_,i)=>new Date(month.getFullYear(),month.getMonth(),i+1)),weekdays=lang==="id"?["Min","Sen","Sel","Rab","Kam","Jum","Sab"]:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],monthLabel=new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{month:"long",year:"numeric"}).format(month);
-  const agendaGroups=scheduleMonths(records);
+  const records=(items||[]).map(item=>{const schedule=schedules.find(r=>r.requestId===item.id);return schedule?{...item,...schedule}:null;}).filter(Boolean);
+  const now=new Date(),today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+  const year=month.getFullYear(),monthIndex=month.getMonth(),first=new Date(year,monthIndex,1),last=new Date(year,monthIndex+1,0);
+  const monthStart=year+"-"+String(monthIndex+1).padStart(2,"0")+"-01",monthEnd=year+"-"+String(monthIndex+1).padStart(2,"0")+"-"+String(last.getDate()).padStart(2,"0");
+  const visible=records.filter(r=>r.startDate<=monthEnd&&r.endDate>=monthStart);
+  const days=Array.from({length:last.getDate()},(_,i)=>new Date(year,monthIndex,i+1));
+  const weekdays=lang==="id"?["Min","Sen","Sel","Rab","Kam","Jum","Sab"]:["Su","Mo","Tu","We","Th","Fr","Sa"];
+  const monthOptions=Array.from({length:12},(_,i)=>({value:String(i),label:new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{month:"long"}).format(new Date(2026,i,1))}));
+  const years=records.map(r=>[Number(r.startDate.slice(0,4)),Number(r.endDate.slice(0,4))]).flat().filter(Number.isFinite);
+  const minYear=Math.min(new Date().getFullYear()-1,...(years.length?years:[new Date().getFullYear()]));
+  const maxYear=Math.max(new Date().getFullYear()+2,...(years.length?years:[new Date().getFullYear()]));
+  const yearOptions=Array.from({length:maxYear-minYear+1},(_,i)=>minYear+i);
+  const monthLabel=new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{month:"long",year:"numeric"}).format(month);
   const color=c=>c==="peach"?"var(--peach)":c==="gold"?"var(--gold)":c==="ok"?"var(--ok)":c==="lavender"?"var(--sch-lavender)":c==="pink"?"var(--sch-pink)":"var(--cyan)";
-  const renderEntry=r=><article className="schedule-entry" key={r.id} style={{borderLeftColor:color(r.color)}}><b>{r.id}</b><span>{r.clientName||"Client"} · {r.serviceTitle||"Commission"}</span><small>{formatScheduleDate(r.startDate,lang)} – {formatScheduleDate(r.endDate,lang)}</small><span className={"schedule-status "+scheduleStatusClass(r.status)}>{r.status||"Pending Review"}</span>{r.note&&<small>{r.note}</small>}</article>;
+  const moveMonth=delta=>setMonth(new Date(year,monthIndex+delta,1));
+  const renderOrder=r=>{
+    const status=r.status||"Pending Review";
+    return <article className="schedule-order-card" key={r.id} style={{borderLeftColor:color(r.color)}}>
+      <div className="schedule-order-top"><b className="schedule-order-id">{r.id}</b><span className={"tag status-badge "+scheduleStatusClass(status)}>{status}</span></div>
+      <h3 className="schedule-order-client">{r.clientName||"Client"}</h3>
+      <p className="schedule-order-service">{r.serviceTitle||"Commission"}</p>
+      <dl className="schedule-order-dates">
+        <div><dt>{lang==="id"?"Submitted":"Submitted"}</dt><dd>{r.createdAt?fmtDate(r.createdAt):"—"}</dd></div>
+        <div><dt>{lang==="id"?"Mulai":"Start"}</dt><dd>{formatScheduleDate(r.startDate,lang)}</dd></div>
+        <div><dt>{lang==="id"?"Target selesai":"Target finish"}</dt><dd>{formatScheduleDate(r.endDate,lang)}</dd></div>
+      </dl>
+      {r.note&&<p className="schedule-public-note">{r.note}</p>}
+    </article>;
+  };
   return <div className="page commission-board-page">
     <PageHead crumb="PUBLIC COMMISSIONS" title="Commission Board">A public overview of current and previous commission requests. Client names are shown as entered in the order form.</PageHead>
-    <div className="note info" style={{marginBottom:14}}>For privacy, this board only displays the commission number, client name, service, and status. Contact details, references, pricing, and private order notes are not displayed.</div>
     {msg&&<div className="note bad" role="alert">{msg}</div>}
-    {items===null&&!msg?<div className="card empty">Loading commission board...</div>:!items||!items.length?<div className="card empty">No commission requests have been listed yet.</div>:<div className="commission-board-grid">{items.map(item=>{const sc=schedules.find(r=>r.requestId===item.id),status=item.status||"Pending Review";return <section className="card commission-board-card" key={item.id}><div className="meta" style={{justifyContent:"space-between"}}><span className="tag">{item.id}</span><span className={"tag status-badge "+scheduleStatusClass(status)}>{status}</span></div><h3 style={{marginTop:12}}>{item.clientName||"Client"}</h3><p className="muted" data-no-public-translate="true" style={{marginTop:4}}>{item.serviceTitle||"Commission"}</p><div className="commission-dates"><small>Submitted {fmtDate(item.createdAt)}</small><small>{lang==="id"?"Mulai":"Start"}: {sc?formatScheduleDate(sc.startDate,lang):(lang==="id"?"Belum dijadwalkan":"Not scheduled yet")}</small><small>{lang==="id"?"Target selesai":"Target finish"}: {sc?formatScheduleDate(sc.endDate,lang):(lang==="id"?"Belum dijadwalkan":"Not scheduled yet")}</small>{status==="Completed"&&sc&&<small>{lang==="id"?"Selesai":"Completed"} {formatScheduleDate(sc.endDate,lang)}</small>}</div></section>;})}</div>}
-    <section className="card schedule-section"><div className="card-head"><div><h2>{lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}</h2><p className="muted">{lang==="id"?"Agenda pengerjaan commission yang dijadwalkan.":"Scheduled commission work agenda."}</p></div></div>
-      {!records.length?<div className="schedule-empty">{lang==="id"?"Belum ada jadwal pengerjaan.":"No work scheduled yet."}</div>:<><div className="schedule-agenda">{agendaGroups.map(group=>{const lanes=assignScheduleLanes(group.rows),count=Math.max(1,...lanes.map(r=>r.lane+1)),key=group.key;return <section className="schedule-month-agenda" key={key}><h3>{new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{month:"long",year:"numeric"}).format(new Date(key+"-01T00:00:00"))}</h3><div className="schedule-month-lanes" style={{gridTemplateColumns:"repeat("+count+",minmax(0,1fr))"}}>{lanes.map(r=><div key={r.id} style={{gridColumn:String(r.lane+1)}}>{renderEntry(r)}</div>)}</div></section>;})}</div>
-      <div className="schedule-calendar"><div className="schedule-month-nav"><button type="button" aria-label="Previous month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))}>‹</button><b>{monthLabel}</b><button type="button" aria-label="Next month" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1))}>›</button></div><div className="schedule-weekdays">{weekdays.map(d=><b key={d}>{d}</b>)}</div><div className="schedule-days">{Array.from({length:first.getDay()},(_,i)=><span key={"blank"+i}/>)}{days.map(day=>{const key=monthKey+String(day.getDate()).padStart(2,"0"),active=visible.filter(r=>r.startDate<=key&&r.endDate>=key);return <div key={key} className={"schedule-day"+(key===today?" today":"")}><b>{day.getDate()}</b>{active.slice(0,3).map(r=><span key={r.id} title={r.id} style={{background:color(r.color),display:"inline-block",width:(100/Math.min(active.length,3))+"%",verticalAlign:"top"}}>{r.id}</span>)}</div>;})}</div></div></>}</section>
+    <section className="schedule-section">
+      <header className="schedule-heading">
+        <div><h2>{lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}</h2><p>{lang==="id"?"Kalender jadwal commission berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</p></div>
+      </header>
+      <div className="schedule-controls" aria-label={lang==="id"?"Pilih bulan dan tahun":"Choose month and year"}>
+        <label><span>{lang==="id"?"BULAN":"MONTH"}</span><select value={String(monthIndex)} onChange={e=>setMonth(new Date(year,Number(e.target.value),1))}>{monthOptions.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
+        <label><span>{lang==="id"?"TAHUN":"YEAR"}</span><select value={String(year)} onChange={e=>setMonth(new Date(Number(e.target.value),monthIndex,1))}>{yearOptions.map(y=><option key={y} value={String(y)}>{y}</option>)}</select></label>
+        <div className="schedule-month-arrows"><button type="button" aria-label={lang==="id"?"Bulan sebelumnya":"Previous month"} onClick={()=>moveMonth(-1)}>‹</button><b>{monthLabel}</b><button type="button" aria-label={lang==="id"?"Bulan berikutnya":"Next month"} onClick={()=>moveMonth(1)}>›</button></div>
+      </div>
+      <div className="schedule-calendar" role="grid" aria-label={monthLabel}>
+        <div className="schedule-calendar-grid">
+          {weekdays.map(d=><div className="schedule-weekday" role="columnheader" key={d}>{d}</div>)}
+          {Array.from({length:first.getDay()},(_,i)=><div className="schedule-day schedule-day-blank" role="gridcell" aria-hidden="true" key={"blank-"+i}/>)}
+          {days.map(day=>{
+            const key=year+"-"+String(monthIndex+1).padStart(2,"0")+"-"+String(day.getDate()).padStart(2,"0");
+            const active=visible.filter(r=>r.startDate<=key&&r.endDate>=key);
+            return <div key={key} className={"schedule-day"+(key===today?" is-today":"")} role="gridcell" aria-label={key+(active.length?" · "+active.length+" scheduled orders":"")}>
+              <span className="schedule-day-number">{day.getDate()}</span>
+              {active.length>0&&<span className="schedule-day-markers" aria-hidden="true">{active.slice(0,4).map(r=><i key={r.id} style={{background:color(r.color)}}/>)}{active.length>4&&<small>+{active.length-4}</small>}</span>}
+            </div>;
+          })}
+        </div>
+      </div>
+      <section className="schedule-orders" aria-label={lang==="id"?"Daftar order terjadwal":"Scheduled orders"}>
+        {visible.length?<div className="schedule-orders-grid">{visible.map(renderOrder)}</div>:<p className="schedule-no-orders">{lang==="id"?"Tidak ada jadwal di bulan ini":"No schedules this month"}</p>}
+      </section>
+    </section>
   </div>;
 }
 /* ---- visitor: tracking */
