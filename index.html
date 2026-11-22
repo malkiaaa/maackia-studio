@@ -4172,10 +4172,9 @@ function OrderFlow({ id, go, lang }) {
   const s = CONFIG.services.find((a) => a.id === id);
   const [f, setF] = useState(() => { const x = s ? X(s) : SVC_DEF, a = {}; x.addons.forEach((d) => { if (d.required) a[d.id] = 1; }); return { ...F0, addons: a, want: s ? s.title : "" }; });
   const [step, setStep] = useState(0); const [err, setErr] = useState({}); const [busy, setBusy] = useState(false); const [fail, setFail] = useState(""); const [done, setDone] = useState(null); const [up, setUp] = useState("");
-  useEffect(() => { if (s && f.want !== s.title) setF((p) => ({ ...p, want: s.title })); }, [s?.id, s?.title, f.want]);
   if (!s) return <div className="page"><PageHead crumb="ORDER" title="Service not found" /><Btn onClick={() => go("services")}>Back to services</Btn></div>;
-  const x = X(s), c = calc(s, f), wantIsValid = typeof f.want === "string" && f.want === s.title, set = (k) => (v) => { setF((p) => ({ ...p, [k]: v })); setErr((e) => ({ ...e, [k]: "" })); };
-  const check = (n) => { const e = {}; if (n === 0) { if (!f.name.trim()) e.name = "Please enter your name."; if (!/^\S+@\S+\.\S+$/.test(f.email.trim())) e.email = "Please enter a valid email address."; } if (n === 1) { if (!wantIsValid) e.want = "Service selection is invalid. Please return to services and choose it again."; if (!f.tier) e.tier = "Choose a commission type."; } if (n === 3) x.addons.forEach((a) => { if (a.required && !(f.addons[a.id] > 0)) e["a" + a.id] = a.name + " is required."; }); if (n === 6 && !f.display) e.display = "Please choose one option."; if (n === 7 && !f.tos) e.tos = "You must agree to the Terms of Service."; setErr(e); return !Object.keys(e).length; };
+  const x = X(s), form = { ...f, want: s.title }, c = calc(s, f), set = (k) => (v) => { setF((p) => ({ ...p, [k]: v })); setErr((e) => ({ ...e, [k]: "" })); };
+  const check = (n) => { const e = {}; if (n === 0) { if (!f.name.trim()) e.name = "Please enter your name."; if (!/^\S+@\S+\.\S+$/.test(f.email.trim())) e.email = "Please enter a valid email address."; } if (n === 1) { if (typeof form.want !== "string" || form.want !== s.title) e.want = "Service selection is invalid. Please return to services and choose it again."; if (!f.tier) e.tier = "Choose a commission type."; } if (n === 3) x.addons.forEach((a) => { if (a.required && !(f.addons[a.id] > 0)) e["a" + a.id] = a.name + " is required."; }); if (n === 6 && !f.display) e.display = "Please choose one option."; if (n === 7 && !f.tos) e.tos = "You must agree to the Terms of Service."; setErr(e); return !Object.keys(e).length; };
   const next = () => { if (check(step)) { setStep(step + 1); window.scrollTo({ top: 0 }); } };
   const pickFiles = async (e) => {
     const list = [...(e.target.files || [])]; e.target.value = "";
@@ -4194,7 +4193,7 @@ function OrderFlow({ id, go, lang }) {
     const e = {};
     if (!String(f.name || "").trim()) e.name = "Please enter your name.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(f.email || "").trim())) e.email = "Please enter a valid email address.";
-    if (!(typeof f.want === "string" && f.want === s.title)) e.want = "Service selection is invalid. Please return to services and choose it again.";
+    if (!(typeof form.want === "string" && form.want === s.title)) e.want = "Service selection is invalid. Please return to services and choose it again.";
     if (!f.tier) e.tier = "Choose a commission type.";
     x.addons.forEach((a) => { if (a.required && !(Number(f.addons?.[a.id]) > 0)) e["a" + a.id] = a.name + " is required."; });
     if (!f.display) e.display = "Please choose one option.";
@@ -4212,7 +4211,7 @@ function OrderFlow({ id, go, lang }) {
     if (!validateAll()) return;
     setBusy(true); setFail("");
     try {
-      setDone(await Store.create(f, s, c));
+      setDone(await Store.create(form, s, c));
     } catch (x2) {
       if (x2 && x2.commissionId) {
         setFail("Your commission was saved, but order tracking could not be initialized. Request ID: " + x2.commissionId + ". Do not submit again; contact the studio with this ID.");
