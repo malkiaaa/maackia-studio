@@ -1803,7 +1803,7 @@ function loadSaved() {
    sees them. Only people who can edit the artifact can publish.
    ============================================================ */
 const SKEL_PRE = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
-const SKEL_POST = "<style id="commission-schedule-css">
+const SKEL_POST = `<style id="commission-schedule-css">
 :root{--sch-lavender:#E8DDFB;--sch-pink:#F6DDE8}
 .status-badge{border:0!important;letter-spacing:0;text-transform:none}
 .status-badge.pending{background:#FCE7B2!important;color:#3A2A00!important}
@@ -1828,7 +1828,7 @@ const SKEL_POST = "<style id="commission-schedule-css">
 @media(max-width:767px){.commission-board-page{min-width:0;max-width:100%;overflow-x:clip}.commission-board-grid{grid-template-columns:minmax(0,1fr);gap:12px;width:100%;min-width:0}.commission-board-card{grid-column:1/-1;width:100%;max-width:100%;min-width:0;box-sizing:border-box}.schedule-editor-fields{grid-template-columns:minmax(0,1fr)}.schedule-note-field,.schedule-editor-actions{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.schedule-entry,.schedule-month-nav button{transition:none!important;animation:none!important}}
 </style>
-</body></html>";
+</body></html>`;
 const HEAD_STATIC = '<title>Malkiaa Studio</title><meta name="claude:viewport-fit-sides" content="cover"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">';
 function buildDoc(site) {
   const css = document.getElementById("app-css").textContent;
