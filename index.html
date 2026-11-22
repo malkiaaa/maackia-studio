@@ -1423,7 +1423,7 @@ function loadSaved() {
   try {
     const el = document.getElementById("site-data");
     const o = JSON.parse((el && el.textContent) || "{}");
-    const s = mergeDeep(DEFAULT_SITE, o);
+    const s = ensureWorkflowIds(mergeDeep(DEFAULT_SITE, o));
     if (!s.profile.about.cardImage && s.appearance.banner) s.profile.about.cardImage = s.appearance.banner;
     s.appearance.banner = s.profile.about.cardImage || "";
     s.pricing.forEach((g) => g.items.forEach((it) => { if (!it.id) it.id = uid("p"); if (it.image === undefined) it.image = ""; if (it.exampleId === undefined) it.exampleId = ""; }));
@@ -1455,9 +1455,31 @@ function buildDoc(site) {
     S + ' type="text/babel" data-presets="react" id="app-src">' + src + E + SKEL_POST;
 }
 async function publishSite(site) {
-  // Vercel-hosted site content is stored centrally in Supabase, not through
-  // the Claude Artifact publishing API.
-  return Store.api("save_site", { site }, true);
+  // Fail closed: never publish unless the latest published site was refreshed and validated.
+  let timer;
+  let latest;
+  try {
+    latest = await Promise.race([
+      Store.api("get_site", {}, true),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Could not refresh the latest published site within 15 seconds. Publish was canceled; no changes were saved.")), 15000);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+  const current = latest && latest.site;
+  const validSite = current && typeof current === "object" && !Array.isArray(current) &&
+    Array.isArray(current.services) && Array.isArray(current.pricing) &&
+    Array.isArray(current.licenses) && current.workflow && typeof current.workflow === "object" &&
+    !Array.isArray(current.workflow) && Array.isArray(current.workflow.steps) && Array.isArray(current.workflow.stages);
+  if (!validSite) {
+    throw new Error("The latest published site data is missing or invalid. Publish was canceled; no changes were saved.");
+  }
+  // Preserve server i18n by stable item ID before the full-object save.
+  const payload = preserveI18nById(current, plain(site));
+  const result = await Store.api("save_site", { site: payload }, true);
+  return { result, site: payload };
 }
 function explain(e) {
   const c = e && e.code;
@@ -2516,7 +2538,7 @@ function Commission({ go, cur, setCur, lang }) {
       </div>
       {CONFIG.pricing.map((g) => (
         <section key={g.id} className="price-group">
-          <h2>{g.title}</h2><p className="muted">{g.note}</p>
+          <h2>{i18nText(g, "title", lang, g.title)}</h2><p className="muted">{i18nText(g, "note", lang, g.note)}</p>
           <div className="price-grid">
             {g.items.map((it, n) => {
               const p = fmtPrice(it[cur.toLowerCase()], cur);
@@ -2524,9 +2546,9 @@ function Commission({ go, cur, setCur, lang }) {
               return (
                 <article key={it.id || it.name} className="card price lift">
                   <Art art={ex.art} i={ex.i + n} ratio="wide" />
-                  <h3>{it.name}</h3>
+                  <h3>{i18nText(it, "name", lang, it.name)}</h3>
                   {p ? <div className="amt">{p}</div> : <div className="amt na">{lang === "id" ? "Tidak tersedia" : "Not available in " + cur}</div>}
-                  <p className="muted" style={{ fontSize: ".88rem", flex: 1 }}>{it.desc}</p>
+                  <p className="muted" style={{ fontSize: ".88rem", flex: 1 }}>{i18nText(it, "desc", lang, it.desc)}</p>
                   <Btn size="sm" onClick={() => go("services")}>Request Commission</Btn>
                 </article>
               );
@@ -2567,7 +2589,7 @@ function Terms({ lang, setLang, go }) {
   );
 }
 
-function Workflow({ go }) {
+function Workflow({ go, lang }) {
   const w = CONFIG.workflow;
   return (
     <div className="page workflow-page">
@@ -2576,8 +2598,8 @@ function Workflow({ go }) {
         {w.steps.map((s, i) => (
           <article key={i} className="card step lift">
             <span className="n">{i + 1}</span>
-            <h3>{s.title}</h3>
-            {s.body && <p className="muted" style={{ whiteSpace: "pre-line" }}>{s.body}</p>}
+            <h3>{i18nText(s, "title", lang, s.title)}</h3>
+            {s.body && <p className="muted" style={{ whiteSpace: "pre-line" }}>{i18nText(s, "body", lang, s.body)}</p>}
           </article>
         ))}
       </div>
@@ -2587,13 +2609,13 @@ function Workflow({ go }) {
         <div className="stages">
           {w.stages.map((s, i) => (
             <div key={i} className="stage">
-              <b style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem" }}>{s.title}</b>
-              {s.body && <span className="muted" style={{ whiteSpace: "pre-line" }}>{s.body}</span>}
+              <b style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem" }}>{i18nText(s, "title", lang, s.title)}</b>
+              {s.body && <span className="muted" style={{ whiteSpace: "pre-line" }}>{i18nText(s, "body", lang, s.body)}</span>}
             </div>
           ))}
         </div>
-        {w.revisionNote && <p style={{ marginTop: 14, whiteSpace: "pre-line" }}>{w.revisionNote}</p>}
-        {w.notes && <p className="muted" style={{ marginTop: 10, whiteSpace: "pre-line" }}>{w.notes}</p>}
+        {i18nText(w, "revisionNote", lang, w.revisionNote) && <p style={{ marginTop: 14, whiteSpace: "pre-line" }}>{i18nText(w, "revisionNote", lang, w.revisionNote)}</p>}
+        {i18nText(w, "notes", lang, w.notes) && <p className="muted" style={{ marginTop: 10, whiteSpace: "pre-line" }}>{i18nText(w, "notes", lang, w.notes)}</p>}
       </section>
       <div style={{ marginTop: 22 }} className="btns"><Btn onClick={() => go("terms")} kind="ghost">Read the terms</Btn><Btn onClick={() => go("services")}>Start a request</Btn></div>
     </div>
@@ -2963,14 +2985,18 @@ function CommissionPanel() {
         <section key={g.id} className="card">
           <div className="form">
             <TextIn label="Group name" value={g.title} onChange={sets(["pricing", gi, "title"])} />
+            <TextIn label="Indonesian group name" value={g.i18n?.id?.title || ""} onChange={(v) => upd((n) => { const group = n.pricing.find((item) => item.id === g.id); group.i18n = group.i18n || {}; group.i18n.id = group.i18n.id || {}; group.i18n.id.title = v; })} />
             <TextIn label="Group description" value={g.note} onChange={sets(["pricing", gi, "note"])} />
+            <TextIn label="Indonesian group description" value={g.i18n?.id?.note || ""} onChange={(v) => upd((n) => { const group = n.pricing.find((item) => item.id === g.id); group.i18n = group.i18n || {}; group.i18n.id = group.i18n.id || {}; group.i18n.id.note = v; })} />
           </div>
           <div className="list" style={{ marginTop: 14 }}>
             {g.items.map((it, ii) => (
               <div key={it.id} className="card" style={{ padding: 16, boxShadow: "none", background: "var(--bg)" }}>
                 <div className="form">
                   <TextIn label="Service name" value={it.name} onChange={sets(["pricing", gi, "items", ii, "name"])} />
+                  <TextIn label="Indonesian service name" value={it.i18n?.id?.name || ""} onChange={(v) => upd((n) => { const item = n.pricing.find((group) => group.id === g.id)?.items.find((entry) => entry.id === it.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.name = v; })} />
                   <TextIn label="Short description" value={it.desc} onChange={sets(["pricing", gi, "items", ii, "desc"])} />
+                  <TextIn label="Indonesian short description" value={it.i18n?.id?.desc || ""} onChange={(v) => upd((n) => { const item = n.pricing.find((group) => group.id === g.id)?.items.find((entry) => entry.id === it.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.desc = v; })} />
                   <Field label="Price IDR" hint="Empty = Not available. Text is allowed."><input className="in" value={it.idr === null || it.idr === undefined ? "" : String(it.idr)} onChange={(e) => sets(["pricing", gi, "items", ii, "idr"])(parsePrice(e.target.value))} inputMode="text" placeholder="150000" /></Field>
                   <Field label="Price USD" hint="Empty = Not available. Text is allowed."><input className="in" value={it.usd === null || it.usd === undefined ? "" : String(it.usd)} onChange={(e) => sets(["pricing", gi, "items", ii, "usd"])(parsePrice(e.target.value))} inputMode="text" placeholder="18" /></Field>
                   <Field label="Example artwork from gallery">
@@ -3012,9 +3038,12 @@ function ServicesPanel() {
         <section key={s.id} className="card">
           <div className="form">
             <TextIn label="Service name" value={s.title} onChange={sets(["services", i, "title"])} />
+            <TextIn label="Indonesian title" value={s.i18n?.id?.title || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === s.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.title = v; })} />
             <Field label="Icon"><select className="in" value={s.icon} onChange={(e) => sets(["services", i, "icon"])(e.target.value)}>{SERVICE_ICONS.map((n) => <option key={n} value={n}>{n}</option>)}</select></Field>
             <TextIn label="Short description" value={s.short} onChange={sets(["services", i, "short"])} className="full" />
+            <TextIn label="Indonesian short description" value={s.i18n?.id?.short || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === s.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.short = v; })} className="full" />
             <TextIn label="Detailed description" value={s.detail} onChange={sets(["services", i, "detail"])} multiline className="full" />
+            <TextIn label="Indonesian detailed description" value={s.i18n?.id?.detail || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === s.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.detail = v; })} multiline className="full" />
             <Field label="Example category"><select className="in" value={s.category} onChange={(e) => sets(["services", i, "category"])(e.target.value)}>{site.categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></Field>
             <ImagePicker label="Cover image (shown on service card)" value={s.image} onChange={sets(["services", i, "image"])} maxDim={1400} />
             <TextIn label="External booking URL (optional)" value={s.orderUrl || ""} onChange={sets(["services", i, "orderUrl"])} placeholder="https://..." className="full" hint="If set, Request Commission opens this link. Otherwise it opens the built-in request form." />
@@ -3037,23 +3066,27 @@ function ServicesPanel() {
 function ListEditor({ path, label, bodyLabel = "Text" }) {
   const { site, upd } = useCreator();
   const items = getPath(site, path);
-  const sets = (i, k) => (v) => upd((n) => { getPath(n, path)[i][k] = v; });
+  const isWorkflow = path[0] === "workflow";
+  const updateItem = (item, key, value) => upd((n) => { const list = getPath(n, path); const target = isWorkflow ? list.find((entry) => entry.id === item.id) : list[items.indexOf(item)]; if (target) target[key] = value; });
+  const updateI18n = (item, key, value) => upd((n) => { const target = getPath(n, path).find((entry) => entry.id === item.id); if (!target) return; target.i18n = target.i18n || {}; target.i18n.id = target.i18n.id || {}; target.i18n.id[key] = value; });
   return (
     <div className="list">
       {items.map((s, i) => (
-        <div key={i} className="card" style={{ padding: 16, boxShadow: "none", background: "var(--bg)" }}>
+        <div key={isWorkflow ? s.id : i} className="card" style={{ padding: 16, boxShadow: "none", background: "var(--bg)" }}>
           <div className="form">
-            <TextIn label={label} value={s.title} onChange={sets(i, "title")} className="full" />
-            <TextIn label={bodyLabel} value={s.body} onChange={sets(i, "body")} multiline className="full" />
+            <TextIn label={label} value={s.title} onChange={(v) => updateItem(s, "title", v)} className="full" />
+            <TextIn label={bodyLabel} value={s.body} onChange={(v) => updateItem(s, "body", v)} multiline className="full" />
+            {isWorkflow && <TextIn label="Indonesian title" value={s.i18n?.id?.title || ""} onChange={(v) => updateI18n(s, "title", v)} className="full" />}
+            {isWorkflow && <TextIn label="Indonesian description" value={s.i18n?.id?.body || ""} onChange={(v) => updateI18n(s, "body", v)} multiline className="full" />}
           </div>
           <div className="btns" style={{ marginTop: 10, justifyContent: "flex-end" }}>
             <button className="ib" disabled={i === 0} onClick={() => upd((n) => { setPath(n, path, move(getPath(n, path), i, -1)); })} aria-label="Move up"><Icon name="up" /></button>
             <button className="ib" disabled={i === items.length - 1} onClick={() => upd((n) => { setPath(n, path, move(getPath(n, path), i, 1)); })} aria-label="Move down"><Icon name="down" /></button>
-            <ConfirmDelete onYes={() => upd((n) => { getPath(n, path).splice(i, 1); })} label="Delete" />
+            <ConfirmDelete onYes={() => upd((n) => { const list = getPath(n, path); if (isWorkflow) setPath(n, path, list.filter((entry) => entry.id !== s.id)); else list.splice(i, 1); })} label="Delete" />
           </div>
         </div>
       ))}
-      <div><Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { getPath(n, path).push({ title: "", body: "" }); })}>Add</Btn></div>
+      <div><Btn kind="cyan" size="sm" icon="plus" onClick={() => upd((n) => { getPath(n, path).push(isWorkflow ? { id: uid("wf"), title: "", body: "" } : { title: "", body: "" }); })}>Add</Btn></div>
     </div>
   );
 }
@@ -3089,7 +3122,9 @@ function WorkflowPanel() {
         <h2 style={{ marginBottom: 12 }}>Notes</h2>
         <div className="form">
           <TextIn label="Revision information" value={site.workflow.revisionNote} onChange={sets(["workflow", "revisionNote"])} multiline className="full" />
+          <TextIn label="Indonesian revision information" value={site.workflow.i18n?.id?.revisionNote || ""} onChange={(v) => upd((n) => { n.workflow.i18n = n.workflow.i18n || {}; n.workflow.i18n.id = n.workflow.i18n.id || {}; n.workflow.i18n.id.revisionNote = v; })} multiline className="full" />
           <TextIn label="Additional notes" value={site.workflow.notes} onChange={sets(["workflow", "notes"])} multiline className="full" />
+          <TextIn label="Indonesian additional notes" value={site.workflow.i18n?.id?.notes || ""} onChange={(v) => upd((n) => { n.workflow.i18n = n.workflow.i18n || {}; n.workflow.i18n.id = n.workflow.i18n.id || {}; n.workflow.i18n.id.notes = v; })} multiline className="full" />
         </div>
       </section>
     </div>
@@ -3651,6 +3686,94 @@ const SVC_DEF = {
   notes: ["No NSFW", "No political content", "Character references are required", "Additional complexity may affect pricing"],
 };
 const X = (s) => ({ ...SVC_DEF, desc: s.detail || s.short || "", ...s });
+
+const SVC_DEFAULT_I18N = {
+  fields: { license: "Penggunaan pribadi sudah termasuk. Lisensi komersial tersedia.", delivery: "Akan dikonfirmasi dalam proposal.", files: "PNG dan JPG" },
+  tiers: { t1: "Kepala / Ikon", t2: "Setengah badan atas", t3: "Setengah badan", t4: "Seluruh badan" },
+  addons: {
+    ad1: { name: "Latar belakang dengan rendering", desc: "Latar belakang dengan rendering untuk karya kamu." },
+    ad2: { name: "Karakter tambahan", desc: "Setiap karakter tambahan dalam satu karya." },
+    ad3: { name: "Detail tambahan", desc: "Detail ekstra untuk karakter atau adegan kamu." },
+    ad4: { name: "Animasi", desc: "Animasi sederhana. Harga ditentukan sesuai permintaan." },
+  },
+  includes: {
+    "deliverable-finished-illustration": "Ilustrasi final", "deliverable-png": "File PNG", "deliverable-jpg": "File JPG",
+    "deliverable-wip": "Pembaruan proses pengerjaan", "deliverable-revisions": "Revisi sesuai Ketentuan Layanan"
+  },
+  notes: {
+    "note-no-nsfw": "Tidak menerima konten NSFW", "note-no-politics": "Tidak menerima konten politik",
+    "note-references": "Referensi karakter wajib disertakan", "note-complexity": "Kompleksitas tambahan dapat memengaruhi harga"
+  }
+};
+const SVC_DEFAULT_TEXT_IDS = {
+  includes: {
+    "Finished illustration": "deliverable-finished-illustration", "PNG file": "deliverable-png", "JPG file": "deliverable-jpg",
+    "WIP updates": "deliverable-wip", "Revisions according to the Terms of Service": "deliverable-revisions"
+  },
+  notes: {
+    "No NSFW": "note-no-nsfw", "No political content": "note-no-politics",
+    "Character references are required": "note-references", "Additional complexity may affect pricing": "note-complexity"
+  }
+};
+const i18nText = (item, key, lang, fallback) => {
+  const value = lang === "id" ? item?.i18n?.id?.[key] : null;
+  return typeof value === "string" && value.trim() ? value : fallback;
+};
+const serviceText = (service, key, lang) => {
+  const x = X(service), custom = i18nText(service, key, lang, "");
+  if (custom) return custom;
+  if (lang === "id" && x[key] === SVC_DEF[key] && SVC_DEFAULT_I18N.fields[key]) return SVC_DEFAULT_I18N.fields[key];
+  return x[key] == null ? "" : String(x[key]);
+};
+const serviceItemText = (service, kind, item, key, lang) => {
+  const custom = i18nText(item, key, lang, "");
+  if (custom) return custom;
+  if (lang !== "id") return item && item[key] != null ? String(item[key]) : "";
+  const def = SVC_DEF[kind]?.find((entry) => entry.id === item?.id);
+  if (def && def[key] === item[key] && SVC_DEFAULT_I18N[kind]?.[item.id]) {
+    const translated = SVC_DEFAULT_I18N[kind][item.id];
+    return typeof translated === "string" ? translated : translated[key] || String(item[key] || "");
+  }
+  return item && item[key] != null ? String(item[key]) : "";
+};
+const serviceListText = (service, kind, value, lang) => {
+  if (lang !== "id") return value;
+  const key = SVC_DEFAULT_TEXT_IDS[kind]?.[value], overrideKey = key || ("text:" + value);
+  const override = service?.i18n?.id?.[kind]?.[overrideKey];
+  if (typeof override === "string" && override.trim()) return override;
+  return key ? (SVC_DEFAULT_I18N[kind]?.[key] || value) : value;
+};
+const preserveI18nById = (serverValue, localValue) => {
+  if (Array.isArray(localValue)) {
+    const serverItems = Array.isArray(serverValue) ? serverValue : [];
+    return localValue.map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+      const match = item.id == null ? null : serverItems.find((candidate) => candidate && candidate.id === item.id);
+      return preserveI18nById(match || {}, item);
+    });
+  }
+  if (!localValue || typeof localValue !== "object") return localValue;
+  const server = serverValue && typeof serverValue === "object" && !Array.isArray(serverValue) ? serverValue : {};
+  const result = { ...localValue };
+  if (server.i18n || localValue.i18n) result.i18n = mergeDeep(server.i18n || {}, localValue.i18n || {});
+  Object.keys(localValue).forEach((key) => { if (key !== "i18n") result[key] = preserveI18nById(server[key], localValue[key]); });
+  return result;
+};
+const stableWorkflowId = (kind, item) => {
+  const source = String(item?.title || "") + "\u241f" + String(item?.body || "");
+  let hash = 2166136261;
+  for (let i = 0; i < source.length; i++) { hash ^= source.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+  return "wf-" + kind + "-" + (hash >>> 0).toString(36);
+};
+const ensureWorkflowIds = (site) => {
+  ["steps", "stages"].forEach((key) => {
+    const items = site?.workflow?.[key];
+    if (Array.isArray(items)) items.forEach((item) => { if (item && typeof item === "object" && !item.id) item.id = stableWorkflowId(key, item); });
+  });
+  return site;
+};
+const serviceTextKey = (kind, value) => SVC_DEFAULT_TEXT_IDS[kind]?.[value] || ("text:" + value);
+
 const startPrice = (s) => { const p = X(s).tiers.map((t) => t.price).filter((v) => v > 0); return p.length ? Math.min(...p) : null; };
 const spCls = (st) => "sp " + st.split(" ")[0].toLowerCase();
 const licList = () => CONFIG.licenses || [];
@@ -3951,7 +4074,7 @@ const StoreBanner = () => {
 };
 
 /* ---- visitor: marketplace */
-function Services({ go }) {
+function Services({ go, lang }) {
   return (
     <div className="page">
       <PageHead crumb="COMMISSION SERVICES" title="Commission Services">{T("services_sub")}</PageHead>
@@ -3962,11 +4085,11 @@ function Services({ go }) {
           const off = x.status === "Unavailable", cover = safeImg(s.image) || safeImg(ex.image);
           return (
             <article key={s.id} className="card lift span-4" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div className="art wide">{cover ? <img src={cover} alt={s.title + " cover"} loading="lazy" /> : <div className="service-gallery-empty">No cover image</div>}</div>
+              <div className="art wide">{cover ? <img src={cover} alt={serviceText(s, "title", lang) + " cover"} loading="lazy" /> : <div className="service-gallery-empty">No cover image</div>}</div>
               <div className="meta"><span className="tag">{catLabel(s.category)}</span><span className={spCls(x.status)}>{x.status}</span></div>
-              <h3>{s.title}</h3>
-              <p className="muted" style={{ flex: 1 }}>{s.short}</p>
-              <div><b style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}>{sp ? "From " + idr(sp) : "Custom quote"}</b><small className="muted" style={{ display: "block" }}>{x.license}</small></div>
+              <h3>{serviceText(s, "title", lang)}</h3>
+              <p className="muted" style={{ flex: 1 }}>{serviceText(s, "short", lang)}</p>
+              <div><b style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem" }}>{sp ? "From " + idr(sp) : "Custom quote"}</b><small className="muted" style={{ display: "block" }}>{serviceText(s, "license", lang)}</small></div>
               <div className="btns"><Btn kind="cyan" size="sm" onClick={() => go("service-" + s.id)}>View Details</Btn>{safeUrl(s.orderUrl) ? <a className={"btn sm" + (off ? " ghost" : "")} href={safeUrl(s.orderUrl)} target="_blank" rel="noopener noreferrer" aria-disabled={off} onClick={(e) => { if (off) e.preventDefault(); }}>Request Commission</a> : <Btn size="sm" disabled={off} onClick={() => go("order-" + s.id)}>Request Commission</Btn>}</div>
             </article>
           );
@@ -3989,7 +4112,7 @@ function ServiceGallery({ images, title }) {
     </div>
   </section>;
 }
-function ServiceDetail({ id, go }) {
+function ServiceDetail({ id, go, lang }) {
   const s = CONFIG.services.find((a) => a.id === id); const [ok, setOk] = useState(false);
   if (!s) return <div className="page"><PageHead crumb="SERVICE" title="Service not found" /><Btn onClick={() => go("services")}>Back to services</Btn></div>;
   const x = X(s), sp = startPrice(s), av = safeImg(CONFIG.profile.avatar);
@@ -3998,7 +4121,7 @@ function ServiceDetail({ id, go }) {
   const terms = (CONFIG.terms.en || []), bookingUrl = safeUrl(s.orderUrl);
   return (
     <div className="page">
-      <PageHead crumb={"COMMISSION SERVICES / " + s.title.toUpperCase()} title={s.title} />
+      <PageHead crumb={"COMMISSION SERVICES / " + serviceText(s, "title", lang).toUpperCase()} title={serviceText(s, "title", lang)} />
       <div className="grid">
         <section className="card tint span-12" style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
           <div className="avatar" style={{ width: 64, height: 64, cursor: "default" }}>{av ? <img src={av} alt="" /> : <Icon name="smile" />}</div>
@@ -4006,18 +4129,18 @@ function ServiceDetail({ id, go }) {
           <div><small className="muted">Starting price</small><div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem" }}>{sp ? idr(sp) : "Custom quote"}</div></div>
         </section>
         <ServiceGallery images={gallery} title={s.title} />
-        <section className="card span-7"><h2 style={{ marginBottom: 8 }}>Description</h2><p style={{ whiteSpace: "pre-line" }}>{x.desc}</p>
-          <div className="kv" style={{ marginTop: 14 }}><div className="kv-row"><Icon name="file" /><div><span>Files and format</span>{x.files}</div></div><div className="kv-row"><Icon name="check" /><div><span>Estimated turnaround</span>{x.delivery}</div></div><div className="kv-row"><Icon name="globe" /><div><span>Usage / license</span>{x.license}</div></div></div>
-          {x.usageTerms && <p style={{ whiteSpace: "pre-line", marginTop: 12 }}>{x.usageTerms}</p>}
+        <section className="card span-7"><h2 style={{ marginBottom: 8 }}>Description</h2><p style={{ whiteSpace: "pre-line" }}>{serviceText(s, "detail", lang) || serviceText(s, "short", lang)}</p>
+          <div className="kv" style={{ marginTop: 14 }}><div className="kv-row"><Icon name="file" /><div><span>Files and format</span>{serviceText(s, "files", lang)}</div></div><div className="kv-row"><Icon name="check" /><div><span>Estimated turnaround</span>{serviceText(s, "delivery", lang)}</div></div><div className="kv-row"><Icon name="globe" /><div><span>Usage / license</span>{serviceText(s, "license", lang)}</div></div></div>
+          {serviceText(s, "usageTerms", lang) && <p style={{ whiteSpace: "pre-line", marginTop: 12 }}>{serviceText(s, "usageTerms", lang)}</p>}
         </section>
-        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Deliverables</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.includes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
+        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Deliverables</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.includes.map((t) => <li key={t}>{serviceListText(s, "includes", t, lang)}</li>)}</ul></section>
         <section className="card span-7"><h2 style={{ marginBottom: 8 }}>Base prices and add-ons</h2>
-          <div className="list">{x.tiers.map((t) => <div key={t.id} className="rowi"><b className="grow">{t.name}</b>{t.price > 0 ? idr(t.price) : "Custom quote"}</div>)}</div>
+          <div className="list">{x.tiers.map((t) => <div key={t.id} className="rowi"><b className="grow">{serviceItemText(s, "tiers", t, "name", lang)}</b>{t.price > 0 ? idr(t.price) : "Custom quote"}</div>)}</div>
           <h3 style={{ margin: "16px 0 8px" }}>Add-ons</h3>
-          <div className="list">{x.addons.map((a) => <div key={a.id} className="rowi"><div className="grow"><b>{a.name}{a.required ? " (required)" : ""}</b><small className="muted">{a.desc}</small></div><span>{a.type === "custom" ? "Custom quote" : a.type === "percent" ? "+" + a.price + "%" : "+" + idr(a.price)}</span></div>)}</div></section>
-        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Important notes</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.notes.map((t, i) => <li key={i}>{t}</li>)}</ul></section>
+          <div className="list">{x.addons.map((a) => <div key={a.id} className="rowi"><div className="grow"><b>{serviceItemText(s, "addons", a, "name", lang)}{a.required ? " (required)" : ""}</b><small className="muted">{serviceItemText(s, "addons", a, "desc", lang)}</small></div><span>{a.type === "custom" ? "Custom quote" : a.type === "percent" ? "+" + a.price + "%" : "+" + idr(a.price)}</span></div>)}</div></section>
+        <section className="card span-5"><h2 style={{ marginBottom: 8 }}>Important notes</h2><ul style={{ margin: 0, paddingLeft: 20 }}>{x.notes.map((t) => <li key={t}>{serviceListText(s, "notes", t, lang)}</li>)}</ul></section>
         <section className="card span-12"><h2 style={{ marginBottom: 8 }}>Artist terms</h2>
-          {x.serviceTerms && <p style={{ whiteSpace: "pre-line", marginBottom: 12 }}>{x.serviceTerms}</p>}
+          {serviceText(s, "serviceTerms", lang) && <p style={{ whiteSpace: "pre-line", marginBottom: 12 }}>{serviceText(s, "serviceTerms", lang)}</p>}
           {terms.length ? terms.map((t, i) => <details key={i} style={{ marginBottom: 6 }}><summary><b>{t.title}</b></summary><p style={{ whiteSpace: "pre-line", marginTop: 6 }}>{t.body}</p></details>) : <p className="muted">The artist has not added terms yet.</p>}
           <label className="switch" style={{ marginTop: 14 }}><span>I have read and agree to the Terms of Service.</span><input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} /></label>
           <div className="btns" style={{ marginTop: 14 }}>{bookingUrl ? <a className={"btn peach" + (x.status === "Unavailable" ? " ghost" : "")} href={bookingUrl} target="_blank" rel="noopener noreferrer" aria-disabled={x.status === "Unavailable"} onClick={(e) => { if (x.status === "Unavailable") e.preventDefault(); }}>Request Commission</a> : <Btn disabled={!ok || x.status === "Unavailable"} onClick={() => go("order-" + s.id)}>{x.status === "Unavailable" ? "Currently unavailable" : "Request Commission"}</Btn>}<Btn kind="ghost" onClick={() => go("services")}>Back</Btn></div></section>
@@ -4029,21 +4152,21 @@ function ServiceDetail({ id, go }) {
 /* ---- visitor: request form */
 const STEPS = ["Client", "Details", "References", "Add-ons", "License", "Deadline", "Display", "Review"];
 const F0 = { name: "", email: "", username: "", ig: "", x: "", tt: "", yt: "", other: "", want: "", type: "", chars: 1, cname: "", lore: "", pers: "", pose: "", mood: "", style: "", bg: "", extra: "", files: [], urls: "", tier: "", addons: {}, license: "personal", deadline: "", rush: "No", platform: "", commNote: "", display: "", more: "", tos: false };
-function Sum({ s, sel }) {
+function Sum({ s, sel, lang }) {
   const c = calc(s, sel);
   return (
     <div className="card osum">
       <h3 style={{ marginBottom: 8 }}>Price estimate</h3>
       {c.lines.length === 0 && <p className="muted">Choose a commission type to see prices.</p>}
-      {c.lines.map((l, i) => <div key={i} className="srow"><span>{l[0]}</span><b>{l[2] || (i ? "+ " : "") + idr(l[1])}</b></div>)}
+      {c.lines.map((l, i) => { const tier = X(s).tiers.find((item) => item.name === l[0]); const addon = X(s).addons.find((item) => l[0] === item.name || l[0].startsWith(item.name)); const label = tier ? serviceItemText(s, "tiers", tier, "name", lang) : addon ? serviceItemText(s, "addons", addon, "name", lang) + l[0].slice(addon.name.length) : l[0]; return <div key={i} className="srow"><span>{label}</span><b>{l[2] || (i ? "+ " : "") + idr(l[1])}</b></div>; })}
       {c.lines.length > 0 && <div className="srow"><span>Subtotal</span><b>{idr(c.sub)}</b></div>}
-      {c.lic && <div className="srow"><span>{c.lic.label}</span><b>{c.lc ? "Custom quote" : c.lv ? "+ " + idr(c.lv) : "Included"}</b></div>}
+      {c.lic && <div className="srow"><span>{i18nText(c.lic, "label", lang, c.lic.label)}</span><b>{c.lc ? "Custom quote" : c.lv ? "+ " + idr(c.lv) : "Included"}</b></div>}
       <div className="srow tot"><span>Estimated total</span><b>{idr(c.total)}{c.custom ? " + custom" : ""}</b></div>
       <small className="muted">This is an estimated price based on your selections. The final price may change after the artist reviews your request. You will receive a custom proposal before making any payment.</small>
     </div>
   );
 }
-function OrderFlow({ id, go }) {
+function OrderFlow({ id, go, lang }) {
   const s = CONFIG.services.find((a) => a.id === id);
   const [f, setF] = useState(() => { const x = s ? X(s) : SVC_DEF, a = {}; x.addons.forEach((d) => { if (d.required) a[d.id] = 1; }); return { ...F0, addons: a, want: s ? s.title : "" }; });
   const [step, setStep] = useState(0); const [err, setErr] = useState({}); const [busy, setBusy] = useState(false); const [fail, setFail] = useState(""); const [done, setDone] = useState(null); const [up, setUp] = useState("");
@@ -4105,7 +4228,7 @@ function OrderFlow({ id, go }) {
       {Store.mode() === "local" && <div className="note info" style={{ margin: "12px auto", maxWidth: 520 }}>Demo mode: saved only in this browser. The artist has not received it.</div>}
       {Store.mode() !== "local" && <div className="note info" role="status" style={{ margin: "12px auto", maxWidth: 560, textAlign: "left" }}><b style={{ display: "block", marginBottom: 4 }}>Please check your email</b><p>Your order confirmation will be sent to the email address you provided. Please check your Inbox. If you can't find it, check your Spam/Junk folder. If our email is there, select <b>“Not Spam”</b> so future messages from Malkiaa Studio are more likely to reach your Inbox.</p></div>}
       <div className="kv" style={{ maxWidth: 420, margin: "16px auto", textAlign: "left" }}>
-        <div className="kv-row"><Icon name="check" /><div><span>Request ID</span><b>{done.id}</b></div></div><div className="kv-row"><Icon name="pen" /><div><span>Service</span>{done.serviceTitle}</div></div>
+        <div className="kv-row"><Icon name="check" /><div><span>Request ID</span><b>{done.id}</b></div></div><div className="kv-row"><Icon name="pen" /><div><span>Service</span><span data-no-public-translate="true">{done.serviceTitle}</span></div></div>
         <div className="kv-row"><Icon name="file" /><div><span>Submitted</span>{fmtDate(done.createdAt)}</div></div><div className="kv-row"><Icon name="star" /><div><span>Estimated price</span>{idr(done.estimate)}{done.custom ? " + custom" : ""}</div></div><div className="kv-row"><Icon name="flow" /><div><span>Status</span>{done.status}</div></div></div>
       <p className="muted">Keep your Request ID and the email you used. You need both to track your order.</p>
       <div className="btns" style={{ justifyContent: "center", marginTop: 12 }}><Btn onClick={() => go("track")}>Track my order</Btn><Btn kind="ghost" onClick={() => go("home")}>Home</Btn></div>
@@ -4114,8 +4237,8 @@ function OrderFlow({ id, go }) {
   const body = [
     <div className="form" key="0">{tx("name", "Your name *")}<div className="note info full">Public name notice: The name you enter here will appear on the public Commission Board alongside your commission number, service, and status. Please enter a name you are comfortable displaying publicly. Your email and private order details will not be shown. This is separate from your artwork-sharing preference.</div>{tx("email", "Email address *", { hint: err.email || "Only used for communication and order updates. It is never shown publicly." })}{tx("username", "Preferred username")}{tx("ig", "Instagram")}{tx("x", "X / Twitter")}{tx("tt", "TikTok")}{tx("yt", "YouTube")}{tx("other", "Other link")}</div>,
     <div className="form" key="1">
-      <Field label="What would you like me to create? *" className="full"><select className="in" value={f.want} onChange={(e) => set("want")(e.target.value)}><option value="">Select...</option>{["Character Illustration", "VTuber Illustration", "Game Character", "Chibi", "Character Design", "Other"].concat(CONFIG.services.map((q) => q.title)).filter((v, i, a) => a.indexOf(v) === i).map((o) => <option key={o}>{o}</option>)}</select>{err.want && <div className="err">{err.want}</div>}</Field>
-      <Field label="Commission type *" className="full"><div className="list">{x.tiers.map((t) => <label key={t.id} className="switch"><span><b>{t.name}</b> <small className="muted">{t.price > 0 ? idr(t.price) : "Custom quote"}</small></span><input type="radio" name="tier" checked={f.tier === t.id} onChange={() => set("tier")(t.id)} /></label>)}</div>{err.tier && <div className="err">{err.tier}</div>}</Field>
+      <Field label="What would you like me to create? *" className="full"><select className="in" value={f.want} onChange={(e) => set("want")(e.target.value)}><option value="">Select...</option>{["Character Illustration", "VTuber Illustration", "Game Character", "Chibi", "Character Design", "Other"].concat(CONFIG.services.map((q) => q.title)).filter((v, i, a) => a.indexOf(v) === i).map((o) => { const service = CONFIG.services.find((item) => item.title === o); return <option key={o} value={o}>{service ? serviceText(service, "title", lang) : translatePublicText(o, lang)}</option>; })}</select>{err.want && <div className="err">{err.want}</div>}</Field>
+      <Field label="Commission type *" className="full"><div className="list">{x.tiers.map((t) => <label key={t.id} className="switch"><span><b>{serviceItemText(s, "tiers", t, "name", lang)}</b> <small className="muted">{t.price > 0 ? idr(t.price) : "Custom quote"}</small></span><input type="radio" name="tier" checked={f.tier === t.id} onChange={() => set("tier")(t.id)} /></label>)}</div>{err.tier && <div className="err">{err.tier}</div>}</Field>
       <Field label="Number of characters" hint="The first character is included in the base price. Each additional character adds 80% of the selected base price.">
         <div className="btns" style={{ alignItems: "center", gap: 10 }}>
           <button type="button" className="ib" disabled={Number(f.chars) <= 1} onClick={() => set("chars")(Math.max(1, Number(f.chars || 1) - 1))} aria-label="Remove one character">−</button>
@@ -4130,19 +4253,19 @@ function OrderFlow({ id, go }) {
       {up && <div className="note info full">{up}</div>}
       <div className="list full">{f.files.map((fl) => <div key={fl.id} className="rowi">{fl.type.startsWith("image/") ? <div className="thumb"><img src={fl.url} alt="" /></div> : <Icon name="file" />}<div className="grow"><b>{fl.name}</b><small className="muted">{(fl.size / 1024).toFixed(0)} KB, uploaded</small></div><button className="ib bad" onClick={() => setF((p) => ({ ...p, files: p.files.filter((q) => q.id !== fl.id) }))} aria-label={"Remove " + fl.name}><Icon name="x" /></button></div>)}</div>
       {tx("urls", "Reference links (one per line)", { ml: true, full: true, ph: "https://..." })}</div>,
-    <div className="list" key="3">{x.addons.map((a) => { if (/additional character/i.test(a.name || "")) return <div key={a.id} className="rowi"><div className="grow"><b>Additional Character</b><small className="muted" style={{ display: "block" }}>Calculated automatically from the number of characters in the previous step.</small><small>+80% of base price for each additional character.</small></div><span className="tag">Automatic</span></div>; const q = f.addons[a.id] || 0, setQ = (v) => { setF((p) => ({ ...p, addons: { ...p.addons, [a.id]: Math.max(a.required ? 1 : 0, Math.min(a.select === "multiple" ? 20 : 1, v)) } })); }; return (
-      <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}><div className="grow"><b>{a.name}{a.required ? " (required)" : ""}</b><small className="muted" style={{ display: "block" }}>{a.desc}</small><small>{a.type === "custom" ? "Custom quote" : a.type === "percent" ? "+" + a.price + "% of base" : "+" + idr(a.price)}</small>{err["a" + a.id] && <div className="err">{err["a" + a.id]}</div>}</div>
+    <div className="list" key="3">{x.addons.map((a) => { if (/additional character/i.test(a.name || "")) return <div key={a.id} className="rowi"><div className="grow"><b>{serviceItemText(s, "addons", a, "name", lang)}</b><small className="muted" style={{ display: "block" }}>Calculated automatically from the number of characters in the previous step.</small><small>+80% of base price for each additional character.</small></div><span className="tag">Automatic</span></div>; const q = f.addons[a.id] || 0, setQ = (v) => { setF((p) => ({ ...p, addons: { ...p.addons, [a.id]: Math.max(a.required ? 1 : 0, Math.min(a.select === "multiple" ? 20 : 1, v)) } })); }; return (
+      <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}><div className="grow"><b>{serviceItemText(s, "addons", a, "name", lang)}{a.required ? " (required)" : ""}</b><small className="muted" style={{ display: "block" }}>{serviceItemText(s, "addons", a, "desc", lang)}</small><small>{a.type === "custom" ? "Custom quote" : a.type === "percent" ? "+" + a.price + "% of base" : "+" + idr(a.price)}</small>{err["a" + a.id] && <div className="err">{err["a" + a.id]}</div>}</div>
         {a.select === "multiple" ? <div className="btns"><button className="ib" onClick={() => setQ(q - 1)} aria-label="Less">-</button><b>{q}</b><button className="ib" onClick={() => setQ(q + 1)} aria-label="More">+</button></div> : <input type="checkbox" style={{ width: 22, height: 22 }} checked={q > 0} disabled={a.required} onChange={(e) => setQ(e.target.checked ? 1 : 0)} aria-label={a.name} />}</div>); })}{x.addons.length === 0 && <p className="muted">No add-ons for this service.</p>}</div>,
-    <div key="4"><p className="muted" style={{ marginBottom: 12 }}>Tell me how the artwork will be used. Commercial use may cost extra, based on the artist's terms.</p><div className="list">{licList().map((l) => <label key={l.id} className="switch"><span><b>{l.label}</b><small className="muted" style={{ display: "block" }}>{l.type === "custom" ? "Custom quote" : l.type === "percent" ? "+" + l.value + "%" : l.value ? "+" + idr(l.value) : "Included"}{l.terms ? " - " + l.terms : ""}</small></span><input type="radio" name="lic" checked={f.license === l.id} onChange={() => set("license")(l.id)} /></label>)}</div></div>,
+    <div key="4"><p className="muted" style={{ marginBottom: 12 }}>Tell me how the artwork will be used. Commercial use may cost extra, based on the artist's terms.</p><div className="list">{licList().map((l) => <label key={l.id} className="switch"><span><b>{i18nText(l, "label", lang, l.label)}</b><small className="muted" style={{ display: "block" }}>{l.type === "custom" ? "Custom quote" : l.type === "percent" ? "+" + l.value + "%" : l.value ? "+" + idr(l.value) : "Included"}{l.terms ? " - " + i18nText(l, "terms", lang, l.terms) : ""}</small></span><input type="radio" name="lic" checked={f.license === l.id} onChange={() => set("license")(l.id)} /></label>)}</div></div>,
     <div className="form" key="5"><Field label="Preferred deadline" hint="A preferred deadline is not a guaranteed completion date. The final date is confirmed in your proposal."><input type="date" className="in" value={f.deadline} onChange={(e) => set("deadline")(e.target.value)} /></Field>{radios("rush", "Is this a rush order?", ["No", "Yes"])}{tx("platform", "Preferred communication platform", { ph: "Email, Discord, Instagram..." })}{tx("commNote", "Additional communication details", { ml: true, full: true })}</div>,
     <div className="form" key="6">{radios("display", "May I publicly display or share the commissioned artwork with credit? *", ["Yes, you may share it with credit.", "No, please keep my commission private.", "Discuss with me first."])}{tx("more", "Anything else you'd like me to know?", { ml: true, full: true })}</div>,
-    <div key="7"><div className="list">{[["Client", f.name + " (" + f.email + ")", 0], ["Service", s.title + (x.tiers.find((t) => t.id === f.tier) ? " - " + x.tiers.find((t) => t.id === f.tier).name : ""), 1], ["Character", (f.cname || "Not set") + ", " + f.chars + " character(s)", 1], ["References", f.files.length + " file(s)" + (f.urls.trim() ? " and links" : ""), 2], ["Add-ons", c.lines.slice(1).map((l) => l[0]).join(", ") || "None", 3], ["License", c.lic ? c.lic.label : "-", 4], ["Deadline", (f.deadline || "None") + ", rush: " + f.rush, 5], ["Public display", f.display || "-", 6]].map(([k, v, n]) => <div key={k} className="rowi"><div className="grow"><small className="muted">{k}</small><div style={{ overflowWrap: "anywhere" }}>{v}</div></div><Btn kind="ghost" size="sm" onClick={() => setStep(n)}>Edit</Btn></div>)}</div>
+    <div key="7"><div className="list">{[["Client", f.name + " (" + f.email + ")", 0], ["Service", s.title + (x.tiers.find((t) => t.id === f.tier) ? " - " + x.tiers.find((t) => t.id === f.tier).name : ""), 1], ["Character", (f.cname || "Not set") + ", " + f.chars + " character(s)", 1], ["References", f.files.length + " file(s)" + (f.urls.trim() ? " and links" : ""), 2], ["Add-ons", c.lines.slice(1).map((l) => l[0]).join(", ") || "None", 3], ["License", c.lic ? c.lic.label : "-", 4], ["Deadline", (f.deadline || "None") + ", rush: " + f.rush, 5], ["Public display", f.display || "-", 6]].map(([k, v, n]) => <div key={k} className="rowi"><div className="grow"><small className="muted">{k}</small><div style={{ overflowWrap: "anywhere" }}>{k === "Service" ? serviceText(s, "title", lang) + (x.tiers.find((t) => t.id === f.tier) ? " - " + serviceItemText(s, "tiers", x.tiers.find((t) => t.id === f.tier), "name", lang) : "") : k === "License" && c.lic ? i18nText(c.lic, "label", lang, c.lic.label) : k === "Add-ons" ? c.lines.slice(1).map((line) => { const addon = x.addons.find((item) => line[0] === item.name || line[0].startsWith(item.name)); return addon ? serviceItemText(s, "addons", addon, "name", lang) + line[0].slice(addon.name.length) : line[0]; }).join(", ") || "None" : v}</div></div><Btn kind="ghost" size="sm" onClick={() => setStep(n)}>Edit</Btn></div>)}</div>
       <label className="switch" style={{ marginTop: 14 }}><span>I have read and agree to the Terms of Service.</span><input type="checkbox" checked={f.tos} onChange={(e) => set("tos")(e.target.checked)} /></label>{err.tos && <div className="err">{err.tos}</div>}
       <StoreBanner />{fail && <div className="note bad" style={{ marginTop: 12 }} role="alert">{fail}</div>}</div>,
   ];
   return (
     <div className="page">
-      <PageHead crumb={"REQUEST / " + s.title.toUpperCase()} title={"Request: " + s.title}>Fill in the steps below. No payment is taken when you submit. You receive a custom proposal first.</PageHead>
+      <PageHead crumb={"REQUEST / " + serviceText(s, "title", lang).toUpperCase()} title={"Request: " + serviceText(s, "title", lang)}>Fill in the steps below. No payment is taken when you submit. You receive a custom proposal first.</PageHead>
       <div className="steps" aria-label="Commission form progress">
         <div className="step-progress-head"><b>{step + 1} / {STEPS.length} · {STEPS[step]}</b><span>{Math.round(((step + 1) / STEPS.length) * 100)}%</span></div>
         <input className="step-scrubber" type="range" min="0" max="7" step="1" value={step} onChange={(e) => setStep(Number(e.target.value))} aria-label="Slide to jump to a form step" />
@@ -4150,7 +4273,7 @@ function OrderFlow({ id, go }) {
       </div>
       <div className="olay"><section className="card"><h2 style={{ marginBottom: 14 }}>{STEPS[step]}</h2>{body[step]}
         <div className="btns" style={{ marginTop: 18, justifyContent: "space-between" }}><Btn kind="ghost" onClick={() => (step ? setStep(step - 1) : go("service-" + s.id))}>Back</Btn>{step < 7 ? <Btn onClick={next}>Next</Btn> : <Btn disabled={busy} onClick={submit}>{busy ? "Sending..." : "Submit commission request"}</Btn>}</div></section>
-        <aside><details className="osd" open><summary>Price estimate</summary><Sum s={s} sel={f} /></details></aside></div>
+        <aside><details className="osd" open><summary>Price estimate</summary><Sum s={s} sel={f} lang={lang} /></details></aside></div>
     </div>
   );
 }
@@ -4181,7 +4304,7 @@ function CommissionBoard() {
           {items.map((item) => <section className="card span-6" key={item.id}>
             <div className="meta" style={{ justifyContent: "space-between" }}><span className="tag">{item.id}</span><span className="tag">{item.status || "Pending Review"}</span></div>
             <h3 style={{ marginTop: 12 }}>{item.clientName || "Client"}</h3>
-            <p className="muted" style={{ marginTop: 4 }}>{item.serviceTitle || "Commission"}</p>
+            <p className="muted" data-no-public-translate="true" style={{ marginTop: 4 }}>{item.serviceTitle || "Commission"}</p>
             <small className="muted" style={{ display: "block", marginTop: 12 }}>Submitted {fmtDate(item.createdAt)}</small>
           </section>)}
         </div>}
@@ -4233,7 +4356,7 @@ function Track() {
       {t && <div className="track-layout" style={{ display:"grid", gap:16, marginTop:18 }}>
         <section className="card track-overview" style={{ borderTop:"5px solid var(--cyan)" }}>
           <div className="card-head track-overview-head">
-            <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
+            <div><small className="muted" style={{ display:"block", fontWeight:800, letterSpacing:".1em" }}>ORDER OVERVIEW</small><h2 data-no-public-translate="true" style={{ marginTop:4 }}>{t.serviceTitle || "Commission"}</h2><p className="muted" style={{ marginTop:4 }}>Request ID: <b>{t.id}</b></p></div>
             <div className="meta track-overview-badges"><span className="tag">{t.status || "Pending Review"}</span><span className="tag">Payment: {t.payment || "Unpaid"}</span></div>
           </div>
           <div className="stages track-overview-stages" aria-label="Commission progress">{TL.map((a,i)=><div key={a[0]} className={"stage" + (i === idx ? " is-active" : "")} aria-current={i === idx ? "step" : undefined}>{a[0]}</div>)}</div>
@@ -4243,7 +4366,7 @@ function Track() {
         <section className="card">
           <div className="card-head"><div><small className="muted" style={{ fontWeight:800, letterSpacing:".1em" }}>01 · PRICE & PROPOSAL</small><h2 style={{ marginTop:4 }}>Proposal</h2></div><span className="tag">{p ? "Available" : "Awaiting artist"}</span></div>
           {p ? <>
-            <div className="list">{(p.lines||[]).map((l,i)=><div key={i} className="rowi"><b className="grow">{l[0]}</b><span>{l[2]||idr(l[1])}</span></div>)}</div>
+            <div className="list">{(p.lines||[]).map((l,i)=><div key={i} className="rowi"><b className="grow" data-no-public-translate="true">{l[0]}</b><span>{l[2]||idr(l[1])}</span></div>)}</div>
             <div className="srow tot" style={{ marginTop:8 }}><b>Final price</b><b>{idr(p.finalPrice)}</b></div>
             {p.delivery && <p style={{ marginTop:10 }}><b>Estimated delivery:</b> {p.delivery}</p>}
             {p.notes && <p style={{ marginTop:8, whiteSpace:"pre-line" }}>{p.notes}</p>}
@@ -4296,7 +4419,7 @@ function Track() {
 function ServicePricingEditor({ service, index }) {
   const { upd } = useCreator();
   const x = X(service);
-  const ens = (n) => { n.services[index] = { ...SVC_DEF, ...n.services[index] }; return n.services[index]; };
+  const ens = (n) => { const target = n.services.find((item) => item.id === service.id); Object.assign(target, { ...SVC_DEF, ...target }); return target; };
   const mut = (fn) => upd((n) => { fn(ens(n)); });
   const list = (title, items, onChange, ph) => <ChipEditor label={title} items={items} onChange={onChange} placeholder={ph} />;
   return (
@@ -4305,31 +4428,40 @@ function ServicePricingEditor({ service, index }) {
       <div className="form">
         <Field label="Availability"><select className="in" value={x.status} onChange={(e) => mut((s2) => { s2.status = e.target.value; })}>{SVC_STATUS.map((o) => <option key={o}>{o}</option>)}</select></Field>
         <TextIn label="License info (shown on card)" value={x.license} onChange={(v) => mut((s2) => { s2.license = v; })} />
+        <TextIn label="Indonesian license info" value={service.i18n?.id?.license || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.license = v; })} />
         <TextIn label="Estimated turnaround time" value={x.delivery} onChange={(v) => mut((s2) => { s2.delivery = v; })} />
+        <TextIn label="Indonesian turnaround time" value={service.i18n?.id?.delivery || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.delivery = v; })} />
         <TextIn label="Files and format" value={x.files} onChange={(v) => mut((s2) => { s2.files = v; })} />
+        <TextIn label="Indonesian files and format" value={service.i18n?.id?.files || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.files = v; })} />
         <TextIn label="Usage / license terms for this service" value={x.usageTerms || ""} onChange={(v) => mut((s2) => { s2.usageTerms = v; })} multiline className="full" placeholder="Personal use, commercial use, redistribution, credit..." />
+        <TextIn label="Indonesian usage / license terms" value={service.i18n?.id?.usageTerms || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.usageTerms = v; })} multiline className="full" />
         <TextIn label="Additional service terms" value={x.serviceTerms || ""} onChange={(v) => mut((s2) => { s2.serviceTerms = v; })} multiline className="full" placeholder="What clients should know before ordering..." />
+        <TextIn label="Indonesian additional service terms" value={service.i18n?.id?.serviceTerms || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.serviceTerms = v; })} multiline className="full" />
         {list("Deliverables / What the client receives", x.includes, (v) => mut((s2) => { s2.includes = v; }), "Add a deliverable")}
+        <div className="field full"><span>Indonesian deliverables</span>{x.includes.map((value) => <TextIn key={value} label={value} value={service.i18n?.id?.includes?.[serviceTextKey("includes", value)] || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.includes = item.i18n.id.includes || {}; item.i18n.id.includes[serviceTextKey("includes", value)] = v; })} />)}</div>
         {list("Important notes", x.notes, (v) => mut((s2) => { s2.notes = v; }), "Add a note")}
+        <div className="field full"><span>Indonesian notes</span>{x.notes.map((value) => <TextIn key={value} label={value} value={service.i18n?.id?.notes?.[serviceTextKey("notes", value)] || ""} onChange={(v) => upd((n) => { const item = n.services.find((entry) => entry.id === service.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.notes = item.i18n.id.notes || {}; item.i18n.id.notes[serviceTextKey("notes", value)] = v; })} />)}</div>
         <Field label="Base prices (0 = custom quote)" className="full">
           <div className="list">{x.tiers.map((t, ti) => <div key={t.id} className="rowi">
-            <input className="in" value={t.name} onChange={(e) => mut((s2) => { s2.tiers[ti].name = e.target.value; })} aria-label="Name" />
-            <input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers[ti].price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} />
-            <ConfirmDelete onYes={() => mut((s2) => { s2.tiers.splice(ti, 1); })} label="Delete base price" />
+            <div className="grow" style={{ display: "grid", gap: 6 }}><input className="in" value={t.name} onChange={(e) => mut((s2) => { const item = s2.tiers.find((entry) => entry.id === t.id); item.name = e.target.value; })} aria-label="Name" /><input className="in" value={t.i18n?.id?.name || ""} onChange={(e) => mut((s2) => { const item = s2.tiers.find((entry) => entry.id === t.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.name = e.target.value; })} aria-label="Indonesian title" placeholder="Indonesian title" /></div>
+            <input className="in" type="number" min="0" value={t.price} onChange={(e) => mut((s2) => { s2.tiers.find((entry) => entry.id === t.id).price = Number(e.target.value) || 0; })} aria-label="Price" style={{ maxWidth: 150 }} />
+            <ConfirmDelete onYes={() => mut((s2) => { s2.tiers = s2.tiers.filter((entry) => entry.id !== t.id); })} label="Delete base price" />
           </div>)}</div>
           <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.tiers.push({ id: uid("t"), name: "New type", price: 0 }); })}>Add base price</Btn>
         </Field>
         <Field label="Add-ons" className="full">
           <div className="list">{x.addons.map((a, ai) => <div key={a.id} className="rowi" style={{ flexWrap: "wrap" }}>
             <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
-              <input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons[ai].name = e.target.value; })} aria-label="Name" />
-              <input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons[ai].desc = e.target.value; })} placeholder="Description" aria-label="Description" />
+              <input className="in" value={a.name} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).name = e.target.value; })} aria-label="Name" />
+              <input className="in" value={a.i18n?.id?.name || ""} onChange={(e) => mut((s2) => { const item = s2.addons.find((entry) => entry.id === a.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.name = e.target.value; })} placeholder="Indonesian title" aria-label="Indonesian title" />
+              <input className="in" value={a.desc} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).desc = e.target.value; })} placeholder="Description" aria-label="Description" />
+              <input className="in" value={a.i18n?.id?.desc || ""} onChange={(e) => mut((s2) => { const item = s2.addons.find((entry) => entry.id === a.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.desc = e.target.value; })} placeholder="Indonesian description" aria-label="Indonesian description" />
             </div>
-            <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons[ai].type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
-            <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={a.price} disabled={a.type === "custom"} onChange={(e) => mut((s2) => { s2.addons[ai].price = Number(e.target.value) || 0; })} aria-label="Price" />
-            <select className="in" style={{ maxWidth: 130 }} value={a.select} onChange={(e) => mut((s2) => { s2.addons[ai].select = e.target.value; })} aria-label="Selection"><option value="single">Single</option><option value="multiple">Multiple</option></select>
-            <label className="switch"><span>Required</span><input type="checkbox" checked={!!a.required} onChange={(e) => mut((s2) => { s2.addons[ai].required = e.target.checked; })} /></label>
-            <ConfirmDelete onYes={() => mut((s2) => { s2.addons.splice(ai, 1); })} label="Delete add-on" />
+            <select className="in" style={{ maxWidth: 140 }} value={a.type} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).type = e.target.value; })} aria-label="Pricing type"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
+            <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={a.price} disabled={a.type === "custom"} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).price = Number(e.target.value) || 0; })} aria-label="Price" />
+            <select className="in" style={{ maxWidth: 130 }} value={a.select} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).select = e.target.value; })} aria-label="Selection"><option value="single">Single</option><option value="multiple">Multiple</option></select>
+            <label className="switch"><span>Required</span><input type="checkbox" checked={!!a.required} onChange={(e) => mut((s2) => { s2.addons.find((entry) => entry.id === a.id).required = e.target.checked; })} /></label>
+            <ConfirmDelete onYes={() => mut((s2) => { s2.addons = s2.addons.filter((entry) => entry.id !== a.id); })} label="Delete add-on" />
           </div>)}</div>
           <Btn kind="cyan" size="sm" icon="plus" onClick={() => mut((s2) => { s2.addons.push({ id: uid("ad"), name: "New add-on", desc: "", type: "fixed", price: 0, select: "single", required: false }); })}>Add add-on</Btn>
         </Field>
@@ -4348,7 +4480,9 @@ function LicensesEditor() {
       <div className="list">{(site.licenses || []).map((l, i) => <div key={l.id} className="rowi" style={{ flexWrap: "wrap" }}>
         <div className="grow" style={{ display: "grid", gap: 8, minWidth: 220 }}>
           <input className="in" value={l.label} onChange={(e) => sets(["licenses", i, "label"])(e.target.value)} aria-label="Name" />
+          <input className="in" value={l.i18n?.id?.label || ""} onChange={(e) => upd((n) => { const item = n.licenses.find((entry) => entry.id === l.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.label = e.target.value; })} placeholder="Indonesian title" aria-label="Indonesian title" />
           <input className="in" value={l.terms || ""} onChange={(e) => sets(["licenses", i, "terms"])(e.target.value)} placeholder="Terms" aria-label="Terms" />
+          <input className="in" value={l.i18n?.id?.terms || ""} onChange={(e) => upd((n) => { const item = n.licenses.find((entry) => entry.id === l.id); item.i18n = item.i18n || {}; item.i18n.id = item.i18n.id || {}; item.i18n.id.terms = e.target.value; })} placeholder="Indonesian terms" aria-label="Indonesian terms" />
         </div>
         <select className="in" style={{ maxWidth: 140 }} value={l.type} onChange={(e) => sets(["licenses", i, "type"])(e.target.value)}><option value="fixed">Fixed amount</option><option value="percent">Percentage</option><option value="custom">Custom quote</option></select>
         <input className="in" type="number" min="0" style={{ maxWidth: 110 }} value={l.value} disabled={l.type === "custom"} onChange={(e) => sets(["licenses", i, "value"])(Number(e.target.value) || 0)} aria-label="Value" />
@@ -4604,7 +4738,7 @@ function App() {
         if (!sb) { if(active)setPublishedLoaded(true); return; }
         const result = await Store.api("get_site", {});
         if (active && result.site && typeof result.site === "object") {
-          const remote = mergeDeep(DEFAULT_SITE, result.site);
+          const remote = ensureWorkflowIds(mergeDeep(DEFAULT_SITE, result.site));
           if (!remote.profile.about.cardImage && remote.appearance.banner) remote.profile.about.cardImage = remote.appearance.banner;
           remote.appearance.banner = remote.profile.about.cardImage || "";
           setSaved(remote);
@@ -4675,7 +4809,7 @@ function App() {
     Store.api("get_draft_site",{},true).then(r=>{
       if(!active)return;
       if(r.site && typeof r.site === "object" && !Array.isArray(r.site)) {
-        setSite(p=>mergeDeep(p,r.site));
+        setSite(p=>ensureWorkflowIds(mergeDeep(p,r.site)));
       }
       setDraftLoaded(true);
     }).catch(()=>{ if(active)setDraftLoaded(true); });
@@ -4708,8 +4842,8 @@ function App() {
   const doPublish = async (data) => {
     setSaving(true); setMsg(null);
     try {
-      await publishSite(data);
-      const next = clone(data);
+      const published = await publishSite(data);
+      const next = clone(published.site || data);
       setSaved(next);
       setSite(next);
       setMsg({ ok: "Saved. Visitors will see the update." });
@@ -4803,7 +4937,7 @@ function App() {
     const selector = "h1,h2,h3,h4,p,.tag,.note,.err,.stage,.service-gallery-empty,small,span,b,strong,a,button,label,li,summary,blockquote";
     const applyOverrides = () => {
       root.querySelectorAll(selector).forEach((el) => {
-        if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]")) return;
+        if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit],[data-no-public-translate]")) return;
         const textNodes = Array.from(el.childNodes).filter((node) => node.nodeType === 3 && node.nodeValue.trim());
         if (!textNodes.length || document.activeElement === el) return;
         const current = textNodes.map((node) => node.nodeValue).join("");
@@ -4824,7 +4958,7 @@ function App() {
       });
       if (!creatorOn && view !== "about") {
         root.querySelectorAll("[placeholder],[aria-label],[title]").forEach((el) => {
-          if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit]")) return;
+          if (el.closest(".inpage-builder,.creator-bar-wrap,[data-no-edit],[data-no-public-translate]")) return;
           [["placeholder","i18nPlaceholder"],["aria-label","i18nAriaLabel"],["title","i18nTitle"]].forEach(([attr,key]) => {
             if (!el.hasAttribute(attr)) return;
             if (el.dataset[key] === undefined) el.dataset[key] = el.getAttribute(attr) || "";
@@ -4874,14 +5008,14 @@ function App() {
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
-            {view === "services" && <Services go={go} setCat={setCat} />}
+            {view === "services" && <Services go={go} setCat={setCat} lang={lang} />}
             {view === "board" && <CommissionBoard />}
             {view === "terms" && <Terms lang={lang} setLang={setLang} go={go} />}
-            {view === "workflow" && <Workflow go={go} />}
+            {view === "workflow" && <Workflow go={go} lang={lang} />}
             {view === "contact" && <Contact />}
             {view === "track" && <Track />}
-            {view.startsWith("service-") && <ServiceDetail id={view.slice(8)} go={go} />}
-            {view.startsWith("order-") && <OrderFlow id={view.slice(6)} go={go} />}
+            {view.startsWith("service-") && <ServiceDetail id={view.slice(8)} go={go} lang={lang} />}
+            {view.startsWith("order-") && <OrderFlow id={view.slice(6)} go={go} lang={lang} />}
             {view === "creator" && creatorOn && <CreatorPage />}
           </div>
         </main>
