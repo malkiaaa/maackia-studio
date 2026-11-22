@@ -2823,7 +2823,7 @@ function AdoptableDetail({ id, go, currency, lang }) {
   const status = item.status || "available";
   const claimUrl = safeUrl(CONFIG.adoptableSettings && CONFIG.adoptableSettings.claim && CONFIG.adoptableSettings.claim.url);
   const claim = status === "available";
-  const claimInternalRoute = claimUrl && /^(?:#|\\/)([A-Za-z0-9_-]+)$/.exec(claimUrl);
+  const claimInternalRoute = claimUrl && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimUrl);
   return (
     <div className="page">
       <div className="adoptable-back"><Btn kind="ghost" size="sm" icon="left" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali" : "Back"}</Btn></div>
