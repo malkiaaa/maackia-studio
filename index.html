@@ -5503,7 +5503,7 @@ function NotifPanel() {
 
 function OrdersPanel() {
   const {site,upd}=useCreator();
-  const [list, setList = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
+  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
   const [connStatus] = useConnectionStatus();
   const schedules=Array.isArray(site.commissionSchedule)?site.commissionSchedule:[];
   const updateSchedule=(order,field,value)=>upd(n=>{const rows=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id),old=(n.commissionSchedule||[]).find(r=>r.requestId===order.id)||{requestId:order.id,startDate:"",endDate:"",note:"",color:""};const next={...old,[field]:field==="note"?cleanScheduleNote(value):value};if(field==="endDate"&&next.startDate&&value&&value<next.startDate)return;if(field==="startDate"&&next.endDate&&value&&next.endDate<value)next.endDate="";if(!next.startDate&&!next.endDate&&!next.note&&!next.color){n.commissionSchedule=rows;return;}n.commissionSchedule=rows.concat(next);});
