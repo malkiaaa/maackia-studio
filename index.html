@@ -1348,7 +1348,7 @@ html.is-android .home-dashboard > .home-intro-card::before {
 .adoptable-gallery-edit-item .ib{width:30px;height:30px;background:rgba(255,255,255,.94)}
 .adoptable-gallery-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:116px;height:116px;border:1px dashed var(--line);border-radius:12px;background:var(--powder);color:var(--ink);font-weight:800}
 .adoptable-gallery-add:disabled{opacity:.6}
-.adoptable-gallery-edit-item.has-image-error:after{content:"Image unavailable";position:absolute;inset:0;display:grid;place-items:center;padding:8px;text-align:center;color:#66717D;font-size:.75rem;font-weight:700}
+.adoptable-gallery-editor-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;padding:8px;text-align:center;color:#66717D;font-size:.75rem;font-weight:700}.adoptable-gallery-edit-item.has-image-error .adoptable-gallery-editor-fallback{display:flex}
 @media(max-width:767px){.adoptable-detail-media{gap:10px}.adoptable-detail-image{aspect-ratio:4/5;max-height:none}.adoptable-detail-prices{grid-template-columns:minmax(0,1fr)}.adoptable-gallery{padding:9px}}
 </style>
 
@@ -3895,6 +3895,7 @@ function AdoptableGalleryEditor({ images, onChange, lang = "en" }) {
     <div className="adoptable-gallery-editor">
       {images.map((url, index) => <div className="adoptable-gallery-edit-item" key={url + index}>
         <img src={safeImg(url) || placeholder(index, "Gallery")} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />
+        <span className="adoptable-gallery-editor-fallback">{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span>
         <div className="btns">
           <button type="button" className="ib" disabled={index === 0} onClick={() => onChange(move(images, index, -1))} aria-label={lang === "id" ? "Pindahkan gambar galeri " + (index + 1) + " ke atas" : "Move gallery image " + (index + 1) + " up"}><Icon name="up" /></button>
           <button type="button" className="ib" disabled={index === images.length - 1} onClick={() => onChange(move(images, index, 1))} aria-label={lang === "id" ? "Pindahkan gambar galeri " + (index + 1) + " ke bawah" : "Move gallery image " + (index + 1) + " down"}><Icon name="down" /></button>
