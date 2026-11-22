@@ -2853,9 +2853,9 @@ function AdoptableCard({ item, currency, lang, go }) {
         <b className="adoptable-price">{adoptablePrice(item, currency, lang)}</b>
         <div className="btns">
           <Btn kind="ghost" size="sm" onClick={() => go("adoptable-" + item.id)}>{lang === "id" ? "Lihat detail" : "View details"}</Btn>
-          {status === "available"
+          {status === "available" && item.visible !== false
             ? <Btn kind="peach" size="sm" onClick={() => go("adoptable-" + item.id)}>{lang === "id" ? "Klaim" : "Claim"}</Btn>
-            : <Btn kind="ghost" size="sm" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (lang === "id" ? "Tidak tersedia" : "Unavailable")}</Btn>}
+            : <Btn kind="ghost" size="sm" disabled>{item.visible === false ? (lang === "id" ? "Belum dipublikasikan" : "Not published") : (status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (lang === "id" ? "Tidak tersedia" : "Unavailable"))}</Btn>}
         </div>
       </div>
     </article>
