@@ -1350,6 +1350,38 @@ html.is-android .home-dashboard > .home-intro-card::before {
 .adoptable-gallery-add:disabled{opacity:.6}
 .adoptable-gallery-editor-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;padding:8px;text-align:center;color:#66717D;font-size:.75rem;font-weight:700}.adoptable-gallery-edit-item.has-image-error .adoptable-gallery-editor-fallback{display:flex}
 @media(max-width:767px){.adoptable-detail-media{gap:10px}.adoptable-detail-image{aspect-ratio:4/5;max-height:none}.adoptable-detail-prices{grid-template-columns:minmax(0,1fr)}.adoptable-gallery{padding:9px}}
+/* Adoptable detail information hierarchy */
+.adoptable-detail-copy{align-items:stretch}
+.adoptable-detail-intro{display:flex;flex-direction:column;align-items:flex-start;gap:12px;width:100%}
+.adoptable-detail-section{width:100%;min-width:0}
+.adoptable-detail-section h3{font-size:1rem;margin:0 0 9px}
+.adoptable-detail-section p{white-space:pre-wrap;overflow-wrap:anywhere}
+.adoptable-check-list,.adoptable-note-list,.adoptable-terms-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.adoptable-check-list li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;align-items:start}
+.adoptable-check-list li>span:first-child{font-weight:900;color:var(--ok)}
+.adoptable-notes{box-sizing:border-box}
+.adoptable-notes h3{margin-bottom:8px}
+.adoptable-note-list{list-style:disc;padding-left:20px}
+.adoptable-legacy-notes{margin:0 0 9px}
+.adoptable-terms{border:1px solid var(--line);border-radius:14px;padding:13px;width:100%;box-sizing:border-box}
+.adoptable-terms summary{cursor:pointer;font-weight:850;list-style:none}
+.adoptable-terms summary::-webkit-details-marker{display:none}
+.adoptable-terms summary:after{content:"+";float:right;font-size:1.15rem}
+.adoptable-terms[open] summary:after{content:"−"}
+.adoptable-terms-list{list-style:disc;padding:12px 0 0 20px}
+.adoptable-price-unset{margin:0}
+.adoptable-list-editor{display:grid;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px}
+.adoptable-list-editor h4{margin:0}
+.adoptable-list-editor-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.adoptable-list-editor-row textarea{min-height:72px;resize:vertical}
+.adoptable-list-editor-item{display:grid;gap:8px;padding:10px;border-radius:12px;background:var(--powder)}
+.adoptable-list-editor-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.adoptable-list-editor-item-head small{color:var(--muted);overflow-wrap:anywhere}
+.adoptable-list-preview{display:grid;gap:7px;margin:0;padding-left:20px}
+.adoptable-list-editor-actions{display:flex;flex-wrap:wrap;gap:8px}
+.adoptable-settings-help{font-size:.8rem;color:var(--muted)}
+@media(max-width:767px){.adoptable-list-editor-row{grid-template-columns:minmax(0,1fr)}}
+
 </style>
 
 <div id="root"></div>
@@ -1621,6 +1653,15 @@ function mergePublishAdoptables(serverValue, localValue) {
         }
       });
       return preserved;
+    });
+  }
+  if (payload.adoptableSettings && server.adoptableSettings) {
+    ["defaultDeliverables", "defaultNotes", "defaultTerms"].forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(payload.adoptableSettings, key) &&
+          Object.prototype.hasOwnProperty.call(server.adoptableSettings, key)) {
+        payload.adoptableSettings[key] = Array.isArray(server.adoptableSettings[key])
+          ? server.adoptableSettings[key].slice() : server.adoptableSettings[key];
+      }
     });
   }
   return { payload, needsConfirmation: serverItems.length > 0 && !!localItems && localItems.length === 0 };
