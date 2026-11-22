@@ -2823,6 +2823,7 @@ function AdoptableDetail({ id, go, currency, lang }) {
   const status = item.status || "available";
   const claimUrl = safeUrl(CONFIG.adoptableSettings && CONFIG.adoptableSettings.claim && CONFIG.adoptableSettings.claim.url);
   const claim = status === "available";
+  const claimInternalRoute = claimUrl && /^(?:#|\\/)([A-Za-z0-9_-]+)$/.exec(claimUrl);
   return (
     <div className="page">
       <div className="adoptable-back"><Btn kind="ghost" size="sm" icon="left" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali" : "Back"}</Btn></div>
@@ -2839,9 +2840,11 @@ function AdoptableDetail({ id, go, currency, lang }) {
           <div className="adoptable-detail-price">{adoptablePrice(item, currency, lang)}</div>
           {adoptableText(item, "description", lang) && <p className="adoptable-description">{adoptableText(item, "description", lang)}</p>}
           {adoptableText(item, "notes", lang) && <div className="adoptable-notes"><b>{lang === "id" ? "Catatan" : "Notes"}</b><p>{adoptableText(item, "notes", lang)}</p></div>}
-          {claim && (claimUrl
-            ? <Btn kind="peach" href={claimUrl}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>
-            : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>)}
+          {claim && (claimUrl && claimInternalRoute
+            ? <Btn kind="peach" onClick={() => go(claimInternalRoute[1])}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>
+            : claimUrl
+              ? <Btn kind="peach" href={claimUrl}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>
+              : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>)}
           {!claim && <Btn kind="ghost" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (lang === "id" ? "Sedang dipesan" : "Reserved")}</Btn>}
         </div>
       </section>
@@ -3722,7 +3725,7 @@ function SupabasePanel() {
 
 /* ============================================================ ADOPTABLES — Creator Dashboard editor */
 function AdoptableEditor({ initial, onCancel, onApply }) {
-  const [draft, setDraft] = useState(() => ({ ...clone(initial), visible: initial.visible !== false }));
+  const [draft, setDraft] = useState(() => ({ ...clone(initial), status: initial.status || "available", visible: initial.visible !== false }));
   const validationErrors = validateAdoptableItem(draft, safeImg);
   const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
   const setIdText = (key, value) => setDraft((current) => ({ ...current, i18n: { ...(current.i18n || {}), id: { ...((current.i18n || {}).id || {}), [key]: value } } }));
