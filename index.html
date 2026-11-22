@@ -1643,6 +1643,7 @@ function assignScheduleLanes(rows){const ends=[],sorted=(rows||[]).filter(r=>val
 function scheduleMonths(rows){const groups={};(rows||[]).forEach(r=>{if(!validScheduleDate(r.startDate)||!validScheduleDate(r.endDate)||r.endDate<r.startDate)return;const cursor=new Date(r.startDate.slice(0,7)+"-01T00:00:00Z"),last=r.endDate.slice(0,7);while(cursor.toISOString().slice(0,7)<=last){const key=cursor.toISOString().slice(0,7);(groups[key]||(groups[key]=[])).push(r);cursor.setUTCMonth(cursor.getUTCMonth()+1);}});return Object.keys(groups).sort().map(key=>({key,rows:groups[key]}));}
 function formatScheduleDate(v,lang){if(!validScheduleDate(v))return"";return new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}).format(new Date(v+"T00:00:00Z"));}
 function scheduleStatusClass(v){const s=String(v||"Pending Review").toLowerCase();if(["pending review","reviewing","request submitted"].includes(s))return"pending";if(s==="completed")return"completed";if(["cancelled","declined","rejected"].includes(s))return"cancelled";if(["in progress","waiting for feedback","revision"].includes(s))return"progress";return"neutral";}
+function scheduleStatusLabel(v,lang="en"){const s=String(v||"Pending Review");if(lang!=="id")return s;const labels={"Pending Review":"Menunggu Peninjauan","Reviewing":"Sedang Ditinjau","Request Submitted":"Permintaan Diajukan","In Progress":"Sedang Dikerjakan","Waiting for Feedback":"Menunggu Masukan","Revision":"Revisi","Completed":"Selesai","Cancelled":"Dibatalkan","Declined":"Ditolak","Rejected":"Ditolak","Paid":"Dibayar","Awaiting Payment":"Menunggu Pembayaran"};return labels[s]||s;}
 /* ============================================================ utils */
 const uid = (p = "x") => p + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -5245,10 +5246,9 @@ function OrderFlow({ id, go, lang }) {
 }
 
 /* ---- visitor: public commission board */
-function CommissionBoard() {
+function CommissionBoard({lang="id"}) {
   const [items,setItems]=useState(null),[msg,setMsg]=useState("");
   const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
-  const lang=(()=>{try{return localStorage.getItem("malkiaa-language")==="en"?"en":"id";}catch(e){return"id";}})();
   const schedules=normalizeCommissionSchedule(CONFIG.commissionSchedule||[]);
   useEffect(()=>{let active=true;(async()=>{try{const result=await Store.api("public_board",{});if(active)setItems(Array.isArray(result.items)?result.items:[]);}catch(e){if(active)setMsg("The public commission board is temporarily unavailable. Please try again later.");}})();return()=>{active=false;};},[]);
   const records=(items||[]).map(item=>{const schedule=schedules.find(r=>r.requestId===item.id);return schedule?{...item,...schedule}:null;}).filter(Boolean);
@@ -5273,7 +5273,7 @@ function CommissionBoard() {
       <h3 className="schedule-order-client">{r.clientName||"Client"}</h3>
       <p className="schedule-order-service">{r.serviceTitle||"Commission"}</p>
       <dl className="schedule-order-dates">
-        <div><dt>{lang==="id"?"Submitted":"Submitted"}</dt><dd>{r.createdAt?fmtDate(r.createdAt):"—"}</dd></div>
+        <div><dt>{lang==="id"?"Diajukan":"Submitted"}</dt><dd>{r.createdAt?fmtDate(r.createdAt):"—"}</dd></div>
         <div><dt>{lang==="id"?"Mulai":"Start"}</dt><dd>{formatScheduleDate(r.startDate,lang)}</dd></div>
         <div><dt>{lang==="id"?"Target selesai":"Target finish"}</dt><dd>{formatScheduleDate(r.endDate,lang)}</dd></div>
       </dl>
@@ -5307,7 +5307,7 @@ function CommissionBoard() {
         </div>
       </div>
       <section className="schedule-orders" aria-label={lang==="id"?"Daftar order terjadwal":"Scheduled orders"}>
-        {visible.length?<div className="schedule-orders-grid">{visible.map(renderOrder)}</div>:<p className="schedule-no-orders">{lang==="id"?"Tidak ada jadwal di bulan ini":"No schedules this month"}</p>}
+        {items===null?<p className="schedule-no-orders">{lang==="id"?"Memuat jadwal…":"Loading schedules…"}</p>:visible.length?<div className="schedule-orders-grid">{visible.map(renderOrder)}</div>:<p className="schedule-no-orders">{lang==="id"?"Tidak ada jadwal di bulan ini":"No schedules this month"}</p>}
       </section>
     </section>
   </div>;
@@ -5639,30 +5639,30 @@ function NotifPanel() {
   );
 }
 
-function OrdersPanel() {
+function OrdersPanel({lang="id"}) {
   const {site,upd}=useCreator();
   const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
   const [connStatus] = useConnectionStatus();
   const schedules=Array.isArray(site.commissionSchedule)?site.commissionSchedule:[];
   const updateSchedule=(order,field,value)=>upd(n=>{const rows=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id),old=(n.commissionSchedule||[]).find(r=>r.requestId===order.id)||{requestId:order.id,startDate:"",endDate:"",note:"",color:""};const next={...old,[field]:field==="note"?cleanScheduleNote(value):value};if(field==="endDate"&&next.startDate&&value&&value<next.startDate)return;if(field==="startDate"&&next.endDate&&value&&next.endDate<value)next.endDate="";if(!next.startDate&&!next.endDate&&!next.note&&!next.color){n.commissionSchedule=rows;return;}n.commissionSchedule=rows.concat(next);});
-  const removeSchedule=id=>upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==id);});
-  const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr("Could not load requests: "+(e&&e.message||"")));
+  const removeSchedule=id=>{setScheduleError("");upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==id);});};
+  const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr((lang==="id"?"Tidak dapat memuat permintaan: ":"Could not load requests: ")+(e&&e.message||"")));
   useEffect(() => {
     load(); let channel=null;
     if (_sbClient) channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
     return ()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
   },[connStatus]);
   const deleteClientOrder = async (order) => {
-    if(!window.confirm("Permanently delete commission "+order.id+" for "+((order.form||{}).name||"this client")+"? This cannot be undone.")) return;
+    if(!window.confirm((lang==="id"?"Hapus permanen komisi ":"Permanently delete commission ")+order.id+(lang==="id"?" untuk ":" for ")+((order.form||{}).name||(lang==="id"?"klien ini":"this client"))+(lang==="id"?"? Tindakan ini tidak dapat dibatalkan.":"? This cannot be undone."))) return;
     setDeleting(order.id); setErr("");
     try { await Store.deleteOrder(order.id); upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id);}); if(sel&&sel.id===order.id)setSel(null); await load(); }
-    catch(e) { setErr("Could not delete commission "+order.id+": "+(e.message||"")); }
+    catch(e) { setErr((lang==="id"?"Tidak dapat menghapus komisi ":"Could not delete commission ")+order.id+": "+(e.message||"")); }
     finally { setDeleting(""); }
   };
   if(sel) return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
   const n=(st)=>(list||[]).filter(o=>st.includes(o.status)).length;
   const stats=[["Total",list?list.length:0],["Pending",n(["Pending Review"])],["Accepted",n(["Paid","Awaiting Payment"])],["In progress",n(["In Progress","Waiting for Feedback","Revision"])],["Completed",n(["Completed"])],["Rejected",n(["Rejected","Cancelled"])]];
-  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}
+  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}{scheduleError&&<div className="note bad" role="alert" style={{marginBottom:12}}>{scheduleError}</div>}
     <div className="grid">{stats.map(([l,v])=><div key={l} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
     <section className="card"><div className="card-head"><h2>Client requests</h2><Btn kind="ghost" size="sm" onClick={load}>Refresh</Btn></div>
       {list===null?<p className="muted">Loading...</p>:list.length===0?<p className="muted">No requests yet.</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
@@ -5672,13 +5672,13 @@ function OrdersPanel() {
         <span className={"tag status-badge "+scheduleStatusClass(o.status)}>{o.status||"Pending Review"}</span>
         <details className="schedule-editor"><summary>Schedule</summary><div className="schedule-editor-fields">
           <label>Start date<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).startDate||""} onChange={e=>updateSchedule(o,"startDate",e.target.value)} /></label>
-          <label>Target finish<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).endDate||""} onChange={e=>updateSchedule(o,"endDate",e.target.value)} /></label>
+          <label>{lang==="id"?"Target selesai":"Target finish"}<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).endDate||""} onChange={e=>updateSchedule(o,"endDate",e.target.value)} /></label>
           <label className="schedule-note-field">Public note (optional)<input maxLength="120" value={(schedules.find(r=>r.requestId===o.id)||{}).note||""} onChange={e=>updateSchedule(o,"note",e.target.value)} placeholder="Shown on public schedule" /></label>
-          <label>Bar color<select value={(schedules.find(r=>r.requestId===o.id)||{}).color||"cyan"} onChange={e=>updateSchedule(o,"color",e.target.value)}><option value="cyan">Cyan</option><option value="peach">Yellow</option><option value="gold">Gold</option><option value="ok">Green</option><option value="lavender">Lavender</option><option value="pink">Pink</option></select></label>
-          <div className="schedule-editor-actions"><button type="button" onClick={()=>removeSchedule(o.id)}>Clear schedule</button>{schedules.find(r=>r.requestId===o.id)&&scheduleOverlapCount(schedules,schedules.find(r=>r.requestId===o.id))>3&&<small role="status">More than 3 commissions overlap. Warning only.</small>}</div>
+          <label>Bar color<select value={(schedules.find(r=>r.requestId===o.id)||{}).color||"cyan"} onChange={e=>updateSchedule(o,"color",e.target.value)}><option value="cyan">{lang==="id"?"Biru sian":"Cyan"}</option><option value="peach">{lang==="id"?"Kuning":"Yellow"}</option><option value="gold">{lang==="id"?"Emas":"Gold"}</option><option value="ok">{lang==="id"?"Hijau":"Green"}</option><option value="lavender">Lavender</option><option value="pink">Pink</option></select></label>
+          <div className="schedule-editor-actions"><button type="button" onClick={()=>removeSchedule(o.id)}>{lang==="id"?"Hapus jadwal":"Clear schedule"}</button>{schedules.find(r=>r.requestId===o.id)&&scheduleOverlapCount(schedules,schedules.find(r=>r.requestId===o.id))>3&&<small role="status">{lang==="id"?"Lebih dari 3 komisi bertumpang tindih. Ini hanya peringatan.":"More than 3 commissions overlap. Warning only."}</small>}</div>
         </div></details>
         <div className="btns" style={{gap:6,flex:"0 0 auto"}}>
-          <Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?"Deleting...":"Delete"}</Btn>
+          <Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?(lang==="id"?"Menghapus…":"Deleting…"):(lang==="id"?"Hapus":"Delete")}</Btn>
         </div>
       </article>)}</div>}
     </section>
@@ -6026,7 +6026,7 @@ function App() {
             {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} owner={creatorOn} setToast={setToast} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
             {view === "services" && <Services go={go} setCat={setCat} lang={lang} />}
-            {view === "board" && <CommissionBoard />}
+            {view === "board" && <CommissionBoard lang={lang} />}
             {view === "terms" && <Terms lang={lang} setLang={setLang} go={go} />}
             {view === "workflow" && <Workflow go={go} lang={lang} />}
             {view === "contact" && <Contact />}
