@@ -1460,6 +1460,15 @@ html.is-android .home-dashboard > .home-intro-card::before {
   .schedule-order-dates dt{font-size:10px}
   .schedule-order-dates dd{font-size:12px}
 }
+
+/* Fixed-contrast public status badges and schedule palette */
+:root{--sch-lavender:#E8DDFB;--sch-pink:#F6DDE8}
+.status-badge{display:inline-flex;align-items:center;justify-content:center;border:0!important;letter-spacing:0!important;text-transform:none!important;font-size:13px!important;font-weight:800!important;padding:5px 10px!important}
+.status-badge.pending{background:#FCE7B2!important;color:#3A2A00!important}
+.status-badge.progress{background:#BFEAF0!important;color:#12343A!important}
+.status-badge.completed{background:#C9E8D2!important;color:#153B22!important}
+.status-badge.cancelled{background:#F4C8CE!important;color:#4B151D!important}
+.status-badge.neutral{background:#EAF9FD!important;color:#2F4F5E!important}
 </style>
 
 <div id="root"></div>
@@ -5265,7 +5274,7 @@ function CommissionBoard() {
     </article>;
   };
   return <div className="page commission-board-page">
-    <PageHead crumb="PUBLIC COMMISSIONS" title="Commission Board">A public overview of current and previous commission requests. Client names are shown as entered in the order form.</PageHead>
+    <PageHead crumb="PUBLIC COMMISSIONS" title={lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}>{lang==="id"?"Kalender jadwal commission berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</PageHead>
     {msg&&<div className="note bad" role="alert">{msg}</div>}
     <section className="schedule-section">
       <header className="schedule-heading">
