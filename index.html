@@ -5642,45 +5642,57 @@ function NotifPanel() {
 
 function OrdersPanel({lang="id"}) {
   const {site,upd}=useCreator();
-  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
-  const [connStatus] = useConnectionStatus();
+  const [list,setList]=useState(null),[sel,setSel]=useState(null),[err,setErr]=useState(""),[deleting,setDeleting]=useState("");
+  const [scheduleError,setScheduleError]=useState("");
+  const [connStatus]=useConnectionStatus();
   const schedules=Array.isArray(site.commissionSchedule)?site.commissionSchedule:[];
-  const updateSchedule=(order,field,value)=>upd(n=>{const rows=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id),old=(n.commissionSchedule||[]).find(r=>r.requestId===order.id)||{requestId:order.id,startDate:"",endDate:"",note:"",color:""};const next={...old,[field]:field==="note"?cleanScheduleNote(value):value};if(field==="endDate"&&next.startDate&&value&&value<next.startDate)return;if(field==="startDate"&&next.endDate&&value&&next.endDate<value)next.endDate="";if(!next.startDate&&!next.endDate&&!next.note&&!next.color){n.commissionSchedule=rows;return;}n.commissionSchedule=rows.concat(next);});
-  const removeSchedule=id=>{setScheduleError("");upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==id);});};
-  const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr((lang==="id"?"Tidak dapat memuat permintaan: ":"Could not load requests: ")+(e&&e.message||"")));
-  useEffect(() => {
-    load(); let channel=null;
-    if (_sbClient) channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
-    return ()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
-  },[connStatus]);
-  const deleteClientOrder = async (order) => {
-    if(!window.confirm((lang==="id"?"Hapus permanen komisi ":"Permanently delete commission ")+order.id+(lang==="id"?" untuk ":" for ")+((order.form||{}).name||(lang==="id"?"klien ini":"this client"))+(lang==="id"?"? Tindakan ini tidak dapat dibatalkan.":"? This cannot be undone."))) return;
-    setDeleting(order.id); setErr("");
-    try { await Store.deleteOrder(order.id); upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id);}); if(sel&&sel.id===order.id)setSel(null); await load(); }
-    catch(e) { setErr((lang==="id"?"Tidak dapat menghapus komisi ":"Could not delete commission ")+order.id+": "+(e.message||"")); }
-    finally { setDeleting(""); }
+  const updateSchedule=(order,field,value)=>{
+    const old=schedules.find(r=>r.requestId===order.id)||{requestId:order.id,startDate:"",endDate:"",note:"",color:""};
+    const next={...old,[field]:field==="note"?cleanScheduleNote(value):value};
+    if(next.startDate&&next.endDate&&next.endDate<next.startDate){
+      setScheduleError(lang==="id"?"Tanggal target selesai tidak boleh sebelum tanggal mulai.":"Target finish cannot be earlier than the start date.");
+      return;
+    }
+    setScheduleError("");
+    upd(n=>{
+      const rows=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id);
+      if(!next.startDate&&!next.endDate&&!next.note&&!next.color){n.commissionSchedule=rows;return;}
+      n.commissionSchedule=rows.concat(next);
+    });
   };
-  if(sel) return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
-  const n=(st)=>(list||[]).filter(o=>st.includes(o.status)).length;
+  const removeSchedule=id=>{setScheduleError("");upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==id);});};
+  const load=()=>Store.allOrders().then(a=>setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch(e=>setErr((lang==="id"?"Tidak dapat memuat permintaan: ":"Could not load requests: ")+(e&&e.message||"")));
+  useEffect(()=>{
+    load();let channel=null;
+    if(_sbClient)channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
+    return()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
+  },[connStatus,lang]);
+  const deleteClientOrder=async order=>{
+    if(!window.confirm((lang==="id"?"Hapus permanen komisi ":"Permanently delete commission ")+order.id+(lang==="id"?" untuk ":" for ")+((order.form||{}).name||(lang==="id"?"klien ini":"this client"))+(lang==="id"?"? Tindakan ini tidak dapat dibatalkan.":"? This cannot be undone.")))return;
+    setDeleting(order.id);setErr("");
+    try{await Store.deleteOrder(order.id);upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id);});if(sel&&sel.id===order.id)setSel(null);await load();}
+    catch(e){setErr((lang==="id"?"Tidak dapat menghapus komisi ":"Could not delete commission ")+order.id+": "+(e.message||""));}
+    finally{setDeleting("");}
+  };
+  if(sel)return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
+  const n=st=>(list||[]).filter(o=>st.includes(o.status)).length;
   const stats=[["Total",list?list.length:0],["Pending",n(["Pending Review"])],["Accepted",n(["Paid","Awaiting Payment"])],["In progress",n(["In Progress","Waiting for Feedback","Revision"])],["Completed",n(["Completed"])],["Rejected",n(["Rejected","Cancelled"])]];
   return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}{scheduleError&&<div className="note bad" role="alert" style={{marginBottom:12}}>{scheduleError}</div>}
-    <div className="grid">{stats.map(([l,v])=><div key={l} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
-    <section className="card"><div className="card-head"><h2>Client requests</h2><Btn kind="ghost" size="sm" onClick={load}>Refresh</Btn></div>
-      {list===null?<p className="muted">Loading...</p>:list.length===0?<p className="muted">No requests yet.</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
+    <div className="grid">{stats.map(([label,value])=><div key={label} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{label}</span><b>{value}</b></div>)}</div>
+    <section className="card"><div className="card-head"><h2>{lang==="id"?"Permintaan klien":"Client requests"}</h2><Btn kind="ghost" size="sm" onClick={load}>{lang==="id"?"Muat ulang":"Refresh"}</Btn></div>
+      {list===null?<p className="muted">{lang==="id"?"Memuat…":"Loading..."}</p>:list.length===0?<p className="muted">{lang==="id"?"Belum ada permintaan.":"No requests yet."}</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
         <button type="button" onClick={()=>setSel(o)} style={{flex:"1 1 240px",minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
-          <div className="grow"><b>{o.id} · {(o.form||{}).name||"Client"}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||"Commission"} · {fmtDate(o.createdAt||o.created_at)} · {idr((o.estimate||{}).total||0)}</small></div>
+          <div className="grow"><b>{o.id} · {(o.form||{}).name||(lang==="id"?"Klien":"Client")}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||(lang==="id"?"Komisi":"Commission")} · {fmtDate(o.createdAt||o.created_at)} · {idr((o.estimate||{}).total||0)}</small></div>
         </button>
-        <span className={"tag status-badge "+scheduleStatusClass(o.status)}>{o.status||"Pending Review"}</span>
-        <details className="schedule-editor"><summary>Schedule</summary><div className="schedule-editor-fields">
-          <label>Start date<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).startDate||""} onChange={e=>updateSchedule(o,"startDate",e.target.value)} /></label>
+        <span className={"tag status-badge "+scheduleStatusClass(o.status)}>{scheduleStatusLabel(o.status,lang)}</span>
+        <details className="schedule-editor"><summary>{lang==="id"?"Jadwal":"Schedule"}</summary><div className="schedule-editor-fields">
+          <label>{lang==="id"?"Tanggal mulai":"Start date"}<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).startDate||""} onChange={e=>updateSchedule(o,"startDate",e.target.value)} /></label>
           <label>{lang==="id"?"Target selesai":"Target finish"}<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).endDate||""} onChange={e=>updateSchedule(o,"endDate",e.target.value)} /></label>
-          <label className="schedule-note-field">Public note (optional)<input maxLength="120" value={(schedules.find(r=>r.requestId===o.id)||{}).note||""} onChange={e=>updateSchedule(o,"note",e.target.value)} placeholder="Shown on public schedule" /></label>
-          <label>Bar color<select value={(schedules.find(r=>r.requestId===o.id)||{}).color||"cyan"} onChange={e=>updateSchedule(o,"color",e.target.value)}><option value="cyan">{lang==="id"?"Biru sian":"Cyan"}</option><option value="peach">{lang==="id"?"Kuning":"Yellow"}</option><option value="gold">{lang==="id"?"Emas":"Gold"}</option><option value="ok">{lang==="id"?"Hijau":"Green"}</option><option value="lavender">Lavender</option><option value="pink">Pink</option></select></label>
+          <label className="schedule-note-field">{lang==="id"?"Catatan publik (opsional)":"Public note (optional)"}<input maxLength="120" value={(schedules.find(r=>r.requestId===o.id)||{}).note||""} onChange={e=>updateSchedule(o,"note",e.target.value)} placeholder={lang==="id"?"Ditampilkan pada jadwal publik":"Shown on public schedule"} /></label>
+          <label>{lang==="id"?"Warna penanda":"Schedule color"}<select value={(schedules.find(r=>r.requestId===o.id)||{}).color||"cyan"} onChange={e=>updateSchedule(o,"color",e.target.value)}><option value="cyan">{lang==="id"?"Biru sian":"Cyan"}</option><option value="peach">{lang==="id"?"Kuning":"Yellow"}</option><option value="gold">{lang==="id"?"Emas":"Gold"}</option><option value="ok">{lang==="id"?"Hijau":"Green"}</option><option value="lavender">Lavender</option><option value="pink">Pink</option></select></label>
           <div className="schedule-editor-actions"><button type="button" onClick={()=>removeSchedule(o.id)}>{lang==="id"?"Hapus jadwal":"Clear schedule"}</button>{schedules.find(r=>r.requestId===o.id)&&scheduleOverlapCount(schedules,schedules.find(r=>r.requestId===o.id))>3&&<small role="status">{lang==="id"?"Lebih dari 3 komisi bertumpang tindih. Ini hanya peringatan.":"More than 3 commissions overlap. Warning only."}</small>}</div>
         </div></details>
-        <div className="btns" style={{gap:6,flex:"0 0 auto"}}>
-          <Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?(lang==="id"?"Menghapus…":"Deleting…"):(lang==="id"?"Hapus":"Delete")}</Btn>
-        </div>
+        <div className="btns" style={{gap:6,flex:"0 0 auto"}}><Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?(lang==="id"?"Menghapus…":"Deleting…"):(lang==="id"?"Hapus":"Delete")}</Btn></div>
       </article>)}</div>}
     </section>
     <NotifPanel />
