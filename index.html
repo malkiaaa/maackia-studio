@@ -1642,6 +1642,7 @@ function scheduleOverlapCount(rows,c){if(!validScheduleDate(c.startDate)||!valid
 function assignScheduleLanes(rows){const ends=[],sorted=(rows||[]).filter(r=>validScheduleDate(r.startDate)&&validScheduleDate(r.endDate)&&r.endDate>=r.startDate).slice().sort((a,b)=>a.startDate.localeCompare(b.startDate)||a.endDate.localeCompare(b.endDate));return sorted.map(r=>{let lane=ends.findIndex(e=>e<r.startDate);if(lane<0)lane=ends.length;ends[lane]=r.endDate;return{...r,lane};});}
 function scheduleMonths(rows){const groups={};(rows||[]).forEach(r=>{if(!validScheduleDate(r.startDate)||!validScheduleDate(r.endDate)||r.endDate<r.startDate)return;const cursor=new Date(r.startDate.slice(0,7)+"-01T00:00:00Z"),last=r.endDate.slice(0,7);while(cursor.toISOString().slice(0,7)<=last){const key=cursor.toISOString().slice(0,7);(groups[key]||(groups[key]=[])).push(r);cursor.setUTCMonth(cursor.getUTCMonth()+1);}});return Object.keys(groups).sort().map(key=>({key,rows:groups[key]}));}
 function formatScheduleDate(v,lang){if(!validScheduleDate(v))return"";return new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}).format(new Date(v+"T00:00:00Z"));}
+function formatScheduleTimestamp(v,lang){if(!v)return"—";const d=new Date(v);if(!Number.isFinite(d.getTime()))return String(v);return new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{day:"2-digit",month:"short",year:"numeric"}).format(d);}
 function scheduleStatusClass(v){const s=String(v||"Pending Review").toLowerCase();if(["pending review","reviewing","request submitted"].includes(s))return"pending";if(s==="completed")return"completed";if(["cancelled","declined","rejected"].includes(s))return"cancelled";if(["in progress","waiting for feedback","revision"].includes(s))return"progress";return"neutral";}
 function scheduleStatusLabel(v,lang="en"){const s=String(v||"Pending Review");if(lang!=="id")return s;const labels={"Pending Review":"Menunggu Peninjauan","Reviewing":"Sedang Ditinjau","Request Submitted":"Permintaan Diajukan","In Progress":"Sedang Dikerjakan","Waiting for Feedback":"Menunggu Masukan","Revision":"Revisi","Completed":"Selesai","Cancelled":"Dibatalkan","Declined":"Ditolak","Rejected":"Ditolak","Paid":"Dibayar","Awaiting Payment":"Menunggu Pembayaran"};return labels[s]||s;}
 /* ============================================================ utils */
@@ -5270,11 +5271,11 @@ function CommissionBoard({lang="id"}) {
   const renderOrder=r=>{
     const status=r.status||"Pending Review";
     return <article className="schedule-order-card" key={r.id} style={{borderLeftColor:color(r.color)}}>
-      <div className="schedule-order-top"><b className="schedule-order-id">{r.id}</b><span className={"tag status-badge "+scheduleStatusClass(status)}>{status}</span></div>
-      <h3 className="schedule-order-client">{r.clientName||"Client"}</h3>
-      <p className="schedule-order-service">{r.serviceTitle||"Commission"}</p>
+      <div className="schedule-order-top"><b className="schedule-order-id">{r.id}</b><span className={"tag status-badge "+scheduleStatusClass(status)}>{scheduleStatusLabel(status,lang)}</span></div>
+      <h3 className="schedule-order-client">{r.clientName||(lang==="id"?"Klien":"Client")}</h3>
+      <p className="schedule-order-service">{r.serviceTitle||(lang==="id"?"Komisi":"Commission")}</p>
       <dl className="schedule-order-dates">
-        <div><dt>{lang==="id"?"Diajukan":"Submitted"}</dt><dd>{r.createdAt?fmtDate(r.createdAt):"—"}</dd></div>
+        <div><dt>{lang==="id"?"Diajukan":"Submitted"}</dt><dd>{formatScheduleTimestamp(r.createdAt,lang)}</dd></div>
         <div><dt>{lang==="id"?"Mulai":"Start"}</dt><dd>{formatScheduleDate(r.startDate,lang)}</dd></div>
         <div><dt>{lang==="id"?"Target selesai":"Target finish"}</dt><dd>{formatScheduleDate(r.endDate,lang)}</dd></div>
       </dl>
@@ -5282,11 +5283,11 @@ function CommissionBoard({lang="id"}) {
     </article>;
   };
   return <div className="page commission-board-page">
-    <PageHead crumb="PUBLIC COMMISSIONS" title={lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}>{lang==="id"?"Kalender jadwal commission berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</PageHead>
+    <PageHead crumb={lang==="id"?"KOMISI PUBLIK":"PUBLIC COMMISSIONS"} title={lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}>{lang==="id"?"Kalender jadwal komisi berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</PageHead>
     {msg&&<div className="note bad" role="alert">{msg}</div>}
     <section className="schedule-section">
       <header className="schedule-heading">
-        <div><h2>{lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}</h2><p>{lang==="id"?"Kalender jadwal commission berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</p></div>
+        <div><h2>{lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}</h2><p>{lang==="id"?"Kalender jadwal komisi berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</p></div>
       </header>
       <div className="schedule-controls" aria-label={lang==="id"?"Pilih bulan dan tahun":"Choose month and year"}>
         <label><span>{lang==="id"?"BULAN":"MONTH"}</span><select value={String(monthIndex)} onChange={e=>setMonth(new Date(year,Number(e.target.value),1))}>{monthOptions.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
@@ -5300,7 +5301,7 @@ function CommissionBoard({lang="id"}) {
           {days.map(day=>{
             const key=year+"-"+String(monthIndex+1).padStart(2,"0")+"-"+String(day.getDate()).padStart(2,"0");
             const active=visible.filter(r=>r.startDate<=key&&r.endDate>=key);
-            return <div key={key} className={"schedule-day"+(key===today?" is-today":"")} role="gridcell" aria-label={key+(active.length?" · "+active.length+" scheduled orders":"")}>
+            return <div key={key} className={"schedule-day"+(key===today?" is-today":"")} role="gridcell" aria-label={key+(active.length?(lang==="id"?" · "+active.length+" pesanan terjadwal":" · "+active.length+" scheduled orders"):"")}>
               <span className="schedule-day-number">{day.getDate()}</span>
               {active.length>0&&<span className="schedule-day-markers" aria-hidden="true">{active.slice(0,4).map(r=><i key={r.id} style={{background:color(r.color)}}/>)}{active.length>4&&<small>+{active.length-4}</small>}</span>}
             </div>;
@@ -5676,13 +5677,13 @@ function OrdersPanel({lang="id"}) {
   };
   if(sel)return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
   const n=st=>(list||[]).filter(o=>st.includes(o.status)).length;
-  const stats=[["Total",list?list.length:0],["Pending",n(["Pending Review"])],["Accepted",n(["Paid","Awaiting Payment"])],["In progress",n(["In Progress","Waiting for Feedback","Revision"])],["Completed",n(["Completed"])],["Rejected",n(["Rejected","Cancelled"])]];
+  const stats=[[lang==="id"?"Total":"Total",list?list.length:0],[lang==="id"?"Menunggu":"Pending",n(["Pending Review"])],[lang==="id"?"Diterima":"Accepted",n(["Paid","Awaiting Payment"])],[lang==="id"?"Dikerjakan":"In progress",n(["In Progress","Waiting for Feedback","Revision"])],[lang==="id"?"Selesai":"Completed",n(["Completed"])],[lang==="id"?"Ditolak":"Rejected",n(["Rejected","Cancelled"])]];
   return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}{scheduleError&&<div className="note bad" role="alert" style={{marginBottom:12}}>{scheduleError}</div>}
     <div className="grid">{stats.map(([label,value])=><div key={label} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{label}</span><b>{value}</b></div>)}</div>
     <section className="card"><div className="card-head"><h2>{lang==="id"?"Permintaan klien":"Client requests"}</h2><Btn kind="ghost" size="sm" onClick={load}>{lang==="id"?"Muat ulang":"Refresh"}</Btn></div>
       {list===null?<p className="muted">{lang==="id"?"Memuat…":"Loading..."}</p>:list.length===0?<p className="muted">{lang==="id"?"Belum ada permintaan.":"No requests yet."}</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
         <button type="button" onClick={()=>setSel(o)} style={{flex:"1 1 240px",minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
-          <div className="grow"><b>{o.id} · {(o.form||{}).name||(lang==="id"?"Klien":"Client")}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||(lang==="id"?"Komisi":"Commission")} · {fmtDate(o.createdAt||o.created_at)} · {idr((o.estimate||{}).total||0)}</small></div>
+          <div className="grow"><b>{o.id} · {(o.form||{}).name||(lang==="id"?"Klien":"Client")}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||(lang==="id"?"Komisi":"Commission")} · {formatScheduleTimestamp(o.createdAt||o.created_at,lang)} · {idr((o.estimate||{}).total||0)}</small></div>
         </button>
         <span className={"tag status-badge "+scheduleStatusClass(o.status)}>{scheduleStatusLabel(o.status,lang)}</span>
         <details className="schedule-editor"><summary>{lang==="id"?"Jadwal":"Schedule"}</summary><div className="schedule-editor-fields">
