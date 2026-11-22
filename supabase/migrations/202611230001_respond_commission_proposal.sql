@@ -24,6 +24,7 @@ declare
   v_updated jsonb;
 begin
   if coalesce(p_commission_id, '') !~ '^COMMISSION-[0-9]{4}-[0-9]{4,}$'
+     or p_response is null
      or p_response not in ('Accepted', 'Declined')
      or coalesce(length(p_note), 0) > 1000 then
     raise exception 'Invalid proposal response payload' using errcode = '22023';
@@ -52,8 +53,13 @@ begin
     return pg_catalog.jsonb_build_object('ok', false, 'code', 'NOT_FOUND');
   end if;
 
-  if v_track.proposal is null then
+  if v_track.proposal is null
+     or pg_catalog.jsonb_typeof(v_track.proposal) is distinct from 'object' then
     return pg_catalog.jsonb_build_object('ok', false, 'code', 'NO_PROPOSAL');
+  end if;
+
+  if pg_catalog.jsonb_typeof(coalesce(v_track.updates, '[]'::jsonb)) is distinct from 'array' then
+    raise exception 'Commission tracking updates are invalid' using errcode = '22023';
   end if;
 
   if v_track.proposal->>'response' in ('Accepted', 'Declined')
