@@ -4059,8 +4059,63 @@ function AdoptableGalleryEditor({ images, onChange, lang = "en" }) {
     {error && <div className="err" role="alert">{error}</div>}
   </div>;
 }
-function AdoptableEditor({ initial, onCancel, onApply, lang = "en" }) {
-  const [draft, setDraft] = useState(() => ({ ...clone(initial), gallery: Array.isArray(initial.gallery) ? initial.gallery.slice(0, 6) : [], status: initial.status || "available", visible: initial.visible !== false }));
+function AdoptableListEditor({ label, items, fallbackItems = [], onChange, lang = "en", allowInherit = false }) {
+  const hasOverride = !allowInherit || (Array.isArray(items) && items.length > 0);
+  const current = hasOverride ? (Array.isArray(items) ? items : []) : (Array.isArray(fallbackItems) ? fallbackItems : []);
+  const update = (index, key, value) => onChange(current.map((entry, i) => {
+    if (i !== index) return entry;
+    if (key === "text") return { ...entry, text: value };
+    return { ...entry, i18n: { ...(entry.i18n || {}), id: { ...((entry.i18n || {}).id || {}), text: value } } };
+  }));
+  const remove = (index) => onChange(current.filter((_, i) => i !== index));
+  const reorder = (index, delta) => onChange(move(current, index, delta));
+  const add = () => onChange([...current, { id: uid("adptext"), text: "", i18n: { id: { text: "" } } }]);
+  return (
+    <section className="adoptable-list-editor full">
+      <div className="card-head"><h4>{label}</h4><small className="muted">{current.length} / 12</small></div>
+      {allowInherit && !hasOverride ? <>
+        {current.length ? <ul className="adoptable-list-preview">{current.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul> : <p className="adoptable-settings-help">{lang === "id" ? "Default global belum memiliki isi." : "No global defaults are configured yet."}</p>}
+        <div className="adoptable-list-editor-actions"><Btn kind="ghost" size="sm" onClick={() => onChange(clone(current))}>{lang === "id" ? "Sesuaikan untuk item ini" : "Customize for this item"}</Btn></div>
+        <small className="adoptable-settings-help">{lang === "id" ? "Item ini mengikuti default global sampai kamu membuat penyesuaian." : "This item follows the global defaults until you customize this list."}</small>
+      </> : <>
+        {current.map((entry, index) => <div className="adoptable-list-editor-item" key={entry.id || index}>
+          <div className="adoptable-list-editor-item-head">
+            <small>{lang === "id" ? "ID stabil: " : "Stable ID: "}{entry.id || "missing"}</small>
+            <div className="acts">
+              <button className="ib" type="button" disabled={index === 0} onClick={() => reorder(index, -1)} aria-label={lang === "id" ? "Pindahkan ke atas" : "Move up"}><Icon name="up" /></button>
+              <button className="ib" type="button" disabled={index === current.length - 1} onClick={() => reorder(index, 1)} aria-label={lang === "id" ? "Pindahkan ke bawah" : "Move down"}><Icon name="down" /></button>
+              <button className="ib" type="button" onClick={() => remove(index)} aria-label={lang === "id" ? "Hapus item" : "Remove item"}><Icon name="trash" /></button>
+            </div>
+          </div>
+          <div className="adoptable-list-editor-row">
+            <Field label={lang === "id" ? "English" : "English"}>
+              <textarea className="in" maxLength={500} value={entry.text || ""} onChange={(event) => update(index, "text", event.target.value)} placeholder={lang === "id" ? "Teks bahasa Inggris" : "English text"} />
+            </Field>
+            <Field label="Indonesia">
+              <textarea className="in" maxLength={500} value={entry.i18n?.id?.text || ""} onChange={(event) => update(index, "idText", event.target.value)} placeholder="Teks bahasa Indonesia" />
+            </Field>
+          </div>
+          <small className="adoptable-settings-help">{(entry.text || "").length} / 500 EN · {(entry.i18n?.id?.text || "").length} / 500 ID</small>
+        </div>)}
+        <div className="adoptable-list-editor-actions">
+          <Btn kind="ghost" size="sm" onClick={add} disabled={current.length >= 12}>{lang === "id" ? "Tambah item" : "Add item"}</Btn>
+          {allowInherit && <Btn kind="ghost" size="sm" onClick={() => onChange([])}>{lang === "id" ? "Gunakan default global" : "Use global defaults"}</Btn>}
+        </div>
+      </>}
+    </section>
+  );
+}
+
+function AdoptableEditor({ initial, onCancel, onApply, lang = "en", settings = {} }) {
+  const [draft, setDraft] = useState(() => ({
+    ...clone(initial),
+    gallery: Array.isArray(initial.gallery) ? initial.gallery.slice(0, 6) : [],
+    deliverables: Array.isArray(initial.deliverables) ? clone(initial.deliverables) : [],
+    importantNotes: Array.isArray(initial.importantNotes) ? clone(initial.importantNotes) : [],
+    artistTerms: Array.isArray(initial.artistTerms) ? clone(initial.artistTerms) : [],
+    status: initial.status || "available",
+    visible: initial.visible !== false
+  }));
   const validationErrors = validateAdoptableItem(draft, safeImg);
   const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
   const setIdText = (key, value) => setDraft((current) => ({ ...current, i18n: { ...(current.i18n || {}), id: { ...((current.i18n || {}).id || {}), [key]: value } } }));
@@ -4083,10 +4138,16 @@ function AdoptableEditor({ initial, onCancel, onApply, lang = "en" }) {
         <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
         <AdoptableGalleryEditor images={Array.isArray(draft.gallery) ? draft.gallery : []} onChange={(value) => set("gallery", value)} lang={lang} />
         <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
+        <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={draft.deliverables} fallbackItems={settings.defaultDeliverables} onChange={(value) => set("deliverables", value)} lang={lang} allowInherit />
+        <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={draft.importantNotes} fallbackItems={settings.defaultNotes} onChange={(value) => set("importantNotes", value)} lang={lang} allowInherit />
+        <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={draft.artistTerms} fallbackItems={settings.defaultTerms} onChange={(value) => set("artistTerms", value)} lang={lang} allowInherit />
       </div>
       {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{lang === "id" ? error
             .replace("Gallery can contain a maximum of 6 images.", "Galeri dapat berisi maksimal 6 gambar.")
             .replace(/Gallery image (\d+) must be a valid image URL\./, "Gambar galeri $1 harus menggunakan URL gambar yang valid.")
+            .replace("Deliverables can contain a maximum of 12 items.", "Daftar Yang kamu dapat maksimal 12 item.")
+            .replace("Important notes can contain a maximum of 12 items.", "Catatan penting maksimal 12 item.")
+            .replace("Artist terms can contain a maximum of 12 items.", "Ketentuan artis maksimal 12 item.")
             : error}</li>)}</ul></div>}
       <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
         <Btn kind="ghost" onClick={onCancel}>Cancel</Btn>
@@ -4095,6 +4156,7 @@ function AdoptableEditor({ initial, onCancel, onApply, lang = "en" }) {
     </section>
   );
 }
+
 function AdoptablesPanel() {
   const { site, upd, lang } = useCreator();
   const [editing, setEditing] = useState(null);
