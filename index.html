@@ -1267,6 +1267,123 @@ html.is-android .home-dashboard > .home-intro-card::before {
   background-size:100% 100% !important;
   background-repeat:no-repeat !important;
 }
+
+/* Adoptables */
+.adoptables-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.adoptable-currency{display:flex;gap:6px}
+.adoptables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:16px}
+.adoptable-card{padding:14px;border-radius:22px;display:flex;flex-direction:column;gap:12px}
+.adoptable-thumb{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:4/5;overflow:hidden;border:0;border-radius:16px;padding:0;background:var(--powder);cursor:pointer}
+.adoptable-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s,filter .25s}
+.adoptable-thumb:hover img{transform:scale(1.035)}
+.adoptable-card.is-sold .adoptable-thumb img,.adoptable-detail.is-sold .adoptable-detail-image img{filter:grayscale(.22) brightness(.68)}
+.adoptable-sold-badge,.adoptable-reserved-badge{position:absolute;top:12px;left:12px;padding:6px 11px;border-radius:999px;background:rgba(47,79,94,.88);color:#fff;font-size:.72rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.adoptable-reserved-badge{background:rgba(138,100,24,.92)}
+.adoptable-card-body{display:flex;flex-direction:column;gap:9px;flex:1}
+.adoptable-card-body h3{font-size:1.08rem;overflow-wrap:anywhere}
+.adoptable-status.available{color:var(--ok)}.adoptable-status.reserved{color:var(--warn)}.adoptable-status.sold{color:var(--bad)}
+.adoptable-price,.adoptable-detail-price{font-size:1.02rem;font-weight:900}
+.adoptable-detail{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:22px;align-items:start}
+.adoptable-detail-image{position:relative;overflow:hidden;border-radius:20px;background:var(--powder);min-height:260px}
+.adoptable-detail-image img{width:100%;height:auto;max-height:78vh;object-fit:contain;display:block}
+.adoptable-detail-copy{display:flex;flex-direction:column;align-items:flex-start;gap:14px;min-width:0}
+.adoptable-detail-copy h2{font-size:1.65rem;overflow-wrap:anywhere}
+.adoptable-description,.adoptable-notes{white-space:pre-wrap;overflow-wrap:anywhere}
+.adoptable-notes{padding:14px;border-radius:14px;background:var(--powder);width:100%}
+.adoptable-notes p{margin-top:5px}
+.adoptable-back{margin-bottom:12px}
+.adoptable-toggle{display:flex;align-items:center;gap:9px;font-weight:800;padding:9px 0}
+.adoptable-toggle input{width:18px;height:18px;accent-color:var(--cyan)}
+@media(max-width:767px){
+ .adoptables-toolbar{align-items:flex-start}
+ .adoptables-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .adoptable-card{padding:9px;border-radius:17px;gap:9px}
+ .adoptable-thumb{border-radius:12px}
+ .adoptable-card-body h3{font-size:.95rem}
+ .adoptable-card-body .btns{gap:6px}
+ .adoptable-card-body .btn{padding:7px 10px;font-size:.74rem}
+ .adoptable-detail{grid-template-columns:minmax(0,1fr);gap:16px;padding:14px}
+ .adoptable-detail-image{min-height:180px}
+ .adoptable-detail-image img{max-height:none}
+}
+@media(max-width:360px){.adoptables-grid{grid-template-columns:minmax(0,1fr)}}
+/* Adoptables gallery, private preview and neutral image fallbacks */
+.adoptable-card-wrap{position:relative;min-width:0}
+.adoptable-private-label{display:inline-flex;margin:0 0 7px;padding:4px 9px;border-radius:999px;background:#FFF0B8;color:#5C4615;font-size:.68rem;font-weight:900;letter-spacing:.07em}
+.adoptable-private-note{margin-bottom:12px;font-weight:800}
+.adoptable-image-placeholder{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:16px;background:linear-gradient(145deg,#EEF1F4,#E4E8ED);color:#66717D;font-size:.82rem;font-weight:700}
+.adoptable-image-placeholder.is-visible,.has-image-error>.adoptable-image-placeholder{display:flex}
+.adoptable-thumb{position:relative;overflow:hidden}
+.adoptable-thumb.has-image-error{background:#E9EDF1}
+.adoptable-thumb img{position:relative;z-index:1}
+.adoptable-detail-media{min-width:0;display:grid;gap:14px}
+.adoptable-detail-image{aspect-ratio:4/5;min-height:220px;max-height:78vh}
+.adoptable-detail-image img{position:relative;z-index:1;width:100%;height:100%;max-height:78vh;object-fit:contain}
+.adoptable-detail-image.has-image-error{background:#E9EDF1}
+.adoptable-gallery{min-width:0;width:100%;border:1px solid var(--line);border-radius:16px;padding:12px}
+.adoptable-gallery-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.adoptable-gallery-head small{color:var(--muted);font-variant-numeric:tabular-nums}
+.adoptable-gallery-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;border-radius:12px}
+.adoptable-gallery-track::-webkit-scrollbar{display:none}
+.adoptable-gallery-slide{position:relative;flex:0 0 100%;min-width:0;min-height:180px;aspect-ratio:16/10;scroll-snap-align:start;background:#E9EDF1;overflow:hidden}
+.adoptable-gallery-zoom{width:100%;height:100%;min-height:180px;border:0;background:transparent;padding:0;cursor:zoom-in}
+.adoptable-gallery-zoom img{display:block;width:100%;height:100%;object-fit:contain}
+.adoptable-gallery-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px}
+.adoptable-gallery-controls>button{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--card);font-size:1.3rem;color:var(--ink)}
+.adoptable-gallery-dots{display:flex;gap:7px;align-items:center}
+.adoptable-gallery-dots button{width:8px;height:8px;border:0;border-radius:50%;background:var(--line);padding:0}
+.adoptable-gallery-dots button[aria-current=true]{background:var(--ink);transform:scale(1.25)}
+.adoptable-lightbox{position:fixed;inset:0;z-index:99990;background:rgba(8,13,20,.94);display:grid;place-items:center;padding:24px}
+.adoptable-lightbox>img{max-width:100%;max-height:90vh;object-fit:contain}
+.adoptable-lightbox>.adoptable-image-placeholder{position:relative;inset:auto;width:min(80vw,700px);min-height:260px}
+.adoptable-lightbox-close{position:absolute;top:18px;right:18px;width:44px;height:44px;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(0,0,0,.25);color:#fff;font-size:2rem;z-index:2}
+.adoptable-detail-prices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+.adoptable-detail-prices>div{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:13px;min-width:0}
+.adoptable-detail-prices small{color:var(--muted);font-weight:800}
+.adoptable-detail-prices b{overflow-wrap:anywhere}
+.adoptable-gallery-editor{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+.adoptable-gallery-edit-item{position:relative;width:116px;height:116px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#E9EDF1}
+.adoptable-gallery-edit-item>img{width:100%;height:100%;object-fit:cover}
+.adoptable-gallery-edit-item .btns{position:absolute;left:4px;right:4px;bottom:4px;justify-content:center;gap:3px}
+.adoptable-gallery-edit-item .ib{width:30px;height:30px;background:rgba(255,255,255,.94)}
+.adoptable-gallery-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:116px;height:116px;border:1px dashed var(--line);border-radius:12px;background:var(--powder);color:var(--ink);font-weight:800}
+.adoptable-gallery-add:disabled{opacity:.6}
+.adoptable-gallery-editor-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;padding:8px;text-align:center;color:#66717D;font-size:.75rem;font-weight:700}.adoptable-gallery-edit-item.has-image-error .adoptable-gallery-editor-fallback{display:flex}
+@media(max-width:767px){.adoptable-detail-media{gap:10px}.adoptable-detail-image{aspect-ratio:4/5;max-height:none}.adoptable-detail-prices{grid-template-columns:minmax(0,1fr)}.adoptable-gallery{padding:9px}}
+/* Adoptable detail information hierarchy */
+.adoptable-detail-copy{align-items:stretch}
+.adoptable-detail-intro{display:flex;flex-direction:column;align-items:flex-start;gap:12px;width:100%}
+.adoptable-detail-section{width:100%;min-width:0}
+.adoptable-detail-section h3{font-size:1rem;margin:0 0 9px}
+.adoptable-detail-section p{white-space:pre-wrap;overflow-wrap:anywhere}
+.adoptable-check-list,.adoptable-note-list,.adoptable-terms-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.adoptable-check-list li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;align-items:start}
+.adoptable-check-list li>span:first-child{font-weight:900;color:var(--ok)}
+.adoptable-notes{box-sizing:border-box}
+.adoptable-notes h3{margin-bottom:8px}
+.adoptable-note-list{list-style:disc;padding-left:20px}
+.adoptable-legacy-notes{margin:0 0 9px}
+.adoptable-terms{border:1px solid var(--line);border-radius:14px;padding:13px;width:100%;box-sizing:border-box}
+.adoptable-terms summary{cursor:pointer;font-weight:850;list-style:none}
+.adoptable-terms summary::-webkit-details-marker{display:none}
+.adoptable-terms summary:after{content:"+";float:right;font-size:1.15rem}
+.adoptable-terms[open] summary:after{content:"−"}
+.adoptable-terms-list{list-style:disc;padding:12px 0 0 20px}
+.adoptable-price-unset{margin:0}
+.adoptable-list-editor{display:grid;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px}
+.adoptable-list-editor h4{margin:0}
+.adoptable-list-editor-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.adoptable-list-editor-row textarea{min-height:72px;resize:vertical}
+.adoptable-list-editor-item{display:grid;gap:8px;padding:10px;border-radius:12px;background:var(--powder)}
+.adoptable-list-editor-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.adoptable-list-editor-item-head small{color:var(--muted);overflow-wrap:anywhere}
+.adoptable-list-preview{display:grid;gap:7px;margin:0;padding-left:20px}
+.adoptable-list-editor-actions{display:flex;flex-wrap:wrap;gap:8px}
+.adoptable-settings-help{font-size:.8rem;color:var(--muted)}
+.adoptable-bilingual-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;grid-column:1/-1;min-width:0}
+@media(max-width:767px){.adoptable-bilingual-pair{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:767px){.adoptable-list-editor-row{grid-template-columns:minmax(0,1fr)}}
+
 </style>
 
 <div id="root"></div>
@@ -1299,6 +1416,38 @@ const DEFAULT_SITE = {
   },
   commissionStatus: "OPEN",
   defaultCurrency: "IDR",
+  adoptables: [],
+  adoptableSettings: {
+    model: "fixed",
+    claim: { mode: "email", url: "", email: "" },
+    claimTemplates: {
+      id: "Halo Malkiaa Studio,\n\nSaya ingin mengklaim adoptable berikut:\n- Karakter: {nama}\n- Harga: {harga}\n- Link: {url}\n\nData saya:\n- Nama / username:\n- Kontak (Discord / IG / WhatsApp):\n- Metode pembayaran:\n- Catatan (opsional):\n\nSaya sudah membaca Terms of Service dan paham bahwa klaim baru sah setelah dikonfirmasi dan dibayar.\n\nTerima kasih!",
+      en: "Hello Malkiaa Studio,\n\nI would like to claim the following adoptable:\n- Character: {nama}\n- Price: {harga}\n- Link: {url}\n\nMy details:\n- Name / username:\n- Contact (Discord / IG / WhatsApp):\n- Payment method:\n- Notes (optional):\n\nI have read the Terms of Service and understand that the claim is only valid after it has been confirmed and paid.\n\nThank you!",
+    },
+    currencies: ["IDR", "USD"],
+    showSold: true,
+    edition: "single_owner",
+    defaultDeliverables: [
+      { id: "deliverable-ownership", text: "Full ownership of the character design", i18n: { id: { text: "Kepemilikan penuh atas desain karakter" } } },
+      { id: "deliverable-illustration", text: "Final illustration (high-resolution file)", i18n: { id: { text: "Ilustrasi final (file resolusi tinggi)" } } },
+      { id: "deliverable-reference-sheet", text: "Character reference sheet", i18n: { id: { text: "Reference sheet karakter" } } },
+      { id: "deliverable-personal-license", text: "Personal-use license", i18n: { id: { text: "Lisensi penggunaan pribadi" } } },
+    ],
+    defaultNotes: [
+      { id: "note-one-of-a-kind", text: "Each design is one-of-a-kind and sold once.", i18n: { id: { text: "Setiap desain unik dan hanya dijual satu kali." } } },
+      { id: "note-claim-email", text: "To claim, send me an email. I'll contact you to arrange payment and delivery.", i18n: { id: { text: "Untuk klaim, kirim email kepadaku. Aku akan menghubungimu untuk mengatur pembayaran dan pengiriman." } } },
+      { id: "note-reservation", text: "The design is reserved for 24 hours after I reply, pending payment.", i18n: { id: { text: "Desain dipesan selama 24 jam setelah aku membalas, sambil menunggu pembayaran." } } },
+    ],
+    defaultTerms: [
+      { id: "term-copyright", text: "I keep the copyright to the artwork; you own the character design.", i18n: { id: { text: "Hak cipta gambar tetap milikku; kamu memiliki desain karakternya." } } },
+      { id: "term-personal-use", text: "Personal use only (OC, roleplay, fanart, display). Commercial use requires my written permission.", i18n: { id: { text: "Hanya untuk penggunaan pribadi (OC, roleplay, fanart, dipamerkan). Penggunaan komersial memerlukan izin tertulis dariku." } } },
+      { id: "term-credit", text: "Please credit me when sharing the original artwork.", i18n: { id: { text: "Mohon cantumkan kredit untukku saat membagikan gambar aslinya." } } },
+      { id: "term-no-nft-ai", text: "No NFT use and no use for training AI.", i18n: { id: { text: "Tidak boleh dipakai untuk NFT atau melatih AI." } } },
+      { id: "term-no-refund", text: "No refunds once the files have been delivered.", i18n: { id: { text: "Tidak ada refund setelah file dikirim." } } },
+      { id: "term-resale-transfer", text: "Resale or transfer of ownership requires telling me first.", i18n: { id: { text: "Penjualan ulang atau pemindahan kepemilikan wajib diberitahukan kepadaku dulu." } } },
+      { id: "term-decline-sale", text: "I may decline a sale to any buyer.", i18n: { id: { text: "Aku berhak menolak penjualan kepada siapa pun." } } },
+    ],
+  },
   mascot: { image: "" },
   appearance: { accent: "#B9D8F7", banner: "", widgets: { intro: true, featured: true, latest: true, services: true, status: true, quick: true } },
   socials: [
@@ -1413,6 +1562,213 @@ const ss = {
 };
 const safeUrl = (u) => (/^https?:\/\//i.test((u || "").trim()) ? u.trim() : "");
 const safeImg = (u) => { u = (u || "").trim(); return /^(https:\/\/|\/_blob\/|data:image\/(png|jpeg|webp|gif);base64,)/i.test(u) ? u : ""; };
+
+/* ADOPTABLES PURE LOGIC START */
+function safeAdoptableClaimUrl(input) {
+  const value = String(input || "").trim();
+  if (/^https?:\/\//i.test(value)) return value;
+  const match = /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(value);
+  return match && ["home","about","gallery","adoptables","services","track","board","workflow","terms","contact"].includes(match[1]) ? value : "";
+}
+function validAdoptableEmail(input) {
+  const email = String(input || "");
+  if (!email || /[\r\n\u0000-\u001f\u007f?&#%]/.test(email) || email.length > 254) return false;
+  const parts = email.split("@");
+  if (parts.length !== 2 || !parts[0] || parts[0].length > 64 || parts[0].startsWith(".") || parts[0].endsWith(".") || parts[0].includes("..")) return false;
+  return /^[A-Z0-9.!#$&'*+\/_~-]+$/i.test(parts[0]) &&
+    /^[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$/i.test(parts[1]);
+}
+function encodeAdoptableMailtoSubject(value) {
+  return encodeURIComponent(String(value || "")).replace(/[!'()*]/g, (character) =>
+    "%" + character.charCodeAt(0).toString(16).toUpperCase()
+  );
+}
+function cleanAdoptableMailValue(value, maxLength = 100) {
+  return Array.from(String(value == null ? "" : value).replace(/[\r\n\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim()).slice(0, maxLength).join("");
+}
+function adoptableClaimTemplate(settings, lang, values = {}) {
+  const templates = settings && settings.claimTemplates && typeof settings.claimTemplates === "object" ? settings.claimTemplates : {};
+  const selected = lang === "id" ? templates.id : templates.en;
+  const fallback = lang === "id" ? "Halo Malkiaa Studio,\n\nSaya ingin mengklaim adoptable berikut:\n- Karakter: {nama}\n- Harga: {harga}\n- Link: {url}\n\nData saya:\n- Nama / username:\n- Kontak (Discord / IG / WhatsApp):\n- Metode pembayaran:\n- Catatan (opsional):\n\nSaya sudah membaca Terms of Service dan paham bahwa klaim baru sah setelah dikonfirmasi dan dibayar.\n\nTerima kasih!" : "Hello Malkiaa Studio,\n\nI would like to claim the following adoptable:\n- Character: {nama}\n- Price: {harga}\n- Link: {url}\n\nMy details:\n- Name / username:\n- Contact (Discord / IG / WhatsApp):\n- Payment method:\n- Notes (optional):\n\nI have read the Terms of Service and understand that the claim is only valid after it has been confirmed and paid.\n\nThank you!";
+  const template = (typeof selected === "string" && selected.trim() ? selected : fallback).slice(0, 500);
+  const replacements = {
+    nama: cleanAdoptableMailValue(values.name, 100),
+    harga: cleanAdoptableMailValue(values.price, 60),
+    url: cleanAdoptableMailValue(values.url, 240)
+  };
+  return template.replace(/\{(nama|harga|url)\}/g, (_, key) => replacements[key]);
+}
+function encodeAdoptableMailtoBody(value) {
+  return encodeURIComponent(String(value || "").replace(/\r\n|\r|\n/g, "\r\n")).replace(/[!'()*]/g, (character) =>
+    "%" + character.charCodeAt(0).toString(16).toUpperCase()
+  );
+}
+function buildAdoptableClaimHref(settings, itemName, lang = "en", values = {}) {
+  const claim = settings && settings.claim ? settings.claim : {};
+  if (claim.mode === "email") {
+    if (!validAdoptableEmail(claim.email)) return "";
+    let localizedName = cleanAdoptableMailValue(itemName, 100);
+    const makePrefix = () => "mailto:" + claim.email + "?subject=" + encodeAdoptableMailtoSubject((lang === "id" ? "Klaim adoptable: " : "Adoptable claim: ") + localizedName) + "&body=";
+    let prefix = makePrefix();
+    let name = cleanAdoptableMailValue(values.name == null ? itemName : values.name, 100);
+    let price = cleanAdoptableMailValue(values.price, 60);
+    const url = cleanAdoptableMailValue(values.url, 240);
+    const fit = () => adoptableClaimTemplate(settings, lang, { name, price, url });
+    let body = fit();
+    let href = prefix + encodeAdoptableMailtoBody(body);
+    while (href.length > 1800 && localizedName.length) {
+      localizedName = Array.from(localizedName).slice(0, Math.max(0, Array.from(localizedName).length - 10)).join("");
+      prefix = makePrefix();
+      href = prefix + encodeAdoptableMailtoBody(body);
+    }
+    while (href.length > 1800 && (name.length || price.length)) {
+      if (name.length >= price.length && name.length) name = Array.from(name).slice(0, Math.max(0, Array.from(name).length - 10)).join("");
+      else price = Array.from(price).slice(0, Math.max(0, Array.from(price).length - 8)).join("");
+      body = fit();
+      href = prefix + encodeAdoptableMailtoBody(body);
+    }
+    if (href.length > 1800) {
+      const chars = Array.from(body);
+      while (href.length > 1800 && chars.length) {
+        chars.splice(Math.max(0, chars.length - 12), 12);
+        body = chars.join("");
+        href = prefix + encodeAdoptableMailtoBody(body);
+      }
+    }
+    return href.length <= 1800 ? href : "";
+  }
+  return safeAdoptableClaimUrl(claim.url);
+}
+function adoptableListText(entry, lang) {
+  const english = entry && typeof entry.text === "string" ? entry.text : "";
+  const translated = lang === "id" && entry && entry.i18n && entry.i18n.id && typeof entry.i18n.id.text === "string"
+    ? entry.i18n.id.text.trim() : "";
+  return translated || english;
+}
+function resolveAdoptableList(item, field, settings, defaultField) {
+  const own = item && item[field];
+  return Array.isArray(own) && own.length ? own : (Array.isArray(settings && settings[defaultField]) ? settings[defaultField] : []);
+}
+function validateAdoptableList(items, label) {
+  const errors = [];
+  const list = Array.isArray(items) ? items : [];
+  if (list.length > 12) errors.push(label + " can contain a maximum of 12 items.");
+  list.forEach((entry, index) => {
+    if (!entry || typeof entry !== "object" || typeof entry.id !== "string" || !entry.id.trim()) errors.push(label + " item " + (index + 1) + " needs a stable ID.");
+    if (!entry || typeof entry.text !== "string" || !entry.text.trim()) errors.push(label + " item " + (index + 1) + " needs English text.");
+    if (entry && typeof entry.text === "string" && entry.text.length > 500) errors.push(label + " item " + (index + 1) + " exceeds 500 characters.");
+    const idText = entry && entry.i18n && entry.i18n.id && entry.i18n.id.text;
+    if (typeof idText === "string" && idText.length > 500) errors.push(label + " item " + (index + 1) + " Indonesian text exceeds 500 characters.");
+  });
+  return errors;
+}
+function validateAdoptableContent(site) {
+  const settings = site && site.adoptableSettings || {};
+  const errors = [];
+  [["defaultDeliverables","Default deliverables"],["defaultNotes","Default important notes"],["defaultTerms","Default artist terms"]]
+    .forEach(([key,label]) => errors.push(...validateAdoptableList(settings[key], label)));
+  (Array.isArray(site && site.adoptables) ? site.adoptables : []).forEach((item) => {
+    errors.push(...validateAdoptableList(item && item.deliverables, (item && item.name || "Adoptable") + " deliverables"));
+    errors.push(...validateAdoptableList(item && item.importantNotes, (item && item.name || "Adoptable") + " important notes"));
+    errors.push(...validateAdoptableList(item && item.artistTerms, (item && item.name || "Adoptable") + " artist terms"));
+  });
+  return errors;
+}
+function adoptablePriceValue(raw, currency, lang) {
+  const amount = normalizeAdoptablePrice(raw);
+  if (amount === null) return null;
+  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
+}
+function normalizeAdoptablePrice(raw) {
+  if (raw === null || raw === undefined || (typeof raw === "string" && raw.trim() === "")) return null;
+  return (typeof raw === "number" || typeof raw === "string") && Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : null;
+}
+function formatAdoptableDetailPrice(raw, currency, lang) {
+  const amount = normalizeAdoptablePrice(raw);
+  if (amount === null) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
+  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
+}
+function filterPublicAdoptables(items, settings = {}) {
+  return (Array.isArray(items) ? items : []).filter((item) =>
+    item && item.visible !== false && (item.status !== "sold" || settings.showSold !== false)
+  );
+}
+function mergePublishAdoptables(serverValue, localValue) {
+  const server = serverValue && typeof serverValue === "object" && !Array.isArray(serverValue) ? serverValue : {};
+  const local = localValue && typeof localValue === "object" && !Array.isArray(localValue) ? localValue : {};
+  const payload = { ...local };
+  ["adoptables", "adoptableSettings"].forEach((key) => {
+    if (!Object.prototype.hasOwnProperty.call(payload, key) && Object.prototype.hasOwnProperty.call(server, key)) payload[key] = server[key];
+  });
+  const serverItems = Array.isArray(server.adoptables) ? server.adoptables : [];
+  const localItems = Array.isArray(payload.adoptables) ? payload.adoptables : null;
+  if (localItems) {
+    const serverById = new Map(serverItems.filter((item) => item && item.id).map((item) => [item.id, item]));
+    payload.adoptables = localItems.map((item) => {
+      const previous = item && item.id ? serverById.get(item.id) : null;
+      if (!previous || !item) return item;
+      const preserved = { ...item };
+      // Preserve additive Adoptables fields when an older editor/tab submits a pre-field item shape.
+      ["gallery", "deliverables", "importantNotes", "artistTerms"].forEach((key) => {
+        if (!Object.prototype.hasOwnProperty.call(item, key) && Object.prototype.hasOwnProperty.call(previous, key)) {
+          preserved[key] = Array.isArray(previous[key]) ? previous[key].slice() : previous[key];
+        }
+      });
+      return preserved;
+    });
+  }
+  if (payload.adoptableSettings && server.adoptableSettings) {
+    if (server.adoptableSettings.claim) {
+      const localClaim = payload.adoptableSettings.claim || {};
+      if (!Object.prototype.hasOwnProperty.call(localClaim, "email") && Object.prototype.hasOwnProperty.call(server.adoptableSettings.claim, "email")) {
+        payload.adoptableSettings.claim = { ...localClaim, email: server.adoptableSettings.claim.email };
+      }
+    }
+    ["defaultDeliverables", "defaultNotes", "defaultTerms"].forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(payload.adoptableSettings, key) &&
+          Object.prototype.hasOwnProperty.call(server.adoptableSettings, key)) {
+        payload.adoptableSettings[key] = Array.isArray(server.adoptableSettings[key])
+          ? server.adoptableSettings[key].slice() : server.adoptableSettings[key];
+      }
+    });
+  }
+  return { payload, needsConfirmation: serverItems.length > 0 && !!localItems && localItems.length === 0 };
+}
+function stripAdoptableDraftFields(site) {
+  const result = site && typeof site === "object" ? JSON.parse(JSON.stringify(site)) : {};
+  delete result.adoptables;
+  delete result.adoptableSettings;
+  return result;
+}
+function validateAdoptableItem(item, imageValidator) {
+  const errors = [];
+  const value = item && typeof item === "object" ? item : {};
+  if (!String(value.name || "").trim()) errors.push("Name is required.");
+  if (value.visible !== false) {
+    if (typeof imageValidator !== "function" || !imageValidator(value.thumbnail)) errors.push("A valid card thumbnail is required when the item is visible.");
+    if (typeof imageValidator !== "function" || !imageValidator(value.image)) errors.push("A valid full-size image is required when the item is visible.");
+  }
+  const gallery = Array.isArray(value.gallery) ? value.gallery : [];
+  if (gallery.length > 6) errors.push("Gallery can contain a maximum of 6 images.");
+  gallery.forEach((url, index) => {
+    if (typeof imageValidator !== "function" || !imageValidator(url)) errors.push("Gallery image " + (index + 1) + " must be a valid image URL.");
+  });
+  [["deliverables","Deliverables"],["importantNotes","Important notes"],["artistTerms","Artist terms"]].forEach(([key,label]) => {
+    errors.push(...validateAdoptableList(value[key], label));
+  });
+  ["idr", "usd"].forEach((currency) => {
+    const price = value.price && value.price[currency];
+    if (price === null || price === undefined || (typeof price === "string" && price.trim() === "")) return;
+    if (!((typeof price === "number" || typeof price === "string") && Number.isFinite(Number(price)) && Number(price) >= 0)) errors.push("Price " + currency.toUpperCase() + " must be a non-negative number or blank.");
+  });
+  if (!["available", "reserved", "sold"].includes(value.status)) errors.push("Status must be Available, Reserved, or Sold.");
+  return errors;
+}
+function isAdoptableRouteVisible(route, items, settings = {}, owner = false) {
+  if (!(route === "adoptables" || String(route || "").startsWith("adoptable-"))) return true;
+  return filterPublicAdoptables(items, settings).length > 0 || (owner && Array.isArray(items) && items.some((item) => item && item.visible === false));
+}
+/* ADOPTABLES PURE LOGIC END */
 const hexLum = (hex) => {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); if (!m) return 0.5;
   const n = parseInt(m[1], 16), c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
@@ -1477,7 +1833,16 @@ async function publishSite(site) {
     throw new Error("The latest published site data is missing or invalid. Publish was canceled; no changes were saved.");
   }
   // Preserve server i18n by stable item ID before the full-object save.
-  const payload = preserveI18nById(current, plain(site));
+  const mergedAdoptables = mergePublishAdoptables(current, plain(site));
+  if (mergedAdoptables.needsConfirmation) {
+    const confirmed = typeof window !== "undefined" && window.confirm(
+      "This publish will remove every currently published Adoptables item. This cannot be undone from the public page. Continue?"
+    );
+    if (!confirmed) throw new Error("Publish canceled. Published Adoptables were kept unchanged.");
+  }
+  const payload = preserveI18nById(current, mergedAdoptables.payload);
+  const adoptableErrors = validateAdoptableContent(payload);
+  if (adoptableErrors.length) throw new Error("Adoptables validation failed: " + adoptableErrors.join(" "));
   const result = await Store.api("save_site", { site: payload }, true);
   return { result, site: payload };
 }
@@ -1557,6 +1922,7 @@ const PAGES = [
   { id: "about", label: "About Me", icon: "user" },
   { id: "gallery", label: "Portfolio", icon: "image" },
   { id: "services", label: "Commission Services", icon: "sparkles" },
+  { id: "adoptables", label: "Adoptables", icon: "shapes" },
   { id: "track", label: "Track Order", icon: "check" },
   { id: "board", label: "Commission Board", icon: "flow" },
   { id: "workflow", label: "How to Order", icon: "flow" },
@@ -1565,6 +1931,11 @@ const PAGES = [
   { id: "commission", label: "Price List", icon: "pen", hidden: true },
 ];
 const ROUTES = PAGES.map((p) => p.id).concat(["creator"]);
+function publicAdoptables() {
+  const settings = CONFIG.adoptableSettings || {};
+  return filterPublicAdoptables(CONFIG.adoptables, settings);
+}
+function hasPublicAdoptables() { return publicAdoptables().length > 0; }
 const ICONS = {
   home: <><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></>,
   user: <><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></>,
@@ -1955,7 +2326,7 @@ function translatePublicText(value, language) {
 const T = (k) => { const d = TEXT_DEFS.find((x) => x[0] === k); const v = CONFIG.texts && CONFIG.texts[k]; return typeof v === "string" && v.trim() ? v : d ? d[2] : ""; };
 
 function useHashRoute() {
-  const read = () => { const h = (window.location.hash || "").replace("#", ""); return ROUTES.includes(h) || /^(service|order)-[A-Za-z0-9_-]+$/.test(h) ? h : "home"; };
+  const read = () => { const h = (window.location.hash || "").replace("#", ""); return ROUTES.includes(h) || /^(service|order|adoptable)-[A-Za-z0-9_-]+$/.test(h) ? h : "home"; };
   const [route, setRoute] = useState(read);
   useEffect(() => {
     const on = () => { setRoute(read()); window.scrollTo({ top: 0 }); };
@@ -2064,7 +2435,8 @@ function AvatarTrigger({ go, openGate, size }) {
   );
 }
 function NavList({ route, go, onPick, creatorOn }) {
-  const items = (creatorOn ? PAGES.concat([{ id: "creator", label: "Creator Dashboard", icon: "star" }]) : PAGES).filter((p) => !p.hidden);
+  const ownerHasPrivateAdoptables = creatorOn && Array.isArray(CONFIG.adoptables) && CONFIG.adoptables.some((item) => item && item.visible === false);
+  const items = (creatorOn ? PAGES.concat([{ id: "creator", label: "Creator Dashboard", icon: "star" }]) : PAGES).filter((p) => !p.hidden && (p.id !== "adoptables" || hasPublicAdoptables() || ownerHasPrivateAdoptables));
   return (
     <nav className="nav" aria-label="Main">
       {items.map((p) => (
@@ -2645,6 +3017,231 @@ function Contact() {
   );
 }
 
+
+/* ============================================================ ADOPTABLES — public pages */
+function adoptableText(item, key, lang) {
+  const translated = lang === "id" && item && item.i18n && item.i18n.id && item.i18n.id[key];
+  return typeof translated === "string" && translated.trim() ? translated : (item && item[key]) || "";
+}
+function adoptableStatusLabel(status, lang) {
+  const labels = { available: lang === "id" ? "Tersedia" : "Available", reserved: lang === "id" ? "Dipesan" : "Reserved", sold: lang === "id" ? "Terjual" : "Sold" };
+  return labels[status] || status;
+}
+function adoptablePrice(item, currency, lang) {
+  const price = item && item.price || {};
+  const raw = price[currency.toLowerCase()];
+  const amount = normalizeAdoptablePrice(raw);
+  if (amount !== null) return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
+  if (normalizeAdoptablePrice(price.idr) === null && normalizeAdoptablePrice(price.usd) === null) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
+  return "";
+}
+function AdoptableCard({ item, currency, lang, go }) {
+  const name = adoptableText(item, "name", lang) || "Untitled adoptable";
+  const status = item.status || "available";
+  const thumb = safeImg(item.thumbnail || item.image);
+  return (
+    <article className={"card adoptable-card" + (status === "sold" ? " is-sold" : "")}>
+      <button className={"adoptable-thumb" + (!thumb ? " has-image-error" : "")} onClick={() => go("adoptable-" + item.id)} aria-label={"View " + name}>
+        {thumb && <img src={thumb} alt={name} loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />}
+        <span className="adoptable-image-placeholder" aria-hidden="true"><span>{lang === "id" ? "Pratinjau tidak tersedia" : "Preview unavailable"}</span></span>
+        {status === "sold" && <span className="adoptable-sold-badge">{adoptableStatusLabel("sold", lang)}</span>}
+        {status === "reserved" && <span className="adoptable-reserved-badge">{adoptableStatusLabel("reserved", lang)}</span>}
+      </button>
+      <div className="adoptable-card-body">
+        <div className="meta"><span className={"tag adoptable-status " + status}>{adoptableStatusLabel(status, lang)}</span>{(item.tags || []).slice(0, 3).map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
+        <h3>{name}</h3>
+        <b className="adoptable-price">{adoptablePrice(item, currency, lang)}</b>
+        <div className="btns">
+          <Btn kind="ghost" size="sm" onClick={() => go("adoptable-" + item.id)}>{lang === "id" ? "Lihat detail" : "View details"}</Btn>
+          {status === "available" && item.visible !== false
+            ? <Btn kind="peach" size="sm" onClick={() => go("adoptable-" + item.id)}>{lang === "id" ? "Klaim" : "Claim"}</Btn>
+            : <Btn kind="ghost" size="sm" disabled>{item.visible === false ? (lang === "id" ? "Belum dipublikasikan" : "Not published") : (status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (lang === "id" ? "Tidak tersedia" : "Unavailable"))}</Btn>}
+        </div>
+      </div>
+    </article>
+  );
+}
+function AdoptableGallery({ images, title, lang }) {
+  const track = useRef(null);
+  const [active, setActive] = useState(0);
+  const [failed, setFailed] = useState({});
+  const [zoom, setZoom] = useState(false);
+  const urls = (Array.isArray(images) ? images : []).map(safeImg).filter(Boolean).slice(0, 6);
+  const jump = (index) => {
+    const el = track.current;
+    const next = Math.max(0, Math.min(urls.length - 1, index));
+    if (el) el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    setActive(next);
+  };
+  const sync = () => {
+    const el = track.current;
+    if (el && el.clientWidth) setActive(Math.max(0, Math.min(urls.length - 1, Math.round(el.scrollLeft / el.clientWidth))));
+  };
+  useEffect(() => {
+    if (!zoom) return;
+    const key = (event) => { if (event.key === "Escape") setZoom(false); };
+    window.addEventListener("keydown", key);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", key); document.body.style.overflow = previous; };
+  }, [zoom]);
+  if (!urls.length) return null;
+  const current = urls[active] || urls[0];
+  return (
+    <section className="adoptable-gallery" aria-label={lang === "id" ? "Galeri gambar" : "Image gallery"}>
+      <div className="adoptable-gallery-head"><b>{lang === "id" ? "Galeri" : "Gallery"}</b><small>{active + 1} / {urls.length}</small></div>
+      <div className="adoptable-gallery-track" ref={track} onScroll={sync}>
+        {urls.map((url, index) => <div className="adoptable-gallery-slide" key={url + index}>
+          {failed[index] ? <div className="adoptable-image-placeholder is-visible"><span>{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span></div>
+            : <button type="button" className="adoptable-gallery-zoom" onClick={() => { setActive(index); setZoom(true); }} aria-label={lang === "id" ? "Perbesar gambar" : "Enlarge image"}>
+              <img src={url} alt={title + " " + (index + 1)} loading="lazy" onError={() => setFailed((state) => ({ ...state, [index]: true }))} />
+            </button>}
+        </div>)}
+      </div>
+      {urls.length > 1 && <div className="adoptable-gallery-controls">
+        <button type="button" onClick={() => jump(active - 1)} aria-label={lang === "id" ? "Gambar sebelumnya" : "Previous image"}>‹</button>
+        <div className="adoptable-gallery-dots">{urls.map((_, index) => <button type="button" key={index} aria-label={(lang === "id" ? "Gambar " : "Image ") + (index + 1)} aria-current={active === index} onClick={() => jump(index)} />)}</div>
+        <button type="button" onClick={() => jump(active + 1)} aria-label={lang === "id" ? "Gambar berikutnya" : "Next image"}>›</button>
+      </div>}
+      {zoom && <div className="adoptable-lightbox" role="dialog" aria-modal="true" aria-label={lang === "id" ? "Perbesar gambar" : "Image preview"} onClick={() => setZoom(false)}>
+        <button type="button" className="adoptable-lightbox-close" onClick={() => setZoom(false)} aria-label={lang === "id" ? "Tutup" : "Close"}>×</button>
+        {failed[active] ? <div className="adoptable-image-placeholder is-visible"><span>{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span></div>
+          : <img src={current} alt={title} onError={() => setFailed((state) => ({ ...state, [active]: true }))} />}
+      </div>}
+    </section>
+  );
+}
+function AdoptablesPage({ go, currency, setCurrency, lang, owner = false }) {
+  const [filter, setFilter] = useState("all");
+  const settings = CONFIG.adoptableSettings || {};
+  const source = owner ? (Array.isArray(CONFIG.adoptables) ? CONFIG.adoptables : []) : publicAdoptables();
+  const items = source.filter((item) => (owner || item.visible !== false) && (filter === "all" || item.status === filter))
+    .filter((item) => item.status !== "sold" || settings.showSold !== false || owner)
+    .slice().sort((a, b) => ({ available: 0, reserved: 1, sold: 2 }[a.status || "available"] - ({ available: 0, reserved: 1, sold: 2 }[b.status || "available"])));
+  const showSold = settings.showSold !== false || owner;
+  return (
+    <div className="page">
+      <PageHead crumb="ADOPTABLES" title="Adoptables">{lang === "id" ? "Desain karakter original yang tersedia untuk dimiliki." : "Original character designs available for a new owner."}</PageHead>
+      <section className="card">
+        {owner && items.some((item) => item.visible === false) && <div className="note warn adoptable-private-note">PRIVATE PREVIEW · {lang === "id" ? "Item tersembunyi hanya ditampilkan dalam sesi pemilik." : "Hidden items are shown only in the owner session."}</div>}
+        <div className="adoptables-toolbar">
+          <div className="filters" role="group" aria-label="Filter adoptables">
+            {[["all", lang === "id" ? "Semua" : "All"], ["available", adoptableStatusLabel("available", lang)], ["reserved", adoptableStatusLabel("reserved", lang)], ...(showSold ? [["sold", adoptableStatusLabel("sold", lang)]] : [])].map(([value, label]) => (
+              <button key={value} className="chip" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>
+            ))}
+          </div>
+          <div className="adoptable-currency" role="group" aria-label="Currency">
+            {["IDR", "USD"].map((value) => <button key={value} className="chip" aria-pressed={currency === value} onClick={() => setCurrency(value)}>{value}</button>)}
+          </div>
+        </div>
+        {items.length ? <div className="adoptables-grid">{items.map((item) => <div key={item.id} className="adoptable-card-wrap">
+          {owner && item.visible === false && <span className="adoptable-private-label">PRIVATE PREVIEW</span>}
+          <AdoptableCard item={item} currency={currency} lang={lang} go={go} />
+        </div>)}</div>
+          : <div className="empty"><Icon name="shapes" /><p style={{ marginTop: 8 }}>{lang === "id" ? "Belum ada adoptable pada kategori ini." : "No adoptables in this category yet."}</p>{filter !== "all" && <div style={{ marginTop: 12 }}><Btn kind="ghost" size="sm" onClick={() => setFilter("all")}>{lang === "id" ? "Tampilkan semua" : "Show all"}</Btn></div>}</div>}
+      </section>
+    </div>
+  );
+}
+function AdoptableDetail({ id, go, currency, lang, owner = false, setToast = () => {} }) {
+  // Owner-only UI preview; this is NOT confidentiality protection because published site_content is delivered to public clients.
+  const source = owner ? (Array.isArray(CONFIG.adoptables) ? CONFIG.adoptables : []) : publicAdoptables();
+  const item = source.find((entry) => entry.id === id && (owner || entry.visible !== false));
+  if (!item) return <div className="page"><PageHead crumb="ADOPTABLES" title={lang === "id" ? "Tidak ditemukan" : "Not found"} /><section className="card"><p>{lang === "id" ? "Adoptable ini tidak tersedia atau tautannya tidak valid." : "This adoptable is unavailable or the link is invalid."}</p><div style={{ marginTop: 14 }}><Btn kind="ghost" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali ke Adoptables" : "Back to Adoptables"}</Btn></div></section></div>;
+  const status = item.status || "available";
+  const settings = CONFIG.adoptableSettings || {};
+  const localizedName = adoptableText(item, "name", lang) || "Untitled adoptable";
+  const mainImage = safeImg(item.image || item.thumbnail);
+  const gallery = Array.isArray(item.gallery) ? item.gallery.map(safeImg).filter(Boolean).slice(0, 6) : [];
+  const idr = adoptablePriceValue(item.price && item.price.idr, "IDR", lang);
+  const usd = adoptablePriceValue(item.price && item.price.usd, "USD", lang);
+  const displayPrice = [idr, usd].filter(Boolean).join(" / ") || (lang === "id" ? "Harga belum ditentukan" : "Price not set");
+  const pageUrl = typeof window !== "undefined" ? window.location.href : "";
+  const claimValues = { name: localizedName, price: displayPrice, url: pageUrl };
+  const claimTemplate = adoptableClaimTemplate(settings, lang, claimValues);
+  const claimHref = buildAdoptableClaimHref(settings, localizedName, lang, claimValues);
+  const claim = status === "available" && item.visible !== false;
+  const copyClaimTemplate = async () => {
+    let copied = false;
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        await navigator.clipboard.writeText(claimTemplate);
+        copied = true;
+      }
+    } catch (error) {}
+    if (!copied) {
+      const field = document.createElement("textarea");
+      field.value = claimTemplate;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
+      document.body.removeChild(field);
+    }
+    if (copied) setToast("Template disalin");
+    else setToast(lang === "id" ? "Tidak dapat menyalin template" : "Could not copy the template");
+  };
+  const claimInternalRoute = claimHref && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimHref);
+  const deliverables = resolveAdoptableList(item, "deliverables", settings, "defaultDeliverables");
+  const importantNotes = resolveAdoptableList(item, "importantNotes", settings, "defaultNotes");
+  const artistTerms = resolveAdoptableList(item, "artistTerms", settings, "defaultTerms");
+  const oldNotes = adoptableText(item, "notes", lang);
+  const hasNotes = !!oldNotes || importantNotes.length > 0;
+  return (
+    <div className="page">
+      <div className="adoptable-back"><Btn kind="ghost" size="sm" icon="left" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali" : "Back"}</Btn></div>
+      <PageHead crumb="ADOPTABLES" title={adoptableText(item, "name", lang) || "Untitled adoptable"} />
+      {owner && item.visible === false && <div className="note warn adoptable-private-note">PRIVATE PREVIEW · {lang === "id" ? "Item ini belum terlihat oleh publik." : "This item is not visible to the public."}</div>}
+      <section className={"card adoptable-detail" + (status === "sold" ? " is-sold" : "")}>
+        <div className="adoptable-detail-media">
+          <div className={"adoptable-detail-image" + (!mainImage ? " has-image-error" : "")}>
+            {mainImage && <img src={mainImage} alt={adoptableText(item, "name", lang)} onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />}
+            <div className="adoptable-image-placeholder"><span>{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span></div>
+            {status === "sold" && <span className="adoptable-sold-badge">{adoptableStatusLabel("sold", lang)}</span>}
+            {status === "reserved" && <span className="adoptable-reserved-badge">{adoptableStatusLabel("reserved", lang)}</span>}
+          </div>
+          <AdoptableGallery images={gallery} title={adoptableText(item, "name", lang)} lang={lang} />
+        </div>
+        <div className="adoptable-detail-copy">
+          <div className="adoptable-detail-intro">
+            <div className="meta"><span className={"tag adoptable-status " + status}>{adoptableStatusLabel(status, lang)}</span>{(item.tags || []).map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
+            <h2>{adoptableText(item, "name", lang) || "Untitled adoptable"}</h2>
+            {(idr !== null || usd !== null) ? <div className="adoptable-detail-prices">
+              {idr !== null && <div><small>IDR</small><b>{idr}</b></div>}
+              {usd !== null && <div><small>USD</small><b>{usd}</b></div>}
+            </div> : <p className="muted adoptable-price-unset">{lang === "id" ? "Harga belum ditentukan" : "Price not set"}</p>}
+          </div>
+          {adoptableText(item, "description", lang) && <section className="adoptable-detail-section"><h3>{lang === "id" ? "Info karakter" : "Character information"}</h3><p className="adoptable-description">{adoptableText(item, "description", lang)}</p></section>}
+          {deliverables.length > 0 && <section className="adoptable-detail-section">
+            <h3>{lang === "id" ? "Yang kamu dapat" : "What you get"}</h3>
+            <ul className="adoptable-check-list">{deliverables.map((entry) => <li key={entry.id}><span aria-hidden="true">✓</span><span>{adoptableListText(entry, lang)}</span></li>)}</ul>
+          </section>}
+          {hasNotes && <section className="adoptable-notes adoptable-detail-section">
+            <h3>{lang === "id" ? "Catatan penting" : "Important notes"}</h3>
+            {oldNotes && <p className="adoptable-legacy-notes">{oldNotes}</p>}
+            {importantNotes.length > 0 && <ul className="adoptable-note-list">{importantNotes.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul>}
+          </section>}
+          {artistTerms.length > 0 && <details className="adoptable-terms adoptable-detail-section">
+            <summary>{lang === "id" ? "Ketentuan artis" : "Artist terms"}</summary>
+            <ul className="adoptable-terms-list">{artistTerms.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul>
+          </details>}
+          {claim && <div className="btns" style={{ flexWrap: "wrap", gap: 8 }}>
+            {claimHref && claimInternalRoute
+              ? <Btn kind="peach" onClick={() => go(claimInternalRoute[1])}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
+              : claimHref
+                ? <Btn kind="peach" href={claimHref}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
+                : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>}
+            <Btn kind="ghost" onClick={copyClaimTemplate}>{lang === "id" ? "Salin template" : "Copy template"}</Btn>
+          </div>}
+          {!claim && <Btn kind="ghost" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (item.visible === false ? (lang === "id" ? "Belum dipublikasikan" : "Not published") : (lang === "id" ? "Sedang dipesan" : "Reserved"))}</Btn>}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 /* ============================================================ creator access modal */
 function AccessModal({ onClose, onSuccess }) {
   const [email, setEmail] = useState("");
@@ -2701,6 +3298,7 @@ const TABS = [
   { id: "profile", label: "Edit Profile", icon: "user" },
   { id: "media", label: "All images", icon: "image" },
   { id: "gallery", label: "Gallery", icon: "image" },
+  { id: "adoptables", label: "Adoptables", icon: "shapes" },
   { id: "commission", label: "Commission", icon: "pen" },
   { id: "services", label: "Services", icon: "sparkles" },
   { id: "terms", label: "Terms", icon: "file" },
@@ -2727,12 +3325,12 @@ function CreatorBar({ go }) {
 function Field({ label, hint, className = "", children }) {
   return <div className={"field " + className}><span>{label}</span>{children}{hint && <small>{hint}</small>}</div>;
 }
-function TextIn({ label, value, onChange, hint, className, placeholder, multiline, id }) {
+function TextIn({ label, value, onChange, hint, className, placeholder, multiline, id, maxLength }) {
   return (
     <Field label={label} hint={hint} className={className}>
       {multiline
-        ? <textarea id={id} className="in" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-        : <input id={id} className="in" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />}
+        ? <textarea id={id} className="in" maxLength={maxLength} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+        : <input id={id} className="in" maxLength={maxLength} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />}
     </Field>
   );
 }
@@ -3514,6 +4112,244 @@ function SupabasePanel() {
   );
 }
 
+
+/* ============================================================ ADOPTABLES — Creator Dashboard editor */
+function AdoptableGalleryEditor({ images, onChange, lang = "en" }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const ref = useRef(null);
+  const addImage = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    if (images.length >= 6) { setError(lang === "id" ? "Batas galeri tercapai: maksimal 6 gambar." : "Gallery limit reached: maximum 6 images."); return; }
+    setBusy(true); setError("");
+    try {
+      const url = await storeImage(file, 1800);
+      if (!safeImg(url)) throw new Error(lang === "id" ? "Unggahan menghasilkan URL gambar yang tidak valid." : "Upload returned an invalid image URL.");
+      onChange(images.concat([url]).slice(0, 6));
+    } catch (uploadError) {
+      const reason = uploadError && uploadError.message ? uploadError.message : "Could not upload this gallery image.";
+      setError(lang === "id" ? reason
+        .replace("Use a PNG, JPG, WebP or GIF image.", "Gunakan gambar PNG, JPG, WebP, atau GIF.")
+        .replace("Image is too large after compression. Use a smaller image.", "Ukuran gambar terlalu besar setelah kompresi. Gunakan gambar yang lebih kecil.")
+        .replace("Upload completed without a permanent file URL.", "Unggahan selesai tanpa URL file permanen.")
+        .replace("Upload returned an invalid image URL.", "Unggahan menghasilkan URL gambar yang tidak valid.")
+        .replace("Could not read image.", "Gambar tidak dapat dibaca.")
+        .replace("Could not upload this gallery image.", "Gambar galeri tidak dapat diunggah.")
+        : reason);
+    } finally { setBusy(false); }
+  };
+  return <div className="field full">
+    <span>{lang === "id" ? "Galeri (maksimal 6 gambar)" : "Gallery (maximum 6 images)"}</span>
+    <div className="adoptable-gallery-editor">
+      {images.map((url, index) => <div className="adoptable-gallery-edit-item" key={url + index}>
+        <img src={safeImg(url) || placeholder(index, "Gallery")} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />
+        <span className="adoptable-gallery-editor-fallback">{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span>
+        <div className="btns">
+          <button type="button" className="ib" disabled={index === 0} onClick={() => onChange(move(images, index, -1))} aria-label={lang === "id" ? "Pindahkan gambar galeri " + (index + 1) + " ke atas" : "Move gallery image " + (index + 1) + " up"}><Icon name="up" /></button>
+          <button type="button" className="ib" disabled={index === images.length - 1} onClick={() => onChange(move(images, index, 1))} aria-label={lang === "id" ? "Pindahkan gambar galeri " + (index + 1) + " ke bawah" : "Move gallery image " + (index + 1) + " down"}><Icon name="down" /></button>
+          <button type="button" className="ib bad" onClick={() => onChange(images.filter((_, i) => i !== index))} aria-label={lang === "id" ? "Hapus gambar galeri " + (index + 1) : "Remove gallery image " + (index + 1)}><Icon name="trash" /></button>
+        </div>
+      </div>)}
+      {images.length < 6 && <button type="button" className="adoptable-gallery-add" disabled={busy} onClick={() => ref.current && ref.current.click()}><Icon name="plus" />{busy ? (lang === "id" ? "Mengunggah…" : "Uploading…") : (lang === "id" ? "Tambah gambar galeri" : "Add gallery image")}</button>}
+    </div>
+    <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={addImage} />
+    <small className="muted">{images.length} / 6 {lang === "id" ? "gambar · unggahan menggunakan penyimpanan gambar portofolio." : "images · uploads use the same image storage as portfolio images."}</small>
+    {error && <div className="err" role="alert">{error}</div>}
+  </div>;
+}
+function AdoptableListEditor({ label, items, fallbackItems = [], onChange, lang = "en", allowInherit = false }) {
+  const hasOverride = !allowInherit || (Array.isArray(items) && items.length > 0);
+  const current = hasOverride ? (Array.isArray(items) ? items : []) : (Array.isArray(fallbackItems) ? fallbackItems : []);
+  const update = (index, key, value) => onChange(current.map((entry, i) => {
+    if (i !== index) return entry;
+    if (key === "text") return { ...entry, text: value };
+    return { ...entry, i18n: { ...(entry.i18n || {}), id: { ...((entry.i18n || {}).id || {}), text: value } } };
+  }));
+  const remove = (index) => onChange(current.filter((_, i) => i !== index));
+  const reorder = (index, delta) => onChange(move(current, index, delta));
+  const add = () => onChange([...current, { id: uid("adptext"), text: "", i18n: { id: { text: "" } } }]);
+  return (
+    <section className="adoptable-list-editor full">
+      <div className="card-head"><h4>{label}</h4><small className="muted">{current.length} / 12</small></div>
+      {allowInherit && !hasOverride ? <>
+        {current.length ? <ul className="adoptable-list-preview">{current.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul> : <p className="adoptable-settings-help">{lang === "id" ? "Default global belum memiliki isi." : "No global defaults are configured yet."}</p>}
+        <div className="adoptable-list-editor-actions"><Btn kind="ghost" size="sm" onClick={() => onChange(current.length ? clone(current) : [{ id: uid("adptext"), text: "", i18n: { id: { text: "" } } }])}>{lang === "id" ? "Sesuaikan untuk item ini" : "Customize for this item"}</Btn></div>
+        <small className="adoptable-settings-help">{lang === "id" ? "Item ini mengikuti default global sampai kamu membuat penyesuaian." : "This item follows the global defaults until you customize this list."}</small>
+      </> : <>
+        {current.map((entry, index) => <div className="adoptable-list-editor-item" key={entry.id || index}>
+          <div className="adoptable-list-editor-item-head">
+            <small>{lang === "id" ? "ID stabil: " : "Stable ID: "}{entry.id || "missing"}</small>
+            <div className="acts">
+              <button className="ib" type="button" disabled={index === 0} onClick={() => reorder(index, -1)} aria-label={lang === "id" ? "Pindahkan ke atas" : "Move up"}><Icon name="up" /></button>
+              <button className="ib" type="button" disabled={index === current.length - 1} onClick={() => reorder(index, 1)} aria-label={lang === "id" ? "Pindahkan ke bawah" : "Move down"}><Icon name="down" /></button>
+              <button className="ib" type="button" onClick={() => remove(index)} aria-label={lang === "id" ? "Hapus item" : "Remove item"}><Icon name="trash" /></button>
+            </div>
+          </div>
+          <div className="adoptable-list-editor-row">
+            <Field label={lang === "id" ? "English" : "English"}>
+              <textarea className="in" maxLength={500} value={entry.text || ""} onChange={(event) => update(index, "text", event.target.value)} placeholder={lang === "id" ? "Teks bahasa Inggris" : "English text"} />
+            </Field>
+            <Field label="Indonesia">
+              <textarea className="in" maxLength={500} value={entry.i18n?.id?.text || ""} onChange={(event) => update(index, "idText", event.target.value)} placeholder="Teks bahasa Indonesia" />
+            </Field>
+          </div>
+          <small className="adoptable-settings-help">{(entry.text || "").length} / 500 EN · {(entry.i18n?.id?.text || "").length} / 500 ID</small>
+        </div>)}
+        <div className="adoptable-list-editor-actions">
+          <Btn kind="ghost" size="sm" onClick={add} disabled={current.length >= 12}>{lang === "id" ? "Tambah item" : "Add item"}</Btn>
+          {allowInherit && <Btn kind="ghost" size="sm" onClick={() => onChange([])}>{lang === "id" ? "Gunakan default global" : "Use global defaults"}</Btn>}
+        </div>
+      </>}
+    </section>
+  );
+}
+
+function AdoptableEditor({ initial, onCancel, onApply, lang = "en", settings = {} }) {
+  const [draft, setDraft] = useState(() => ({
+    ...clone(initial),
+    gallery: Array.isArray(initial.gallery) ? initial.gallery.slice(0, 6) : [],
+    deliverables: Array.isArray(initial.deliverables) ? clone(initial.deliverables) : [],
+    importantNotes: Array.isArray(initial.importantNotes) ? clone(initial.importantNotes) : [],
+    artistTerms: Array.isArray(initial.artistTerms) ? clone(initial.artistTerms) : [],
+    status: initial.status || "available",
+    visible: initial.visible !== false
+  }));
+  const validationErrors = validateAdoptableItem(draft, safeImg);
+  const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
+  const setIdText = (key, value) => setDraft((current) => ({ ...current, i18n: { ...(current.i18n || {}), id: { ...((current.i18n || {}).id || {}), [key]: value } } }));
+  return (
+    <section className="card">
+      <div className="card-head"><h2>{initial.name ? "Edit adoptable" : "New adoptable"}</h2><Btn kind="ghost" size="sm" onClick={onCancel}>Cancel</Btn></div>
+      <div className="note info">{initial.name ? "Edit this listing and preview the changes before publishing." : "New items are private by default. Turn on “Visible to public” when the listing is ready."}</div>
+      <div className="form">
+        <TextIn label="Name (English)" value={draft.name || ""} onChange={(value) => set("name", value)} />
+        <TextIn label="Name (Indonesian)" value={draft.i18n?.id?.name || ""} onChange={(value) => setIdText("name", value)} />
+        <div className="adoptable-bilingual-pair full">
+          <TextIn label="Description (English)" value={draft.description || ""} onChange={(value) => set("description", value)} multiline />
+          <TextIn label="Description (Indonesian)" value={draft.i18n?.id?.description || ""} onChange={(value) => setIdText("description", value)} multiline />
+        </div>
+        <div className="adoptable-bilingual-pair full">
+          <TextIn label="Notes (English)" value={draft.notes || ""} onChange={(value) => set("notes", value)} multiline />
+          <TextIn label="Notes (Indonesian)" value={draft.i18n?.id?.notes || ""} onChange={(value) => setIdText("notes", value)} multiline />
+        </div>
+        <Field label="Price (IDR)"><input className="in" type="number" min="0" step="1" inputMode="numeric" value={draft.price?.idr == null ? "" : String(draft.price.idr)} onChange={(event) => set("price", { ...(draft.price || {}), idr: event.target.value === "" ? null : Number(event.target.value) })} placeholder="350000" /></Field>
+        <Field label="Price (USD)"><input className="in" type="number" min="0" step="0.01" inputMode="decimal" value={draft.price?.usd == null ? "" : String(draft.price.usd)} onChange={(event) => set("price", { ...(draft.price || {}), usd: event.target.value === "" ? null : Number(event.target.value) })} placeholder="25" /></Field>
+        <Field label="Status"><select className="in" value={draft.status || "available"} onChange={(event) => set("status", event.target.value)}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option></select></Field>
+        <Field label="Visibility"><label className="adoptable-toggle"><input type="checkbox" checked={draft.visible === true} onChange={(event) => set("visible", event.target.checked)} />Visible to public</label><small className="muted">Off = hidden from the public page and navigation. This is separate from Sold status.</small></Field>
+        <ImagePicker label="Card thumbnail" value={draft.thumbnail || ""} onChange={(value) => set("thumbnail", value)} maxDim={1200} />
+        <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
+        <AdoptableGalleryEditor images={Array.isArray(draft.gallery) ? draft.gallery : []} onChange={(value) => set("gallery", value)} lang={lang} />
+        <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
+        <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={draft.deliverables} fallbackItems={settings.defaultDeliverables} onChange={(value) => set("deliverables", value)} lang={lang} allowInherit />
+        <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={draft.importantNotes} fallbackItems={settings.defaultNotes} onChange={(value) => set("importantNotes", value)} lang={lang} allowInherit />
+        <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={draft.artistTerms} fallbackItems={settings.defaultTerms} onChange={(value) => set("artistTerms", value)} lang={lang} allowInherit />
+      </div>
+      {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{lang === "id" ? error
+            .replace("Gallery can contain a maximum of 6 images.", "Galeri dapat berisi maksimal 6 gambar.")
+            .replace(/Gallery image (\d+) must be a valid image URL\./, "Gambar galeri $1 harus menggunakan URL gambar yang valid.")
+            .replace("Deliverables can contain a maximum of 12 items.", "Daftar Yang kamu dapat maksimal 12 item.")
+            .replace("Important notes can contain a maximum of 12 items.", "Catatan penting maksimal 12 item.")
+            .replace("Artist terms can contain a maximum of 12 items.", "Ketentuan artis maksimal 12 item.")
+            : error}</li>)}</ul></div>}
+      <div className="btns" style={{ justifyContent: "flex-end", marginTop: 16 }}>
+        <Btn kind="ghost" onClick={onCancel}>Cancel</Btn>
+        <Btn kind="cyan" onClick={() => onApply(draft)} disabled={validationErrors.length > 0}>Save item</Btn>
+      </div>
+    </section>
+  );
+}
+
+function AdoptablesPanel() {
+  const { site, upd, lang } = useCreator();
+  const [editing, setEditing] = useState(null);
+  const items = Array.isArray(site.adoptables) ? site.adoptables : [];
+  const settings = site.adoptableSettings || {};
+  const claim = settings.claim || {};
+  const updateClaim = (patch) => upd((next) => {
+    next.adoptableSettings = next.adoptableSettings || {};
+    next.adoptableSettings.claim = { ...(next.adoptableSettings.claim || {}), ...patch };
+  });
+  const updateDefault = (key, value) => upd((next) => {
+    next.adoptableSettings = next.adoptableSettings || {};
+    next.adoptableSettings[key] = value;
+  });
+  const blank = () => ({
+    id: uid("adp"), name: "", thumbnail: "", image: "", gallery: [],
+    price: { idr: null, usd: null }, status: "available", visible: false,
+    tags: [], description: "", notes: "", deliverables: [], importantNotes: [], artistTerms: [],
+    i18n: { id: { name: "", description: "", notes: "" } }
+  });
+  const apply = (item) => {
+    upd((next) => {
+      next.adoptables = Array.isArray(next.adoptables) ? next.adoptables : [];
+      const index = next.adoptables.findIndex((entry) => entry.id === item.id);
+      if (index >= 0) next.adoptables[index] = item;
+      else next.adoptables.unshift(item);
+    });
+    setEditing(null);
+  };
+  const mode = claim.mode === "email" ? "email" : "contact";
+  const claimTemplates = settings.claimTemplates || {};
+  return (
+    <div className="panel">
+      {editing ? <AdoptableEditor key={editing.id} initial={editing} onCancel={() => setEditing(null)} onApply={apply} lang={lang} settings={settings} /> : <>
+        <section className="card">
+          <div className="card-head"><div><h2>Adoptables ({items.length})</h2><p className="muted" style={{ fontSize: ".85rem" }}>Fixed price · one design, one owner · IDR and USD</p></div><Btn size="sm" icon="plus" onClick={() => setEditing(blank())}>Add adoptable</Btn></div>
+          <p className="muted" style={{ marginBottom: 12 }}>New items start hidden. Visibility controls public listing; Available / Reserved / Sold controls claim status.</p>
+          <div className="list">
+            {items.map((item, index) => (
+              <div className="rowi" key={item.id}>
+                <div className="thumb">{safeImg(item.thumbnail || item.image) ? <img src={safeImg(item.thumbnail || item.image)} alt="" loading="lazy" /> : <Icon name="image" />}</div>
+                <div className="grow"><b>{item.name || "Untitled adoptable"}</b><span className="muted" style={{ fontSize: ".8rem" }}>{item.status || "available"} · {item.visible !== false ? "Public" : "Hidden"} · {item.id}</span></div>
+                <div className="acts">
+                  <button className="ib" disabled={index === 0} onClick={() => upd((next) => { next.adoptables = move(next.adoptables, index, -1); })} aria-label="Move up"><Icon name="up" /></button>
+                  <button className="ib" disabled={index === items.length - 1} onClick={() => upd((next) => { next.adoptables = move(next.adoptables, index, 1); })} aria-label="Move down"><Icon name="down" /></button>
+                  <button className="ib" onClick={() => setEditing(clone(item))} aria-label="Edit adoptable"><Icon name="pen" /></button>
+                  <ConfirmDelete onYes={() => upd((next) => { next.adoptables = next.adoptables.filter((entry) => entry.id !== item.id); })} label="Delete adoptable" />
+                </div>
+              </div>
+            ))}
+            {!items.length && <p className="muted">No adoptables yet. Add the first item when ready.</p>}
+          </div>
+        </section>
+        <section className="card">
+          <h2 style={{ marginBottom: 12 }}>{lang === "id" ? "Pengaturan Adoptables" : "Adoptables settings"}</h2>
+          <div className="form">
+            <Field label={lang === "id" ? "Metode klaim" : "Claim method"}>
+              <select className="in" value={mode} onChange={(event) => updateClaim({ mode: event.target.value })}>
+                <option value="contact">{lang === "id" ? "Halaman Contact" : "Contact page"}</option>
+                <option value="email">{lang === "id" ? "Email" : "Email"}</option>
+              </select>
+            </Field>
+            {mode === "email" ? <>
+              <TextIn label={lang === "id" ? "Alamat email klaim" : "Claim email address"} value={claim.email || ""} onChange={(value) => updateClaim({ mode: "email", email: value })} className="full" />
+              {claim.email && !validAdoptableEmail(claim.email) && <p className="err full" role="alert">{lang === "id" ? "Format email tidak valid. Tombol klaim akan kembali ke halaman Contact." : "Invalid email format. The claim button will fall back to the Contact page."}</p>}
+              <small className="adoptable-settings-help full">{lang === "id" ? "Alamat klaim dibaca dari data situs; alamat email tidak ditanam di kode default." : "The claim address is read from site data; no email address is hardcoded in the default."}</small>
+            </> : <TextIn label={lang === "id" ? "URL Contact (opsional)" : "Claim / Contact URL (optional)"} value={claim.url || ""} onChange={(value) => updateClaim({ mode: "contact", url: value })} className="full" />}
+            <div className="adoptable-bilingual-pair full">
+              <TextIn label={lang === "id" ? "Template klaim (Indonesia)" : "Claim template (Indonesian)"} value={claimTemplates.id || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, id: value })} multiline maxLength={500} />
+              <TextIn label={lang === "id" ? "Template klaim (English)" : "Claim template (English)"} value={claimTemplates.en || ""} onChange={(value) => updateDefault("claimTemplates", { ...claimTemplates, en: value })} multiline maxLength={500} />
+            </div>
+            <small className="adoptable-settings-help full">{lang === "id" ? "Placeholder yang didukung: {nama}, {harga}, {url}. Maksimal 500 karakter per bahasa; baris baru akan dienkode saat membuka email." : "Supported placeholders: {nama}, {harga}, {url}. Maximum 500 characters per language; line breaks are encoded when opening email."}</small>
+            <Field label={lang === "id" ? "Arsip terjual" : "Sold archive"}><label className="adoptable-toggle"><input type="checkbox" checked={settings.showSold !== false} onChange={(event) => upd((next) => { next.adoptableSettings = { ...(next.adoptableSettings || {}), showSold: event.target.checked }; })} />{lang === "id" ? "Tampilkan item terjual sebagai arsip" : "Show sold items as archive"}</label><small className="muted">{lang === "id" ? "Jika aktif, item terjual tetap terlihat, diredupkan, dan tidak dapat diklaim." : "When enabled, Sold items remain public, dimmed, and non-claimable."}</small></Field>
+          </div>
+        </section>
+        <section className="card">
+          <h2>{lang === "id" ? "Default global" : "Global defaults"}</h2>
+          <p className="adoptable-settings-help">{lang === "id" ? "Daftar ini digunakan oleh item yang tidak memiliki daftar khusus. ID item stabil dipakai untuk menjaga terjemahan saat urutan berubah." : "These lists are used by items without their own overrides. Stable item IDs keep translations attached when list order changes."}</p>
+          <div className="form" style={{ marginTop: 14 }}>
+            <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={settings.defaultDeliverables || []} onChange={(value) => updateDefault("defaultDeliverables", value)} lang={lang} />
+            <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={settings.defaultNotes || []} onChange={(value) => updateDefault("defaultNotes", value)} lang={lang} />
+            <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={settings.defaultTerms || []} onChange={(value) => updateDefault("defaultTerms", value)} lang={lang} />
+          </div>
+        </section>
+      </>}
+    </div>
+  );
+}
+
 function CreatorPage() {
   const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t==="offers"?"services":t; });
   const pick = (t) => { const next = t === "offers" ? "services" : t; setTab(next); ss.set("mk-tab", next); window.scrollTo({ top: 0 }); };
@@ -3532,6 +4368,7 @@ function CreatorPage() {
       {tab === "contact" && <ContactPanel />}
       {tab === "texts" && <TextsPanel />}
       {tab === "gallery" && <GalleryPanel />}
+      {tab === "adoptables" && <AdoptablesPanel />}
       {tab === "commission" && <CommissionPanel />}
       {tab === "services" && <ServicesPanel />}
       {tab === "terms" && <TermsPanel />}
@@ -4811,7 +5648,7 @@ function App() {
     Store.api("get_draft_site",{},true).then(r=>{
       if(!active)return;
       if(r.site && typeof r.site === "object" && !Array.isArray(r.site)) {
-        setSite(p=>ensureWorkflowIds(mergeDeep(p,r.site)));
+        setSite(p=>ensureWorkflowIds(mergeDeep(p,stripAdoptableDraftFields(r.site))));
       }
       setDraftLoaded(true);
     }).catch(()=>{ if(active)setDraftLoaded(true); });
@@ -4838,7 +5675,7 @@ function App() {
   const dirty = useMemo(() => JSON.stringify(site) !== JSON.stringify(saved), [site, saved]);
   useEffect(() => {
     if(!creatorOn||!draftLoaded||!dirty)return;
-    const timer=setTimeout(()=>{ Store.api("save_draft_site",{site:plain(site)},true).catch(e=>setMsg({err:"Draft autosave failed: "+(e.message||"Please retry.")})); },1100);
+    const timer=setTimeout(()=>{ Store.api("save_draft_site",{site:stripAdoptableDraftFields(site)},true).catch(e=>setMsg({err:"Draft autosave failed: "+(e.message||"Please retry.")})); },1100);
     return ()=>clearTimeout(timer);
   },[creatorOn,draftLoaded,site,dirty]);
   const doPublish = async (data) => {
@@ -4854,7 +5691,7 @@ function App() {
   };
   const save = () => doPublish(site);
   const savePart = (path) => { const base = clone(saved); setPath(base, path, clone(getPath(site, path))); return doPublish(base); };
-  const discard = () => { setSite(saved); setMsg(null); Store.api("save_draft_site",{site:plain(saved)},true).catch(()=>{}); };
+  const discard = () => { setSite(saved); setMsg(null); Store.api("save_draft_site",{site:stripAdoptableDraftFields(saved)},true).catch(()=>{}); };
   const exit = async () => { loggingOut.current = true; await Auth.signOut(); ss.del("mk-tab"); setAuth({ loading: false, owner: false }); setSite(saved); setMsg(null); go("home"); setToast("You have been signed out."); loggingOut.current = false; };
 
   const openGate = () => { if (creatorOn) { go("creator"); return; } setGate(true); };
@@ -4863,7 +5700,11 @@ function App() {
     setAuth({ loading: false, owner: true }); setEditing(true); setGate(false); return "";
   };
 
-  const view = route === "creator" && !creatorOn ? "home" : route;
+  useEffect(() => {
+    if (publishedLoaded && !isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings, creatorOn)) go("home");
+  }, [publishedLoaded, route, site.adoptables, site.adoptableSettings, creatorOn, go]);
+  const view = route === "creator" && !creatorOn ? "home"
+    : (!isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings, creatorOn) ? "home" : route);
   const isTextEditing = creatorOn && editing && view !== "creator";
   const mainRef = useRef(null);
   // Scroll motion is deliberately scoped to public content and disabled in Creator mode.
@@ -4997,7 +5838,7 @@ function App() {
   };
 
   return (
-    <CreatorCtx.Provider value={{ creatorOn, site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, editing: creatorOn && editing, setEditing }}>
+    <CreatorCtx.Provider value={{ creatorOn, site, upd, saved, dirty, saving, save, savePart, discard, exit, msg, lang, editing: creatorOn && editing, setEditing }}>
       <div className="shell">
         <Sidebar route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
@@ -5009,6 +5850,8 @@ function App() {
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
+            {view === "adoptables" && <AdoptablesPage go={go} currency={cur} setCurrency={setCur} lang={lang} owner={creatorOn} />}
+            {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} owner={creatorOn} setToast={setToast} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
             {view === "services" && <Services go={go} setCat={setCat} lang={lang} />}
             {view === "board" && <CommissionBoard />}
