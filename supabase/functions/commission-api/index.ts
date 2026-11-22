@@ -1063,40 +1063,94 @@ Deno.serve(async (req) => {
       if (!id || !email || !["Accepted", "Declined"].includes(response)) {
         return json({ error: "Invalid proposal response." }, 400);
       }
-      const { data: track } = await db.from("order_tracks")
-        .select("*").eq("id", id).maybeSingle();
+
+      // [CHANGED] Two independent 5-attempt / 15-minute buckets:
+      // one keyed by Request ID (across IPs), one keyed by IP (across orders).
+      // These one-time decision attempts intentionally remain unsuccessful in
+      // track_attempts so every attempt, including a valid response, is counted.
+      const forwardedFor = req.headers.get("x-forwarded-for") || "";
+      const ipAddress = clean(
+        req.headers.get("cf-connecting-ip") ||
+        req.headers.get("x-real-ip") ||
+        forwardedFor.split(",")[0] ||
+        "unknown",
+        100,
+      );
+      const requestBucketHash = await sha256("respond-request-id|" + id);
+      const requestBucketEmailHash = await sha256("respond-request-id");
+      const ipHash = await sha256("respond-ip|" + ipAddress);
+      const ipBucketEmailHash = await sha256("respond-ip");
+      const [requestRate, ipRate] = await Promise.all([
+        db.rpc("record_track_attempt", {
+          p_ip_hash: requestBucketHash,
+          p_email_hash: requestBucketEmailHash,
+          p_request_id: id,
+        }),
+        db.rpc("record_track_attempt", {
+          p_ip_hash: ipHash,
+          p_email_hash: ipBucketEmailHash,
+          p_request_id: "RESPOND-IP",
+        }),
+      ]);
+      if (requestRate.error || !requestRate.data || ipRate.error || !ipRate.data) {
+        console.error("proposal response rate-limit check failed", {
+          requestRate: requestRate.error,
+          ipRate: ipRate.error,
+        });
+        return json({ error: "Could not verify the response rate limit. Please try again later." }, 503);
+      }
+      if (requestRate.data.allowed !== true || ipRate.data.allowed !== true) {
+        return json({ error: "Terlalu banyak percobaan. Coba lagi dalam 15 menit." }, 429);
+      }
+
+      // [CHANGED] Keep the Request ID + matching email check before any decision.
+      const { data: track, error: trackError } = await db.from("order_tracks")
+        .select("id,emailHash,proposal,status")
+        .eq("id", id).maybeSingle();
+      if (trackError) {
+        console.error("proposal response identity lookup failed", trackError);
+        return json({ error: "Could not verify this commission request." }, 503);
+      }
       const suppliedHash = await sha256(email + "|" + id);
       if (!track || track.emailHash !== suppliedHash) {
         return json({ error: "No order matches that Request ID and email." }, 404);
       }
-      if (!track.proposal) return json({ error: "A proposal is not available for this order yet." }, 409);
-
-      const proposal = { ...(track.proposal || {}), response };
-      const updates = Array.isArray(track.updates) ? track.updates : [];
-      updates.push({
-        at: new Date().toISOString(),
-        from: "client",
-        text: note || "Client: " + response,
-      });
-      const status = response === "Accepted" ? "Awaiting Payment" : "Cancelled";
-      const { data: order, error: orderError } = await db.from("commission_requests")
-        .select("notes,finalPrice,extraLines").eq("id", id).maybeSingle();
-      if (orderError || !order) {
-        console.error("client response commission lookup failed", orderError);
-        return json({ error: "Could not load the commission record." }, 500);
+      if (!track.proposal) {
+        return json({ error: "A proposal is not available for this order yet." }, 409);
       }
-      const { data: updated, error } = await db.rpc("sync_commission_state", {
+
+      // [CHANGED] The database RPC performs a conditional compare-and-set and
+      // synchronizes all commission tables in one PostgreSQL transaction.
+      const { data: result, error } = await db.rpc("respond_commission_proposal", {
         p_commission_id: id,
-        p_status: status,
-        p_payment: track.payment || "Unpaid",
-        p_notes: order.notes || "",
-        p_final_price: order.finalPrice,
-        p_extra_lines: order.extraLines || "",
-        p_track_patch: { proposal, updates },
+        p_response: response,
+        p_note: note,
       });
-      if (error || !updated?.id) {
-        console.error("client response synchronization failed", error);
-        return json({ error: "Could not synchronize your proposal response." }, 500);
+      if (error || !result) {
+        console.error("atomic client proposal response failed", error);
+        return json({ error: "Could not save your proposal response. Please try again." }, 500);
+      }
+      if (result.ok !== true) {
+        if (result.code === "ALREADY_RESPONDED") {
+          return json({ error: "Proposal ini sudah direspons." }, 409);
+        }
+        if (result.code === "NO_PROPOSAL") {
+          return json({ error: "A proposal is not available for this order yet." }, 409);
+        }
+        if (result.code === "NOT_PENDING") {
+          return json({ error: "Proposal ini sudah tidak dapat direspons." }, 409);
+        }
+        if (result.code === "NOT_FOUND") {
+          return json({ error: "No order matches that Request ID and email." }, 404);
+        }
+        console.error("unexpected atomic proposal response result", result);
+        return json({ error: "Could not save your proposal response." }, 500);
+      }
+
+      const updated = result.track;
+      if (!updated?.id) {
+        console.error("atomic proposal response returned no tracking record", result);
+        return json({ error: "Could not save your proposal response." }, 500);
       }
       const { emailHash: _privateHash, ...publicTrack } = updated;
       return json({ track: publicTrack });
