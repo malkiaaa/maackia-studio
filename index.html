@@ -4225,7 +4225,7 @@ function AdoptablesPanel() {
               </select>
             </Field>
             {mode === "email" ? <>
-              <TextIn label={lang === "id" ? "Alamat email klaim" : "Claim email address"} value={claim.email || ""} onChange={(value) => updateClaim({ mode: "email", email: value })} className="full" placeholder="name@example.com" />
+              <TextIn label={lang === "id" ? "Alamat email klaim" : "Claim email address"} value={claim.email || ""} onChange={(value) => updateClaim({ mode: "email", email: value })} className="full" />
               {claim.email && !validAdoptableEmail(claim.email) && <p className="err full" role="alert">{lang === "id" ? "Format email tidak valid. Tombol klaim akan kembali ke halaman Contact." : "Invalid email format. The claim button will fall back to the Contact page."}</p>}
               <small className="adoptable-settings-help full">{lang === "id" ? "Alamat email tidak ditanam sebagai default. Isi alamatmu di sini setelah perubahan di-merge." : "No email address is hardcoded. Enter your address here after this change is merged."}</small>
             </> : <TextIn label={lang === "id" ? "URL Contact (opsional)" : "Claim / Contact URL (optional)"} value={claim.url || ""} onChange={(value) => updateClaim({ mode: "contact", url: value })} className="full" />}
