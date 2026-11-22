@@ -97,6 +97,37 @@ svg.ic{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:2;s
 .search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:0 14px;height:40px;width:220px;box-shadow:var(--shadow)}
 .search input{border:0;background:transparent;outline:0;font:inherit;font-size:.85rem;color:inherit;width:100%;min-width:0}
 .search:focus-within{border-color:var(--cyan)}
+.search{height:44px;flex:0 1 300px;gap:7px;padding:0 7px 0 14px}
+.search input{min-width:0;flex:1}
+.search-count{flex:none;min-width:24px;padding:3px 6px;border-radius:999px;background:var(--powder);color:var(--ink);font-size:.72rem;font-weight:900;text-align:center}
+.search-clear{flex:none;width:44px;height:44px;min-width:44px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:1.45rem;line-height:1;cursor:pointer;display:grid;place-items:center}
+.search-clear:hover{background:var(--powder);color:var(--ink)}
+.search-results{display:grid;gap:14px;min-width:0}
+.search-total{font-size:.88rem}
+.search-results-group{min-width:0}
+.search-results-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.search-results-heading h3{min-width:0}
+.search-results .gal{grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));min-width:0}
+.search-results .gal-item{min-width:0;max-width:100%}
+.search-result-list{display:grid;gap:8px;min-width:0}
+.search-result-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;min-height:60px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--card);text-align:left;cursor:pointer}
+.search-result-row:hover{border-color:var(--cyan);background:var(--powder)}
+.search-result-copy{display:grid;gap:3px;min-width:0;overflow-wrap:anywhere}
+.search-result-copy small{color:var(--muted);font-size:.82rem;line-height:1.4}
+.search-result-arrow{flex:none;font-size:1.5rem}
+.search-empty{display:grid;gap:12px;min-width:0}
+.search-suggestions{display:grid;gap:8px}
+.search-suggestion{min-height:44px}
+@media(max-width:767px){
+ .search{width:100%;flex:0 0 auto;height:44px}
+ .search-results .gal{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .search-result-row{min-height:64px;padding:10px}
+ .search-results-group{padding:14px}
+}
+@media(max-width:380px){
+ .search-results .gal{grid-template-columns:minmax(0,1fr)}
+ .search-results-group{padding:12px}
+}
 /* page tabs – Pekora style */
 .quick{display:flex;gap:6px;align-items:center;margin-left:auto}
 .quick-tab{border:0;background:transparent;padding:6px 14px;border-radius:8px;font-weight:700;font-size:.8rem;cursor:pointer;color:var(--muted);transition:background .2s,color .2s}
@@ -1693,6 +1724,25 @@ function filterPublicAdoptables(items, settings = {}) {
     item && item.visible !== false && (item.status !== "sold" || settings.showSold !== false)
   );
 }
+
+/* Pure search helpers: shared by the UI and covered by focused tests. */
+const normalizeSearchText = (value) => String(value == null ? "" : value)
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const tokenizeSearchQuery = (query) => normalizeSearchText(query).trim().split(/\s+/).filter(Boolean);
+const matchesSearchTokens = (value, tokens) => {
+  const haystack = normalizeSearchText(value);
+  return !tokens.length || tokens.every((token) => haystack.includes(token));
+};
+function buildSearchGroups(query, sources = {}) {
+  const tokens = tokenizeSearchQuery(query);
+  const match = (items, getText) => (Array.isArray(items) ? items : [])
+    .filter((item) => matchesSearchTokens(typeof getText === "function" ? getText(item) : "", tokens));
+  return {
+    artworks: match(sources.artworks, sources.artworkSearchText),
+    adoptables: match(filterPublicAdoptables(sources.adoptables, sources.adoptableSettings), sources.adoptableSearchText),
+    services: match(sources.services, sources.serviceSearchText),
+  };
+}
 function mergePublishAdoptables(serverValue, localValue) {
   const server = serverValue && typeof serverValue === "object" && !Array.isArray(serverValue) ? serverValue : {};
   const local = localValue && typeof localValue === "object" && !Array.isArray(localValue) ? localValue : {};
@@ -2511,15 +2561,20 @@ function MobileChrome({ route, go, openGate, creatorOn }) {
     </>
   );
 }
-function TopBar({ route, go, query, setQuery, lang, setLang }) {
-  const onChange = (v) => { setQuery(v); if (v && route !== "gallery") go("gallery"); };
+function TopBar({ route, go, query, setQuery, lang, setLang, resultCount = 0 }) {
+  const onChange = (v) => { setQuery(v); if (v.trim() && route !== "gallery") go("gallery"); };
   const tabs = [["gallery", "Gallery"], ["commission", "Prices"], ["terms", "Terms"], ["workflow", "Workflow"], ["contact", "Contact"]];
   return (
     <div className="top">
-      <label className="search">
+      <div className="search" role="search">
         <Icon name="search" />
-        <input id="site-search" type="search" value={query} onChange={(e) => onChange(e.target.value)} placeholder="Search…" aria-label="Search artwork or category" />
-      </label>
+        <input id="site-search" type="search" value={query} onChange={(e) => onChange(e.target.value)}
+          placeholder={lang === "id" ? "Cari karya, adoptable, layanan…" : "Search artwork, adoptables, services…"}
+          aria-label={lang === "id" ? "Cari karya, adoptable, dan layanan" : "Search artworks, adoptables, and services"} />
+        {query.trim() && <span className="search-count" aria-live="polite" aria-label={lang === "id" ? resultCount + " hasil" : resultCount + " results"}>{resultCount}</span>}
+        {query && <button type="button" className="search-clear" onClick={() => setQuery("")}
+          aria-label={lang === "id" ? "Hapus pencarian" : "Clear search"} title={lang === "id" ? "Hapus pencarian" : "Clear search"}>×</button>}
+      </div>
       <nav className="quick" aria-label="Quick navigation">
         {tabs.map(([id, l]) => (
           <button key={id} className="quick-tab" aria-pressed={route === id} onClick={() => go(id)}>{l}</button>
@@ -2852,6 +2907,72 @@ function Gallery({ query, setQuery, cat, setCat, open }) {
     </div>
   );
 }
+function SearchResults({ query, groups, lang, open, go, setQuery, setCat }) {
+  const count = groups.artworks.length + groups.adoptables.length + groups.services.length;
+  const categories = Array.isArray(CONFIG.categories) ? CONFIG.categories : [];
+  const clear = () => { setQuery(""); setCat("all"); };
+  return (
+    <div className="page search-results">
+      <PageHead crumb={lang === "id" ? "PENCARIAN" : "SEARCH"} title={lang === "id" ? "Hasil pencarian" : "Search results"}>
+        {lang === "id"
+          ? "Pencarian mencakup karya Gallery, Adoptables yang dipublikasikan, dan judul Services."
+          : "Search covers Gallery artwork, publicly listed Adoptables, and Services titles."}
+      </PageHead>
+      <p className="muted search-total" aria-live="polite">
+        {lang === "id" ? count + " hasil untuk " : count + " results for "}“{query}”
+      </p>
+      {!count ? (
+        <section className="card search-empty">
+          <h3>{lang === "id" ? `Tidak ada hasil untuk "${query}".` : `No results for "${query}".`}</h3>
+          <p className="muted">{lang === "id"
+            ? "Coba kata lain. Search hanya mencari Gallery, Adoptables publik, dan judul Services—bukan data order atau client."
+            : "Try another query. Search covers Gallery, public Adoptables, and Services titles—not order or client data."}</p>
+          {categories.length > 0 && <div className="search-suggestions">
+            <b>{lang === "id" ? "Coba kategori:" : "Try a category:"}</b>
+            <div className="filters">{categories.map((category) => (
+              <button type="button" className="chip search-suggestion" key={category.id}
+                onClick={() => { setCat(category.id); setQuery(""); }}>{category.label}</button>
+            ))}</div>
+          </div>}
+          <Btn kind="cyan" onClick={clear}>{lang === "id" ? "Bersihkan pencarian" : "Clear search"}</Btn>
+        </section>
+      ) : (
+        <>
+          {groups.artworks.length > 0 && <section className="card search-results-group">
+            <div className="search-results-heading"><h3>{lang === "id" ? "Karya Gallery" : "Gallery artwork"}</h3><span className="tag">{groups.artworks.length}</span></div>
+            <div className="gal">{groups.artworks.map((art, i) => (
+              <div className="gal-item" key={art.id || i}>
+                <Art art={art} i={i} onOpen={open} />
+                <div className="cap"><b>{art.title || (lang === "id" ? "Karya tanpa judul" : "Untitled artwork")}</b>
+                  <span className="muted">{catLabel(art.category)}</span></div>
+              </div>
+            ))}</div>
+          </section>}
+          {groups.adoptables.length > 0 && <section className="card search-results-group">
+            <div className="search-results-heading"><h3>Adoptables</h3><span className="tag">{groups.adoptables.length}</span></div>
+            <div className="search-result-list">{groups.adoptables.map((item) => (
+              <button type="button" className="search-result-row" key={item.id} onClick={() => go("adoptable-" + item.id)}>
+                <span className="search-result-copy"><b>{adoptableText(item, "name", lang) || (lang === "id" ? "Tanpa nama" : "Unnamed adoptable")}</b>
+                  {adoptableText(item, "description", lang) && <small>{adoptableText(item, "description", lang)}</small>}</span>
+                <span className={"tag adoptable-status " + (item.status || "available")}>{adoptableStatusLabel(item.status || "available", lang)}</span>
+              </button>
+            ))}</div>
+          </section>}
+          {groups.services.length > 0 && <section className="card search-results-group">
+            <div className="search-results-heading"><h3>Services</h3><span className="tag">{groups.services.length}</span></div>
+            <div className="search-result-list">{groups.services.map((service) => (
+              <button type="button" className="search-result-row" key={service.id} onClick={() => go("service-" + service.id)}>
+                <span className="search-result-copy"><b>{serviceText(service, "title", lang)}</b></span>
+                <span className="search-result-arrow" aria-hidden="true">›</span>
+              </button>
+            ))}</div>
+          </section>}
+        </>
+      )}
+    </div>
+  );
+}
+
 
 function Lightbox({ id, close, step }) {
   const idx = CONFIG.artworks.findIndex((a) => a.id === id);
@@ -5616,6 +5737,17 @@ function App() {
   useEffect(() => {
     try { localStorage.setItem("malkiaa-language", lang); } catch (error) {}
   }, [lang]);
+  const searchGroups = useMemo(() => buildSearchGroups(query, {
+    artworks: Array.isArray(site.artworks) ? site.artworks : [],
+    adoptables: Array.isArray(site.adoptables) ? site.adoptables : [],
+    services: Array.isArray(site.services) ? site.services : [],
+    adoptableSettings: site.adoptableSettings || {},
+    artworkSearchText: (art) => [art.title, art.description, art.tools, art.notes, catLabel(art.category)].join(" "),
+    adoptableSearchText: (item) => [adoptableText(item, "name", lang), adoptableText(item, "description", lang),
+      item.status, adoptableStatusLabel(item.status || "available", lang)].join(" "),
+    serviceSearchText: (service) => serviceText(service, "title", lang),
+  }), [query, lang, site]);
+  const searchResultCount = searchGroups.artworks.length + searchGroups.adoptables.length + searchGroups.services.length;
   const [gate, setGate] = useState(false);
   const [auth, setAuth] = useState({ loading: true, owner: false });
   const authRef = useRef(auth); authRef.current = auth;
@@ -5843,13 +5975,15 @@ function App() {
         <Sidebar route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <MobileChrome route={view} go={go} openGate={openGate} creatorOn={creatorOn} />
         <main className="main">
-          <TopBar route={view} go={go} query={query} setQuery={(v) => { setQuery(v); if (v) setCat("all"); }} lang={lang} setLang={setLang} />
+          <TopBar route={view} go={go} query={query} setQuery={(v) => { setQuery(v); if (v) setCat("all"); }} lang={lang} setLang={setLang} resultCount={searchResultCount} />
           {creatorOn && view!=="creator" && <div className="creator-bar-wrap"><CreatorBar go={go} /></div>}
           <div className="main-inner" key={view} ref={mainRef} onClickCapture={onEditTextClick}>
             {BUILDER_PAGES.some(([id])=>id===view) && <PageBuilderBlocks page={view} />}
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
-            {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
+            {view === "gallery" && (query.trim()
+              ? <SearchResults query={query.trim()} groups={searchGroups} lang={lang} open={setOpenId} go={go} setQuery={setQuery} setCat={setCat} />
+              : <Gallery query="" setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />)}
             {view === "adoptables" && <AdoptablesPage go={go} currency={cur} setCurrency={setCur} lang={lang} owner={creatorOn} />}
             {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} owner={creatorOn} setToast={setToast} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
