@@ -1419,7 +1419,7 @@ const DEFAULT_SITE = {
   adoptables: [],
   adoptableSettings: {
     model: "fixed",
-    claim: { mode: "contact", url: "" },
+    claim: { mode: "contact", url: "", email: "" },
     currencies: ["IDR", "USD"],
     showSold: true,
     edition: "single_owner",
@@ -1658,6 +1658,12 @@ function mergePublishAdoptables(serverValue, localValue) {
     });
   }
   if (payload.adoptableSettings && server.adoptableSettings) {
+    if (server.adoptableSettings.claim) {
+      const localClaim = payload.adoptableSettings.claim || {};
+      if (!Object.prototype.hasOwnProperty.call(localClaim, "email") && Object.prototype.hasOwnProperty.call(server.adoptableSettings.claim, "email")) {
+        payload.adoptableSettings.claim = { ...localClaim, email: server.adoptableSettings.claim.email };
+      }
+    }
     ["defaultDeliverables", "defaultNotes", "defaultTerms"].forEach((key) => {
       if (!Object.prototype.hasOwnProperty.call(payload.adoptableSettings, key) &&
           Object.prototype.hasOwnProperty.call(server.adoptableSettings, key)) {
@@ -2962,10 +2968,12 @@ function adoptableStatusLabel(status, lang) {
   return labels[status] || status;
 }
 function adoptablePrice(item, currency, lang) {
-  const raw = item && item.price ? item.price[currency.toLowerCase()] : null;
+  const price = item && item.price || {};
+  const raw = price[currency.toLowerCase()];
   const amount = normalizeAdoptablePrice(raw);
-  if (amount === null) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
-  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
+  if (amount !== null) return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
+  if (normalizeAdoptablePrice(price.idr) === null && normalizeAdoptablePrice(price.usd) === null) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
+  return "";
 }
 function AdoptableCard({ item, currency, lang, go }) {
   const name = adoptableText(item, "name", lang) || "Untitled adoptable";
