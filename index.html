@@ -1534,6 +1534,29 @@ html.is-android .home-dashboard > .home-intro-card::before {
 @media(max-width:767px){.commission-board-page{min-width:0;max-width:100%;overflow-x:clip}.commission-board-grid{grid-template-columns:minmax(0,1fr);gap:12px;width:100%;min-width:0}.commission-board-card{grid-column:1/-1;width:100%;max-width:100%;min-width:0;box-sizing:border-box}.schedule-editor-fields{grid-template-columns:minmax(0,1fr)}.schedule-note-field,.schedule-editor-actions{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.schedule-entry,.schedule-month-nav button{transition:none!important;animation:none!important}}
 
+
+/* Public CommissionBoard renders the calendar on mobile; override the legacy agenda-only hide rule. */
+.commission-board-page .schedule-calendar{display:block}
+
+/* Compact calendar layout on phones; desktop styles remain unchanged. */
+@media(max-width:767px){
+  .commission-board-page .schedule-section{margin-top:14px;padding:10px}
+  .commission-board-page .schedule-heading{margin-bottom:8px}
+  .commission-board-page .schedule-controls{gap:6px;margin-bottom:8px}
+  .commission-board-page .schedule-controls label{gap:2px;flex:1 1 calc(50% - 3px);min-width:0}
+  .commission-board-page .schedule-controls select{min-height:40px;padding:6px 28px 6px 9px}
+  .commission-board-page .schedule-month-arrows{width:100%;min-height:40px;gap:6px;margin:0;justify-content:space-between}
+  .commission-board-page .schedule-month-arrows b{min-width:0;flex:1;font-size:13px}
+  .commission-board-page .schedule-month-arrows button{width:40px;height:40px;flex:none;font-size:22px}
+  .commission-board-page .schedule-calendar-grid{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+  .commission-board-page .schedule-weekday{height:32px;min-height:32px;font-size:12px}
+  .commission-board-page .schedule-day{height:auto;min-height:0;aspect-ratio:1 / 1;padding:4px;gap:2px;border-radius:7px}
+  .commission-board-page .schedule-day.is-today{padding:3px}
+  .commission-board-page .schedule-day-number{font-size:14px;line-height:1.1}
+  .commission-board-page .schedule-day-markers{width:68%;gap:2px}
+  .commission-board-page .schedule-day-markers i{height:3px;min-width:2px}
+  .commission-board-page .schedule-day-markers small{font-size:8px}
+}
 </style>
 
 <div id="root"></div>
