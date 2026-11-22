@@ -1454,16 +1454,20 @@ const ss = {
   set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
   del: (k) => { try { sessionStorage.removeItem(k); } catch (e) {} },
 };
-const safeUrl = (u) => {
-  const value = String(u || "").trim();
-  if (/^https?:\/\//i.test(value)) return value;
-  const match = /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(value);
-  if (match && ["home","about","gallery","adoptables","services","track","board","workflow","terms","contact"].includes(match[1])) return value;
-  return "";
-};
+const safeUrl = (u) => safeAdoptableClaimUrl(u);
 const safeImg = (u) => { u = (u || "").trim(); return /^(https:\/\/|\/_blob\/|data:image\/(png|jpeg|webp|gif);base64,)/i.test(u) ? u : ""; };
 
 /* ADOPTABLES PURE LOGIC START */
+function safeAdoptableClaimUrl(input) {
+  const value = String(input || "").trim();
+  if (/^https?:\/\//i.test(value)) return value;
+  const match = /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(value);
+  return match && ["home","about","gallery","adoptables","services","track","board","workflow","terms","contact"].includes(match[1]) ? value : "";
+}
+function normalizeAdoptablePrice(raw) {
+  if (raw === null || raw === undefined || (typeof raw === "string" && raw.trim() === "")) return null;
+  return (typeof raw === "number" || typeof raw === "string") && Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : null;
+}
 function filterPublicAdoptables(items, settings = {}) {
   return (Array.isArray(items) ? items : []).filter((item) =>
     item && item.visible !== false && (item.status !== "sold" || settings.showSold !== false)
@@ -2763,9 +2767,9 @@ function adoptableStatusLabel(status, lang) {
 }
 function adoptablePrice(item, currency, lang) {
   const raw = item && item.price ? item.price[currency.toLowerCase()] : null;
-  if (raw === null || raw === undefined || (typeof raw === "string" && raw.trim() === "")) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
-  if (!((typeof raw === "number" || typeof raw === "string") && Number.isFinite(Number(raw)) && Number(raw) >= 0)) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
-  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(Number(raw));
+  const amount = normalizeAdoptablePrice(raw);
+  if (amount === null) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
+  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
 }
 function AdoptableCard({ item, currency, lang, go }) {
   const name = adoptableText(item, "name", lang) || "Untitled adoptable";
