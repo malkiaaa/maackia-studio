@@ -1454,10 +1454,30 @@ function buildDoc(site) {
     S + ' type="application/json" id="site-data">' + json + E +
     S + ' type="text/babel" data-presets="react" id="app-src">' + src + E + SKEL_POST;
 }
-async async function publishSite(site) {
-  // Refresh published content before save; preserve server i18n by stable item ID.
-  const latest = await Store.api("get_site", {}, true);
-  const payload = preserveI18nById(latest.site || {}, plain(site));
+async function publishSite(site) {
+  // Fail closed: never publish unless the latest published site was refreshed and validated.
+  let timer;
+  let latest;
+  try {
+    latest = await Promise.race([
+      Store.api("get_site", {}, true),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Could not refresh the latest published site within 15 seconds. Publish was canceled; no changes were saved.")), 15000);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+  const current = latest && latest.site;
+  const validSite = current && typeof current === "object" && !Array.isArray(current) &&
+    Array.isArray(current.services) && Array.isArray(current.pricing) &&
+    Array.isArray(current.licenses) && current.workflow && typeof current.workflow === "object" &&
+    !Array.isArray(current.workflow) && Array.isArray(current.workflow.steps) && Array.isArray(current.workflow.stages);
+  if (!validSite) {
+    throw new Error("The latest published site data is missing or invalid. Publish was canceled; no changes were saved.");
+  }
+  // Preserve server i18n by stable item ID before the full-object save.
+  const payload = preserveI18nById(current, plain(site));
   const result = await Store.api("save_site", { site: payload }, true);
   return { result, site: payload };
 }
