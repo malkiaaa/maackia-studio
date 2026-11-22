@@ -5502,8 +5502,8 @@ function OrdersPanel() {
   const {site,upd}=useCreator();
   const [list, setList = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
   const [connStatus] = useConnectionStatus();
-  const schedules=normalizeCommissionSchedule(site.commissionSchedule||[]);
-  const updateSchedule=(order,field,value)=>upd(n=>{const rows=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id),old=(n.commissionSchedule||[]).find(r=>r.requestId===order.id)||{requestId:order.id,startDate:"",endDate:"",note:"",color:""};const next={...old,[field]:field==="note"?cleanScheduleNote(value):value};if(!next.startDate&&!next.endDate&&!next.note&&!next.color){n.commissionSchedule=rows;return;}if(validScheduleDate(next.startDate)&&validScheduleDate(next.endDate)&&next.endDate>=next.startDate)n.commissionSchedule=rows.concat(next);else n.commissionSchedule=rows;});
+  const schedules=Array.isArray(site.commissionSchedule)?site.commissionSchedule:[];
+  const updateSchedule=(order,field,value)=>upd(n=>{const rows=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id),old=(n.commissionSchedule||[]).find(r=>r.requestId===order.id)||{requestId:order.id,startDate:"",endDate:"",note:"",color:""};const next={...old,[field]:field==="note"?cleanScheduleNote(value):value};if(field==="endDate"&&next.startDate&&value&&value<next.startDate)return;if(field==="startDate"&&next.endDate&&value&&next.endDate<value)next.endDate="";if(!next.startDate&&!next.endDate&&!next.note&&!next.color){n.commissionSchedule=rows;return;}n.commissionSchedule=rows.concat(next);});
   const removeSchedule=id=>upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==id);});
   const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr("Could not load requests: "+(e&&e.message||"")));
   useEffect(() => {
