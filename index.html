@@ -1307,7 +1307,49 @@ html.is-android .home-dashboard > .home-intro-card::before {
  .adoptable-detail-image img{max-height:none}
 }
 @media(max-width:360px){.adoptables-grid{grid-template-columns:minmax(0,1fr)}}
-
+/* Adoptables gallery, private preview and neutral image fallbacks */
+.adoptable-card-wrap{position:relative;min-width:0}
+.adoptable-private-label{display:inline-flex;margin:0 0 7px;padding:4px 9px;border-radius:999px;background:#FFF0B8;color:#5C4615;font-size:.68rem;font-weight:900;letter-spacing:.07em}
+.adoptable-private-note{margin-bottom:12px;font-weight:800}
+.adoptable-image-placeholder{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:16px;background:linear-gradient(145deg,#EEF1F4,#E4E8ED);color:#66717D;font-size:.82rem;font-weight:700}
+.adoptable-image-placeholder.is-visible,.has-image-error>.adoptable-image-placeholder{display:flex}
+.adoptable-thumb{position:relative;overflow:hidden}
+.adoptable-thumb.has-image-error{background:#E9EDF1}
+.adoptable-thumb img{position:relative;z-index:1}
+.adoptable-detail-media{min-width:0;display:grid;gap:14px}
+.adoptable-detail-image{aspect-ratio:4/5;min-height:220px;max-height:78vh}
+.adoptable-detail-image img{position:relative;z-index:1;width:100%;height:100%;max-height:78vh;object-fit:contain}
+.adoptable-detail-image.has-image-error{background:#E9EDF1}
+.adoptable-gallery{min-width:0;width:100%;border:1px solid var(--line);border-radius:16px;padding:12px}
+.adoptable-gallery-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.adoptable-gallery-head small{color:var(--muted);font-variant-numeric:tabular-nums}
+.adoptable-gallery-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;border-radius:12px}
+.adoptable-gallery-track::-webkit-scrollbar{display:none}
+.adoptable-gallery-slide{position:relative;flex:0 0 100%;min-width:0;min-height:180px;aspect-ratio:16/10;scroll-snap-align:start;background:#E9EDF1;overflow:hidden}
+.adoptable-gallery-zoom{width:100%;height:100%;min-height:180px;border:0;background:transparent;padding:0;cursor:zoom-in}
+.adoptable-gallery-zoom img{display:block;width:100%;height:100%;object-fit:contain}
+.adoptable-gallery-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px}
+.adoptable-gallery-controls>button{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--card);font-size:1.3rem;color:var(--ink)}
+.adoptable-gallery-dots{display:flex;gap:7px;align-items:center}
+.adoptable-gallery-dots button{width:8px;height:8px;border:0;border-radius:50%;background:var(--line);padding:0}
+.adoptable-gallery-dots button[aria-current=true]{background:var(--ink);transform:scale(1.25)}
+.adoptable-lightbox{position:fixed;inset:0;z-index:99990;background:rgba(8,13,20,.94);display:grid;place-items:center;padding:24px}
+.adoptable-lightbox>img{max-width:100%;max-height:90vh;object-fit:contain}
+.adoptable-lightbox>.adoptable-image-placeholder{position:relative;inset:auto;width:min(80vw,700px);min-height:260px}
+.adoptable-lightbox-close{position:absolute;top:18px;right:18px;width:44px;height:44px;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:rgba(0,0,0,.25);color:#fff;font-size:2rem;z-index:2}
+.adoptable-detail-prices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+.adoptable-detail-prices>div{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:13px;min-width:0}
+.adoptable-detail-prices small{color:var(--muted);font-weight:800}
+.adoptable-detail-prices b{overflow-wrap:anywhere}
+.adoptable-gallery-editor{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+.adoptable-gallery-edit-item{position:relative;width:116px;height:116px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#E9EDF1}
+.adoptable-gallery-edit-item>img{width:100%;height:100%;object-fit:cover}
+.adoptable-gallery-edit-item .btns{position:absolute;left:4px;right:4px;bottom:4px;justify-content:center;gap:3px}
+.adoptable-gallery-edit-item .ib{width:30px;height:30px;background:rgba(255,255,255,.94)}
+.adoptable-gallery-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:116px;height:116px;border:1px dashed var(--line);border-radius:12px;background:var(--powder);color:var(--ink);font-weight:800}
+.adoptable-gallery-add:disabled{opacity:.6}
+.adoptable-gallery-edit-item.has-image-error:after{content:"Image unavailable";position:absolute;inset:0;display:grid;place-items:center;padding:8px;text-align:center;color:#66717D;font-size:.75rem;font-weight:700}
+@media(max-width:767px){.adoptable-detail-media{gap:10px}.adoptable-detail-image{aspect-ratio:4/5;max-height:none}.adoptable-detail-prices{grid-template-columns:minmax(0,1fr)}.adoptable-gallery{padding:9px}}
 </style>
 
 <div id="root"></div>
@@ -1468,6 +1510,11 @@ function normalizeAdoptablePrice(raw) {
   if (raw === null || raw === undefined || (typeof raw === "string" && raw.trim() === "")) return null;
   return (typeof raw === "number" || typeof raw === "string") && Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : null;
 }
+function formatAdoptableDetailPrice(raw, currency, lang) {
+  const amount = normalizeAdoptablePrice(raw);
+  if (amount === null) return lang === "id" ? "Harga belum ditentukan" : "Price not set";
+  return new Intl.NumberFormat(lang === "id" ? "id-ID" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "IDR" ? 0 : 2 }).format(amount);
+}
 function filterPublicAdoptables(items, settings = {}) {
   return (Array.isArray(items) ? items : []).filter((item) =>
     item && item.visible !== false && (item.status !== "sold" || settings.showSold !== false)
@@ -1482,6 +1529,16 @@ function mergePublishAdoptables(serverValue, localValue) {
   });
   const serverItems = Array.isArray(server.adoptables) ? server.adoptables : [];
   const localItems = Array.isArray(payload.adoptables) ? payload.adoptables : null;
+  if (localItems) {
+    const serverById = new Map(serverItems.filter((item) => item && item.id).map((item) => [item.id, item]));
+    payload.adoptables = localItems.map((item) => {
+      const previous = item && item.id ? serverById.get(item.id) : null;
+      // Preserve gallery when an older editor/tab submits an item shape that predates the gallery field.
+      return previous && item && !Object.prototype.hasOwnProperty.call(item, "gallery")
+        ? { ...item, gallery: Array.isArray(previous.gallery) ? previous.gallery.slice(0, 6) : [] }
+        : item;
+    });
+  }
   return { payload, needsConfirmation: serverItems.length > 0 && !!localItems && localItems.length === 0 };
 }
 function stripAdoptableDraftFields(site) {
@@ -1498,6 +1555,11 @@ function validateAdoptableItem(item, imageValidator) {
     if (typeof imageValidator !== "function" || !imageValidator(value.thumbnail)) errors.push("A valid card thumbnail is required when the item is visible.");
     if (typeof imageValidator !== "function" || !imageValidator(value.image)) errors.push("A valid full-size image is required when the item is visible.");
   }
+  const gallery = Array.isArray(value.gallery) ? value.gallery : [];
+  if (gallery.length > 6) errors.push("Gallery can contain a maximum of 6 images.");
+  gallery.forEach((url, index) => {
+    if (typeof imageValidator !== "function" || !imageValidator(url)) errors.push("Gallery image " + (index + 1) + " must be a valid image URL.");
+  });
   ["idr", "usd"].forEach((currency) => {
     const price = value.price && value.price[currency];
     if (price === null || price === undefined || (typeof price === "string" && price.trim() === "")) return;
@@ -1506,8 +1568,9 @@ function validateAdoptableItem(item, imageValidator) {
   if (!["available", "reserved", "sold"].includes(value.status)) errors.push("Status must be Available, Reserved, or Sold.");
   return errors;
 }
-function isAdoptableRouteVisible(route, items, settings = {}) {
-  return !(route === "adoptables" || String(route || "").startsWith("adoptable-")) || filterPublicAdoptables(items, settings).length > 0;
+function isAdoptableRouteVisible(route, items, settings = {}, owner = false) {
+  if (!(route === "adoptables" || String(route || "").startsWith("adoptable-"))) return true;
+  return filterPublicAdoptables(items, settings).length > 0 || (owner && Array.isArray(items) && items.some((item) => item && item.visible === false));
 }
 /* ADOPTABLES PURE LOGIC END */
 const hexLum = (hex) => {
@@ -2174,7 +2237,8 @@ function AvatarTrigger({ go, openGate, size }) {
   );
 }
 function NavList({ route, go, onPick, creatorOn }) {
-  const items = (creatorOn ? PAGES.concat([{ id: "creator", label: "Creator Dashboard", icon: "star" }]) : PAGES).filter((p) => !p.hidden && (p.id !== "adoptables" || hasPublicAdoptables()));
+  const ownerHasPrivateAdoptables = creatorOn && Array.isArray(CONFIG.adoptables) && CONFIG.adoptables.some((item) => item && item.visible === false);
+  const items = (creatorOn ? PAGES.concat([{ id: "creator", label: "Creator Dashboard", icon: "star" }]) : PAGES).filter((p) => !p.hidden && (p.id !== "adoptables" || hasPublicAdoptables() || ownerHasPrivateAdoptables));
   return (
     <nav className="nav" aria-label="Main">
       {items.map((p) => (
@@ -2774,10 +2838,12 @@ function adoptablePrice(item, currency, lang) {
 function AdoptableCard({ item, currency, lang, go }) {
   const name = adoptableText(item, "name", lang) || "Untitled adoptable";
   const status = item.status || "available";
+  const thumb = safeImg(item.thumbnail || item.image);
   return (
     <article className={"card adoptable-card" + (status === "sold" ? " is-sold" : "")}>
-      <button className="adoptable-thumb" onClick={() => go("adoptable-" + item.id)} aria-label={"View " + name}>
-        {safeImg(item.thumbnail || item.image) ? <img src={safeImg(item.thumbnail || item.image)} alt={name} loading="lazy" /> : <span className="muted">Image coming soon</span>}
+      <button className={"adoptable-thumb" + (!thumb ? " has-image-error" : "")} onClick={() => go("adoptable-" + item.id)} aria-label={"View " + name}>
+        {thumb && <img src={thumb} alt={name} loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />}
+        <span className="adoptable-image-placeholder" aria-hidden="true"><span>{lang === "id" ? "Pratinjau tidak tersedia" : "Preview unavailable"}</span></span>
         {status === "sold" && <span className="adoptable-sold-badge">{adoptableStatusLabel("sold", lang)}</span>}
         {status === "reserved" && <span className="adoptable-reserved-badge">{adoptableStatusLabel("reserved", lang)}</span>}
       </button>
@@ -2795,16 +2861,69 @@ function AdoptableCard({ item, currency, lang, go }) {
     </article>
   );
 }
-function AdoptablesPage({ go, currency, setCurrency, lang }) {
+function AdoptableGallery({ images, title, lang }) {
+  const track = useRef(null);
+  const [active, setActive] = useState(0);
+  const [failed, setFailed] = useState({});
+  const [zoom, setZoom] = useState(false);
+  const urls = (Array.isArray(images) ? images : []).map(safeImg).filter(Boolean).slice(0, 6);
+  const jump = (index) => {
+    const el = track.current;
+    const next = Math.max(0, Math.min(urls.length - 1, index));
+    if (el) el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    setActive(next);
+  };
+  const sync = () => {
+    const el = track.current;
+    if (el && el.clientWidth) setActive(Math.max(0, Math.min(urls.length - 1, Math.round(el.scrollLeft / el.clientWidth))));
+  };
+  useEffect(() => {
+    if (!zoom) return;
+    const key = (event) => { if (event.key === "Escape") setZoom(false); };
+    window.addEventListener("keydown", key);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", key); document.body.style.overflow = previous; };
+  }, [zoom]);
+  if (!urls.length) return null;
+  const current = urls[active] || urls[0];
+  return (
+    <section className="adoptable-gallery" aria-label={lang === "id" ? "Galeri gambar" : "Image gallery"}>
+      <div className="adoptable-gallery-head"><b>{lang === "id" ? "Galeri" : "Gallery"}</b><small>{active + 1} / {urls.length}</small></div>
+      <div className="adoptable-gallery-track" ref={track} onScroll={sync}>
+        {urls.map((url, index) => <div className="adoptable-gallery-slide" key={url + index}>
+          {failed[index] ? <div className="adoptable-image-placeholder is-visible"><span>{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span></div>
+            : <button type="button" className="adoptable-gallery-zoom" onClick={() => { setActive(index); setZoom(true); }} aria-label={lang === "id" ? "Perbesar gambar" : "Enlarge image"}>
+              <img src={url} alt={title + " " + (index + 1)} loading="lazy" onError={() => setFailed((state) => ({ ...state, [index]: true }))} />
+            </button>}
+        </div>)}
+      </div>
+      {urls.length > 1 && <div className="adoptable-gallery-controls">
+        <button type="button" onClick={() => jump(active - 1)} aria-label={lang === "id" ? "Gambar sebelumnya" : "Previous image"}>‹</button>
+        <div className="adoptable-gallery-dots">{urls.map((_, index) => <button type="button" key={index} aria-label={(lang === "id" ? "Gambar " : "Image ") + (index + 1)} aria-current={active === index} onClick={() => jump(index)} />)}</div>
+        <button type="button" onClick={() => jump(active + 1)} aria-label={lang === "id" ? "Gambar berikutnya" : "Next image"}>›</button>
+      </div>}
+      {zoom && <div className="adoptable-lightbox" role="dialog" aria-modal="true" aria-label={lang === "id" ? "Perbesar gambar" : "Image preview"} onClick={() => setZoom(false)}>
+        <button type="button" className="adoptable-lightbox-close" onClick={() => setZoom(false)} aria-label={lang === "id" ? "Tutup" : "Close"}>×</button>
+        {failed[active] ? <div className="adoptable-image-placeholder is-visible"><span>{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span></div>
+          : <img src={current} alt={title} onError={() => setFailed((state) => ({ ...state, [active]: true }))} />}
+      </div>}
+    </section>
+  );
+}
+function AdoptablesPage({ go, currency, setCurrency, lang, owner = false }) {
   const [filter, setFilter] = useState("all");
   const settings = CONFIG.adoptableSettings || {};
-  const items = publicAdoptables().filter((item) => filter === "all" || item.status === filter)
+  const source = owner ? (Array.isArray(CONFIG.adoptables) ? CONFIG.adoptables : []) : publicAdoptables();
+  const items = source.filter((item) => (owner || item.visible !== false) && (filter === "all" || item.status === filter))
+    .filter((item) => item.status !== "sold" || settings.showSold !== false || owner)
     .slice().sort((a, b) => ({ available: 0, reserved: 1, sold: 2 }[a.status || "available"] - ({ available: 0, reserved: 1, sold: 2 }[b.status || "available"])));
-  const showSold = settings.showSold !== false;
+  const showSold = settings.showSold !== false || owner;
   return (
     <div className="page">
       <PageHead crumb="ADOPTABLES" title="Adoptables">{lang === "id" ? "Desain karakter original yang tersedia untuk dimiliki." : "Original character designs available for a new owner."}</PageHead>
       <section className="card">
+        {owner && items.some((item) => item.visible === false) && <div className="note warn adoptable-private-note">PRIVATE PREVIEW · {lang === "id" ? "Item tersembunyi hanya ditampilkan dalam sesi pemilik." : "Hidden items are shown only in the owner session."}</div>}
         <div className="adoptables-toolbar">
           <div className="filters" role="group" aria-label="Filter adoptables">
             {[["all", lang === "id" ? "Semua" : "All"], ["available", adoptableStatusLabel("available", lang)], ["reserved", adoptableStatusLabel("reserved", lang)], ...(showSold ? [["sold", adoptableStatusLabel("sold", lang)]] : [])].map(([value, label]) => (
@@ -2815,33 +2934,50 @@ function AdoptablesPage({ go, currency, setCurrency, lang }) {
             {["IDR", "USD"].map((value) => <button key={value} className="chip" aria-pressed={currency === value} onClick={() => setCurrency(value)}>{value}</button>)}
           </div>
         </div>
-        {items.length ? <div className="adoptables-grid">{items.map((item) => <AdoptableCard key={item.id} item={item} currency={currency} lang={lang} go={go} />)}</div>
+        {items.length ? <div className="adoptables-grid">{items.map((item) => <div key={item.id} className="adoptable-card-wrap">
+          {owner && item.visible === false && <span className="adoptable-private-label">PRIVATE PREVIEW</span>}
+          <AdoptableCard item={item} currency={currency} lang={lang} go={go} />
+        </div>)}</div>
           : <div className="empty"><Icon name="shapes" /><p style={{ marginTop: 8 }}>{lang === "id" ? "Belum ada adoptable pada kategori ini." : "No adoptables in this category yet."}</p>{filter !== "all" && <div style={{ marginTop: 12 }}><Btn kind="ghost" size="sm" onClick={() => setFilter("all")}>{lang === "id" ? "Tampilkan semua" : "Show all"}</Btn></div>}</div>}
       </section>
     </div>
   );
 }
-function AdoptableDetail({ id, go, currency, lang }) {
-  const item = publicAdoptables().find((entry) => entry.id === id);
+function AdoptableDetail({ id, go, currency, lang, owner = false }) {
+  // Owner-only UI preview; this is NOT confidentiality protection because published site_content is delivered to public clients.
+  const source = owner ? (Array.isArray(CONFIG.adoptables) ? CONFIG.adoptables : []) : publicAdoptables();
+  const item = source.find((entry) => entry.id === id && (owner || entry.visible !== false));
   if (!item) return <div className="page"><PageHead crumb="ADOPTABLES" title={lang === "id" ? "Tidak ditemukan" : "Not found"} /><section className="card"><p>{lang === "id" ? "Adoptable ini tidak tersedia atau tautannya tidak valid." : "This adoptable is unavailable or the link is invalid."}</p><div style={{ marginTop: 14 }}><Btn kind="ghost" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali ke Adoptables" : "Back to Adoptables"}</Btn></div></section></div>;
   const status = item.status || "available";
   const claimUrl = safeAdoptableClaimUrl(CONFIG.adoptableSettings && CONFIG.adoptableSettings.claim && CONFIG.adoptableSettings.claim.url);
-  const claim = status === "available";
+  const claim = status === "available" && item.visible !== false;
   const claimInternalRoute = claimUrl && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimUrl);
+  const mainImage = safeImg(item.image || item.thumbnail);
+  const gallery = Array.isArray(item.gallery) ? item.gallery.map(safeImg).filter(Boolean).slice(0, 6) : [];
+  const idr = formatAdoptableDetailPrice(item.price && item.price.idr, "IDR", lang);
+  const usd = formatAdoptableDetailPrice(item.price && item.price.usd, "USD", lang);
   return (
     <div className="page">
       <div className="adoptable-back"><Btn kind="ghost" size="sm" icon="left" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali" : "Back"}</Btn></div>
       <PageHead crumb="ADOPTABLES" title={adoptableText(item, "name", lang) || "Untitled adoptable"} />
+      {owner && item.visible === false && <div className="note warn adoptable-private-note">PRIVATE PREVIEW · {lang === "id" ? "Item ini belum terlihat oleh publik." : "This item is not visible to the public."}</div>}
       <section className={"card adoptable-detail" + (status === "sold" ? " is-sold" : "")}>
-        <div className="adoptable-detail-image">
-          {safeImg(item.image || item.thumbnail) ? <img src={safeImg(item.image || item.thumbnail)} alt={adoptableText(item, "name", lang)} /> : <div className="empty"><Icon name="image" /></div>}
-          {status === "sold" && <span className="adoptable-sold-badge">{adoptableStatusLabel("sold", lang)}</span>}
-          {status === "reserved" && <span className="adoptable-reserved-badge">{adoptableStatusLabel("reserved", lang)}</span>}
+        <div className="adoptable-detail-media">
+          <div className={"adoptable-detail-image" + (!mainImage ? " has-image-error" : "")}>
+            {mainImage && <img src={mainImage} alt={adoptableText(item, "name", lang)} onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />}
+            <div className="adoptable-image-placeholder"><span>{lang === "id" ? "Gambar tidak tersedia" : "Image unavailable"}</span></div>
+            {status === "sold" && <span className="adoptable-sold-badge">{adoptableStatusLabel("sold", lang)}</span>}
+            {status === "reserved" && <span className="adoptable-reserved-badge">{adoptableStatusLabel("reserved", lang)}</span>}
+          </div>
+          <AdoptableGallery images={gallery} title={adoptableText(item, "name", lang)} lang={lang} />
         </div>
         <div className="adoptable-detail-copy">
           <div className="meta"><span className={"tag adoptable-status " + status}>{adoptableStatusLabel(status, lang)}</span>{(item.tags || []).map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
           <h2>{adoptableText(item, "name", lang) || "Untitled adoptable"}</h2>
-          <div className="adoptable-detail-price">{adoptablePrice(item, currency, lang)}</div>
+          <div className="adoptable-detail-prices">
+            <div><small>IDR</small><b>{idr}</b></div>
+            <div><small>USD</small><b>{usd}</b></div>
+          </div>
           {adoptableText(item, "description", lang) && <p className="adoptable-description">{adoptableText(item, "description", lang)}</p>}
           {adoptableText(item, "notes", lang) && <div className="adoptable-notes"><b>{lang === "id" ? "Catatan" : "Notes"}</b><p>{adoptableText(item, "notes", lang)}</p></div>}
           {claim && (claimUrl && claimInternalRoute
@@ -2849,7 +2985,7 @@ function AdoptableDetail({ id, go, currency, lang }) {
             : claimUrl
               ? <Btn kind="peach" href={claimUrl}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>
               : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>)}
-          {!claim && <Btn kind="ghost" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (lang === "id" ? "Sedang dipesan" : "Reserved")}</Btn>}
+          {!claim && <Btn kind="ghost" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (item.visible === false ? (lang === "id" ? "Belum dipublikasikan" : "Not published") : (lang === "id" ? "Sedang dipesan" : "Reserved"))}</Btn>}
         </div>
       </section>
     </div>
@@ -3728,15 +3864,51 @@ function SupabasePanel() {
 
 
 /* ============================================================ ADOPTABLES — Creator Dashboard editor */
+function AdoptableGalleryEditor({ images, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const ref = useRef(null);
+  const addImage = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    if (images.length >= 6) { setError("Gallery limit reached: maximum 6 images."); return; }
+    setBusy(true); setError("");
+    try {
+      const url = await storeImage(file, 1800);
+      if (!safeImg(url)) throw new Error("Upload returned an invalid image URL.");
+      onChange(images.concat([url]).slice(0, 6));
+    } catch (uploadError) {
+      setError(uploadError && uploadError.message ? uploadError.message : "Could not upload this gallery image.");
+    } finally { setBusy(false); }
+  };
+  return <div className="field full">
+    <span>Gallery (maximum 6 images)</span>
+    <div className="adoptable-gallery-editor">
+      {images.map((url, index) => <div className="adoptable-gallery-edit-item" key={url + index}>
+        <img src={safeImg(url) || placeholder(index, "Gallery")} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentNode.classList.add("has-image-error"); }} />
+        <div className="btns">
+          <button type="button" className="ib" disabled={index === 0} onClick={() => onChange(move(images, index, -1))} aria-label={"Move gallery image " + (index + 1) + " up"}><Icon name="up" /></button>
+          <button type="button" className="ib" disabled={index === images.length - 1} onClick={() => onChange(move(images, index, 1))} aria-label={"Move gallery image " + (index + 1) + " down"}><Icon name="down" /></button>
+          <button type="button" className="ib bad" onClick={() => onChange(images.filter((_, i) => i !== index))} aria-label={"Remove gallery image " + (index + 1)}><Icon name="trash" /></button>
+        </div>
+      </div>)}
+      {images.length < 6 && <button type="button" className="adoptable-gallery-add" disabled={busy} onClick={() => ref.current && ref.current.click()}><Icon name="plus" />{busy ? "Uploading…" : "Add gallery image"}</button>}
+    </div>
+    <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={addImage} />
+    <small className="muted">{images.length} / 6 images · uploads use the same image storage as portfolio images.</small>
+    {error && <div className="err" role="alert">{error}</div>}
+  </div>;
+}
 function AdoptableEditor({ initial, onCancel, onApply }) {
-  const [draft, setDraft] = useState(() => ({ ...clone(initial), status: initial.status || "available", visible: initial.visible !== false }));
+  const [draft, setDraft] = useState(() => ({ ...clone(initial), gallery: Array.isArray(initial.gallery) ? initial.gallery.slice(0, 6) : [], status: initial.status || "available", visible: initial.visible !== false }));
   const validationErrors = validateAdoptableItem(draft, safeImg);
   const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
   const setIdText = (key, value) => setDraft((current) => ({ ...current, i18n: { ...(current.i18n || {}), id: { ...((current.i18n || {}).id || {}), [key]: value } } }));
   return (
     <section className="card">
       <div className="card-head"><h2>{initial.name ? "Edit adoptable" : "New adoptable"}</h2><Btn kind="ghost" size="sm" onClick={onCancel}>Cancel</Btn></div>
-      <div className="note info">New items are private by default. Turn on “Visible to public” when the listing is ready.</div>
+      <div className="note info">{initial.name ? "Edit this listing and preview the changes before publishing." : "New items are private by default. Turn on “Visible to public” when the listing is ready."}</div>
       <div className="form">
         <TextIn label="Name (English)" value={draft.name || ""} onChange={(value) => set("name", value)} />
         <TextIn label="Name (Indonesian)" value={draft.i18n?.id?.name || ""} onChange={(value) => setIdText("name", value)} />
@@ -3750,6 +3922,7 @@ function AdoptableEditor({ initial, onCancel, onApply }) {
         <Field label="Visibility"><label className="adoptable-toggle"><input type="checkbox" checked={draft.visible === true} onChange={(event) => set("visible", event.target.checked)} />Visible to public</label><small className="muted">Off = hidden from the public page and navigation. This is separate from Sold status.</small></Field>
         <ImagePicker label="Card thumbnail" value={draft.thumbnail || ""} onChange={(value) => set("thumbnail", value)} maxDim={1200} />
         <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
+        <AdoptableGalleryEditor images={Array.isArray(draft.gallery) ? draft.gallery : []} onChange={(value) => set("gallery", value)} />
         <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
       </div>
       {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
@@ -3765,7 +3938,7 @@ function AdoptablesPanel() {
   const [editing, setEditing] = useState(null);
   const items = Array.isArray(site.adoptables) ? site.adoptables : [];
   const settings = site.adoptableSettings || {};
-  const blank = () => ({ id: uid("adp"), name: "", thumbnail: "", image: "", price: { idr: null, usd: null }, status: "available", visible: false, tags: [], description: "", notes: "", i18n: { id: { name: "", description: "", notes: "" } } });
+  const blank = () => ({ id: uid("adp"), name: "", thumbnail: "", image: "", gallery: [], price: { idr: null, usd: null }, status: "available", visible: false, tags: [], description: "", notes: "", i18n: { id: { name: "", description: "", notes: "" } } });
   const apply = (item) => {
     upd((next) => {
       next.adoptables = Array.isArray(next.adoptables) ? next.adoptables : [];
@@ -5160,10 +5333,10 @@ function App() {
   };
 
   useEffect(() => {
-    if (publishedLoaded && !isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings)) go("home");
-  }, [publishedLoaded, route, site.adoptables, site.adoptableSettings, go]);
+    if (publishedLoaded && !isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings, creatorOn)) go("home");
+  }, [publishedLoaded, route, site.adoptables, site.adoptableSettings, creatorOn, go]);
   const view = route === "creator" && !creatorOn ? "home"
-    : (!isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings) ? "home" : route);
+    : (!isAdoptableRouteVisible(route, site.adoptables, site.adoptableSettings, creatorOn) ? "home" : route);
   const isTextEditing = creatorOn && editing && view !== "creator";
   const mainRef = useRef(null);
   // Scroll motion is deliberately scoped to public content and disabled in Creator mode.
@@ -5309,8 +5482,8 @@ function App() {
             {view === "home" && <Home go={go} open={setOpenId} />}
             {view === "about" && <About />}
             {view === "gallery" && <Gallery query={query} setQuery={setQuery} cat={cat} setCat={setCat} open={setOpenId} />}
-            {view === "adoptables" && <AdoptablesPage go={go} currency={cur} setCurrency={setCur} lang={lang} />}
-            {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} />}
+            {view === "adoptables" && <AdoptablesPage go={go} currency={cur} setCurrency={setCur} lang={lang} owner={creatorOn} />}
+            {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} owner={creatorOn} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
             {view === "services" && <Services go={go} setCat={setCat} lang={lang} />}
             {view === "board" && <CommissionBoard />}
