@@ -3038,13 +3038,19 @@ function AdoptableDetail({ id, go, currency, lang, owner = false }) {
   const item = source.find((entry) => entry.id === id && (owner || entry.visible !== false));
   if (!item) return <div className="page"><PageHead crumb="ADOPTABLES" title={lang === "id" ? "Tidak ditemukan" : "Not found"} /><section className="card"><p>{lang === "id" ? "Adoptable ini tidak tersedia atau tautannya tidak valid." : "This adoptable is unavailable or the link is invalid."}</p><div style={{ marginTop: 14 }}><Btn kind="ghost" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali ke Adoptables" : "Back to Adoptables"}</Btn></div></section></div>;
   const status = item.status || "available";
-  const claimUrl = safeAdoptableClaimUrl(CONFIG.adoptableSettings && CONFIG.adoptableSettings.claim && CONFIG.adoptableSettings.claim.url);
+  const settings = CONFIG.adoptableSettings || {};
+  const claimHref = buildAdoptableClaimHref(settings, item.name);
   const claim = status === "available" && item.visible !== false;
-  const claimInternalRoute = claimUrl && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimUrl);
+  const claimInternalRoute = claimHref && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimHref);
   const mainImage = safeImg(item.image || item.thumbnail);
   const gallery = Array.isArray(item.gallery) ? item.gallery.map(safeImg).filter(Boolean).slice(0, 6) : [];
-  const idr = formatAdoptableDetailPrice(item.price && item.price.idr, "IDR", lang);
-  const usd = formatAdoptableDetailPrice(item.price && item.price.usd, "USD", lang);
+  const idr = adoptablePriceValue(item.price && item.price.idr, "IDR", lang);
+  const usd = adoptablePriceValue(item.price && item.price.usd, "USD", lang);
+  const deliverables = resolveAdoptableList(item, "deliverables", settings, "defaultDeliverables");
+  const importantNotes = resolveAdoptableList(item, "importantNotes", settings, "defaultNotes");
+  const artistTerms = resolveAdoptableList(item, "artistTerms", settings, "defaultTerms");
+  const oldNotes = adoptableText(item, "notes", lang);
+  const hasNotes = !!oldNotes || importantNotes.length > 0;
   return (
     <div className="page">
       <div className="adoptable-back"><Btn kind="ghost" size="sm" icon="left" onClick={() => go("adoptables")}>{lang === "id" ? "Kembali" : "Back"}</Btn></div>
@@ -3061,19 +3067,33 @@ function AdoptableDetail({ id, go, currency, lang, owner = false }) {
           <AdoptableGallery images={gallery} title={adoptableText(item, "name", lang)} lang={lang} />
         </div>
         <div className="adoptable-detail-copy">
-          <div className="meta"><span className={"tag adoptable-status " + status}>{adoptableStatusLabel(status, lang)}</span>{(item.tags || []).map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
-          <h2>{adoptableText(item, "name", lang) || "Untitled adoptable"}</h2>
-          <div className="adoptable-detail-prices">
-            <div><small>IDR</small><b>{idr}</b></div>
-            <div><small>USD</small><b>{usd}</b></div>
+          <div className="adoptable-detail-intro">
+            <div className="meta"><span className={"tag adoptable-status " + status}>{adoptableStatusLabel(status, lang)}</span>{(item.tags || []).map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
+            <h2>{adoptableText(item, "name", lang) || "Untitled adoptable"}</h2>
+            {(idr !== null || usd !== null) ? <div className="adoptable-detail-prices">
+              {idr !== null && <div><small>IDR</small><b>{idr}</b></div>}
+              {usd !== null && <div><small>USD</small><b>{usd}</b></div>}
+            </div> : <p className="muted adoptable-price-unset">{lang === "id" ? "Harga belum ditentukan" : "Price not set"}</p>}
           </div>
-          {adoptableText(item, "description", lang) && <p className="adoptable-description">{adoptableText(item, "description", lang)}</p>}
-          {adoptableText(item, "notes", lang) && <div className="adoptable-notes"><b>{lang === "id" ? "Catatan" : "Notes"}</b><p>{adoptableText(item, "notes", lang)}</p></div>}
-          {claim && (claimUrl && claimInternalRoute
-            ? <Btn kind="peach" onClick={() => go(claimInternalRoute[1])}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>
-            : claimUrl
-              ? <Btn kind="peach" href={claimUrl}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>
-              : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Hubungi untuk klaim" : "Contact to claim"}</Btn>)}
+          {adoptableText(item, "description", lang) && <section className="adoptable-detail-section"><h3>{lang === "id" ? "Info karakter" : "Character information"}</h3><p className="adoptable-description">{adoptableText(item, "description", lang)}</p></section>}
+          {deliverables.length > 0 && <section className="adoptable-detail-section">
+            <h3>{lang === "id" ? "Yang kamu dapat" : "What you get"}</h3>
+            <ul className="adoptable-check-list">{deliverables.map((entry) => <li key={entry.id}><span aria-hidden="true">✓</span><span>{adoptableListText(entry, lang)}</span></li>)}</ul>
+          </section>}
+          {hasNotes && <section className="adoptable-notes adoptable-detail-section">
+            <h3>{lang === "id" ? "Catatan penting" : "Important notes"}</h3>
+            {oldNotes && <p className="adoptable-legacy-notes">{oldNotes}</p>}
+            {importantNotes.length > 0 && <ul className="adoptable-note-list">{importantNotes.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul>}
+          </section>}
+          {artistTerms.length > 0 && <details className="adoptable-terms adoptable-detail-section">
+            <summary>{lang === "id" ? "Ketentuan artis" : "Artist terms"}</summary>
+            <ul className="adoptable-terms-list">{artistTerms.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul>
+          </details>}
+          {claim && (claimHref && claimInternalRoute
+            ? <Btn kind="peach" onClick={() => go(claimInternalRoute[1])}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
+            : claimHref
+              ? <Btn kind="peach" href={claimHref}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>
+              : <Btn kind="peach" onClick={() => go("contact")}>{lang === "id" ? "Klaim adoptable" : "Claim adoptable"}</Btn>)}
           {!claim && <Btn kind="ghost" disabled>{status === "sold" ? (lang === "id" ? "Sudah terjual" : "Sold") : (item.visible === false ? (lang === "id" ? "Belum dipublikasikan" : "Not published") : (lang === "id" ? "Sedang dipesan" : "Reserved"))}</Btn>}
         </div>
       </section>
