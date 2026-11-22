@@ -1534,6 +1534,9 @@ html.is-android .home-dashboard > .home-intro-card::before {
 @media(max-width:767px){.commission-board-page{min-width:0;max-width:100%;overflow-x:clip}.commission-board-grid{grid-template-columns:minmax(0,1fr);gap:12px;width:100%;min-width:0}.commission-board-card{grid-column:1/-1;width:100%;max-width:100%;min-width:0;box-sizing:border-box}.schedule-editor-fields{grid-template-columns:minmax(0,1fr)}.schedule-note-field,.schedule-editor-actions{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.schedule-entry,.schedule-month-nav button{transition:none!important;animation:none!important}}
 
+
+/* Public CommissionBoard renders the calendar on mobile; override the legacy agenda-only hide rule. */
+.commission-board-page .schedule-calendar{display:block}
 </style>
 
 <div id="root"></div>
