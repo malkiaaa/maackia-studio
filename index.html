@@ -3151,7 +3151,11 @@ function AdoptableDetail({ id, go, currency, lang, owner = false, setToast = () 
   const status = item.status || "available";
   const settings = CONFIG.adoptableSettings || {};
   const localizedName = adoptableText(item, "name", lang) || "Untitled adoptable";
-  const displayPrice = formatAdoptableDetailPrice(currency === "USD" ? item.price && item.price.usd : item.price && item.price.idr, currency, lang);
+  const mainImage = safeImg(item.image || item.thumbnail);
+  const gallery = Array.isArray(item.gallery) ? item.gallery.map(safeImg).filter(Boolean).slice(0, 6) : [];
+  const idr = adoptablePriceValue(item.price && item.price.idr, "IDR", lang);
+  const usd = adoptablePriceValue(item.price && item.price.usd, "USD", lang);
+  const displayPrice = [idr, usd].filter(Boolean).join(" / ") || (lang === "id" ? "Harga belum ditentukan" : "Price not set");
   const pageUrl = typeof window !== "undefined" ? window.location.href : "";
   const claimValues = { name: localizedName, price: displayPrice, url: pageUrl };
   const claimTemplate = adoptableClaimTemplate(settings, lang, claimValues);
@@ -3180,10 +3184,6 @@ function AdoptableDetail({ id, go, currency, lang, owner = false, setToast = () 
     else setToast(lang === "id" ? "Tidak dapat menyalin template" : "Could not copy the template");
   };
   const claimInternalRoute = claimHref && /^(?:#|\/)([A-Za-z0-9_-]+)$/.exec(claimHref);
-  const mainImage = safeImg(item.image || item.thumbnail);
-  const gallery = Array.isArray(item.gallery) ? item.gallery.map(safeImg).filter(Boolean).slice(0, 6) : [];
-  const idr = adoptablePriceValue(item.price && item.price.idr, "IDR", lang);
-  const usd = adoptablePriceValue(item.price && item.price.usd, "USD", lang);
   const deliverables = resolveAdoptableList(item, "deliverables", settings, "defaultDeliverables");
   const importantNotes = resolveAdoptableList(item, "importantNotes", settings, "defaultNotes");
   const artistTerms = resolveAdoptableList(item, "artistTerms", settings, "defaultTerms");
