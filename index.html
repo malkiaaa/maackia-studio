@@ -1384,6 +1384,125 @@ html.is-android .home-dashboard > .home-intro-card::before {
 @media(max-width:767px){.adoptable-bilingual-pair{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:767px){.adoptable-list-editor-row{grid-template-columns:minmax(0,1fr)}}
 
+
+/* Commission Board calendar and scheduled order list */
+.commission-board-page{width:100%;min-width:0;max-width:100%;overflow-x:clip}
+.schedule-section{width:100%;max-width:100%;min-width:0;margin-top:18px;padding:clamp(14px,2vw,24px);border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#F4FBFF 0%,#FFFFFF 72%,#F7FCFF 100%);box-shadow:var(--shadow)}
+.schedule-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.schedule-heading h2{font-size:clamp(1.25rem,2vw,1.55rem);color:#294B60}
+.schedule-heading p{margin-top:5px;color:#4F6F7E;font-size:14px}
+.schedule-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.schedule-controls label{display:flex;flex-direction:column;gap:5px;min-width:130px;flex:0 1 190px;color:#36566A;font-size:12px;font-weight:900;letter-spacing:.08em}
+.schedule-controls select{width:100%;min-height:46px;padding:8px 34px 8px 12px;border:1px solid #B9D8E8;border-radius:12px;background:#FFFFFF;color:#294B60;font:700 14px var(--font-body);color-scheme:light}
+.schedule-month-arrows{display:flex;align-items:center;gap:10px;margin-left:auto;min-height:46px;color:#294B60}
+.schedule-month-arrows b{min-width:120px;text-align:center;font-size:14px}
+.schedule-month-arrows button{width:46px;height:46px;display:grid;place-items:center;border:1px solid #B9D8E8;border-radius:12px;background:#FFFFFF;color:#294B60;font:700 25px/1 var(--font-body);cursor:pointer}
+.schedule-calendar{width:100%;max-width:900px;min-width:0;margin:0 auto}
+.schedule-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;width:100%;min-width:0}
+.schedule-weekday{min-width:0;min-height:36px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:#E5F4FA;color:#294B60;font-size:14px;font-weight:900;text-align:center}
+.schedule-day{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:5px;min-width:0;min-height:54px;padding:6px;border:1px solid #DCEBF2;border-radius:10px;background:#FFFFFF;color:#294B60;overflow:hidden}
+.schedule-day-blank{background:transparent;border-color:transparent}
+.schedule-day-number{font-size:14px;font-weight:800;line-height:1.2}
+.schedule-day.is-today{border:2px solid #4386A5;background:#EAF7FC;padding:5px}
+.schedule-day-markers{display:flex;align-items:center;gap:3px;width:100%;min-width:0;overflow:hidden}
+.schedule-day-markers i{display:block;width:100%;height:6px;min-width:3px;border-radius:99px}
+.schedule-day-markers small{flex:none;font-size:10px;font-weight:900;color:#294B60}
+.schedule-orders{margin-top:20px}
+.schedule-orders-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:100%}
+.schedule-order-card{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:0;padding:14px 16px;border:1px solid #DCEBF2;border-left:5px solid var(--cyan);border-radius:16px;background:#FFFFFF;color:#294B60;box-shadow:0 6px 18px -14px rgba(41,75,96,.35)}
+.schedule-order-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.schedule-order-id{font-size:14px;overflow-wrap:anywhere}
+.schedule-order-card .status-badge{flex:none}
+.schedule-order-client{font-size:17px;line-height:1.25;color:#294B60}
+.schedule-order-service{font-size:14px;color:#4F6F7E;overflow-wrap:anywhere}
+.schedule-order-dates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 0}
+.schedule-order-dates>div{display:flex;flex-direction:column;gap:3px;min-width:0;padding:8px 9px;border-radius:10px;background:#F0F8FC}
+.schedule-order-dates dt{font-size:12px;font-weight:800;color:#4F6F7E}
+.schedule-order-dates dd{margin:0;font-size:14px;font-weight:800;color:#294B60;overflow-wrap:anywhere}
+.schedule-public-note{margin-top:2px;padding:9px 11px;border-radius:10px;background:#F8F4FF;color:#44365D;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.schedule-no-orders{padding:20px 14px;border:1px dashed #B9D8E8;border-radius:14px;background:#F8FCFE;color:#36566A;font-size:14px;font-weight:800;text-align:center}
+:root[data-theme="dark"] .schedule-section,:root[data-theme="dark"] .schedule-order-card{color:#294B60}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .schedule-section,:root:not([data-theme="light"]) .schedule-order-card{color:#294B60}
+}
+@media(min-width:1024px){.schedule-orders-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1023px){
+  .schedule-section{padding:16px}
+  .schedule-calendar{max-width:820px}
+  .schedule-controls label{flex-basis:150px}
+}
+@media(max-width:639px){
+  .schedule-section{padding:12px;border-radius:18px}
+  .schedule-heading{margin-bottom:12px}
+  .schedule-controls{gap:8px}
+  .schedule-controls label{flex:1 1 calc(50% - 8px);min-width:0}
+  .schedule-month-arrows{width:100%;justify-content:space-between;margin-left:0}
+  .schedule-calendar-grid{gap:3px}
+  .schedule-weekday{min-height:32px;font-size:12px;border-radius:7px}
+  .schedule-day{min-height:48px;padding:5px 3px;border-radius:7px;gap:4px}
+  .schedule-day.is-today{padding:4px 2px}
+  .schedule-day-number{font-size:14px}
+  .schedule-day-markers{gap:2px}
+  .schedule-day-markers i{height:5px;min-width:2px}
+  .schedule-day-markers small{font-size:9px}
+  .schedule-orders-grid{grid-template-columns:minmax(0,1fr)}
+  .schedule-order-dates{gap:6px}
+  .schedule-order-dates>div{padding:7px 6px}
+  .schedule-order-dates dt{font-size:11px}
+  .schedule-order-dates dd{font-size:13px}
+}
+@media(max-width:380px){
+  .schedule-calendar-grid{gap:2px}
+  .schedule-day{min-height:46px;padding:4px 2px}
+  .schedule-day-number{font-size:13px}
+  .schedule-order-card{padding:12px}
+  .schedule-order-dates{gap:4px}
+  .schedule-order-dates dt{font-size:10px}
+  .schedule-order-dates dd{font-size:12px}
+}
+
+/* Fixed-contrast public status badges and schedule palette */
+:root{--sch-lavender:#E8DDFB;--sch-pink:#F6DDE8}
+.status-badge{display:inline-flex;align-items:center;justify-content:center;border:0!important;letter-spacing:0!important;text-transform:none!important;font-size:13px!important;font-weight:800!important;padding:5px 10px!important}
+.status-badge.pending{background:#FCE7B2!important;color:#3A2A00!important}
+.status-badge.progress{background:#BFEAF0!important;color:#12343A!important}
+.status-badge.completed{background:#C9E8D2!important;color:#153B22!important}
+.status-badge.cancelled{background:#F4C8CE!important;color:#4B151D!important}
+.status-badge.neutral{background:#EAF9FD!important;color:#2F4F5E!important}
+
+@media(min-width:640px) and (max-width:1280px){
+  .schedule-controls label{font-size:14px}
+  .schedule-day-markers small{font-size:12px}
+  .schedule-order-dates dt{font-size:14px}
+  .schedule-order-card .status-badge{font-size:14px!important}
+}
+
+/* Commission Schedule styles — kept in the application stylesheet. */
+
+:root{--sch-lavender:#E8DDFB;--sch-pink:#F6DDE8}
+.status-badge{border:0!important;letter-spacing:0;text-transform:none}
+.status-badge.pending{background:#FCE7B2!important;color:#3A2A00!important}
+.status-badge.progress{background:#BFEAF0!important;color:#12343A!important}
+.status-badge.completed{background:#C9E8D2!important;color:#153B22!important}
+.status-badge.cancelled{background:#F4C8CE!important;color:#4B151D!important}
+.status-badge.neutral{background:var(--powder)!important;color:var(--ink)!important}
+.commission-board-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.commission-board-card{min-width:0;grid-column:span 1;overflow-wrap:anywhere}
+.commission-dates{display:grid;gap:4px;margin-top:12px;color:var(--muted);font-size:.78rem}
+.schedule-section{margin-top:22px}.schedule-empty{padding:28px 14px;text-align:center;border:1px dashed var(--line);border-radius:18px;color:var(--muted)}
+.schedule-agenda{display:grid;gap:18px}.schedule-month-agenda{min-width:0}.schedule-month-agenda h3{margin:0 0 8px;font-size:.95rem}.schedule-month-lanes{display:grid;gap:6px;align-items:start}.schedule-month-lanes>div{min-width:0}.schedule-month-lanes .schedule-entry{height:100%;font-size:.78rem;overflow-wrap:anywhere}.schedule-entry{display:grid;gap:4px;min-width:0;padding:13px 14px;border-left:5px solid var(--cyan);border-radius:14px;background:color-mix(in srgb,var(--cyan) 18%,var(--card));overflow-wrap:anywhere}.schedule-entry small{color:var(--muted)}
+.schedule-status{justify-self:start;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:800;background:var(--powder);color:var(--ink)}
+.schedule-status.pending{background:#FCE7B2;color:#3A2A00}.schedule-status.progress{background:#BFEAF0;color:#12343A}.schedule-status.completed{background:#C9E8D2;color:#153B22}.schedule-status.cancelled{background:#F4C8CE;color:#4B151D}
+.schedule-calendar{display:none}.schedule-month-nav{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.schedule-month-nav button{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--card);font-size:1.4rem}
+.schedule-weekdays,.schedule-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.schedule-weekdays{text-align:center;color:var(--muted);font-size:.78rem}
+.schedule-day{min-height:94px;min-width:0;padding:5px;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.75rem}.schedule-day.today{outline:2px solid var(--cyan);outline-offset:-2px}.schedule-day>span{display:block;margin-top:3px;padding:2px 3px;border-radius:5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#1E3640;font-size:.62rem}
+.schedule-editor{flex:1 1 100%;min-width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}.schedule-editor summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:800}
+.schedule-editor-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.schedule-editor-fields label{display:grid;gap:4px;font-size:.76rem;font-weight:800}.schedule-editor-fields input,.schedule-editor-fields select{width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
+.schedule-note-field,.schedule-editor-actions{grid-column:1/-1}.schedule-editor-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.schedule-editor-actions button{min-height:44px;padding:7px 12px;border:1px solid var(--bad);border-radius:999px;background:transparent;color:var(--bad)}.schedule-editor-actions small{color:var(--warn)}
+@media(min-width:768px){.schedule-agenda{display:none}.schedule-calendar{display:block}}
+@media(max-width:767px){.commission-board-page{min-width:0;max-width:100%;overflow-x:clip}.commission-board-grid{grid-template-columns:minmax(0,1fr);gap:12px;width:100%;min-width:0}.commission-board-card{grid-column:1/-1;width:100%;max-width:100%;min-width:0;box-sizing:border-box}.schedule-editor-fields{grid-template-columns:minmax(0,1fr)}.schedule-note-field,.schedule-editor-actions{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){.schedule-entry,.schedule-month-nav button{transition:none!important;animation:none!important}}
+
 </style>
 
 <div id="root"></div>
@@ -1415,6 +1534,7 @@ const DEFAULT_SITE = {
     about: { image: "", cardImage: "", introduction: "", interests: [], philosophy: "", specialties: ["Character Illustration", "VTuber Illustration", "Game Character Illustration", "Graphic Design", "Custom Artwork"] },
   },
   commissionStatus: "OPEN",
+  commissionSchedule: [],
   defaultCurrency: "IDR",
   adoptables: [],
   adoptableSettings: {
@@ -1541,6 +1661,17 @@ const DEFAULT_SITE = {
   ],
 };
 
+/* COMMISSION SCHEDULE HELPERS */
+function validScheduleDate(v){if(typeof v!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const d=new Date(v+"T00:00:00Z");return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===v;}
+function cleanScheduleNote(v){return String(v||"").replace(/<[^>]*>/g,"").replace(/[\u0000-\u001F\u007F]/g," ").replace(/\s+/g," ").trim().slice(0,120);}
+function normalizeCommissionSchedule(rows){if(!Array.isArray(rows))return[];const seen=new Set();return rows.filter(r=>r&&typeof r.requestId==="string"&&r.requestId.trim()&&!seen.has(r.requestId.trim())&&(seen.add(r.requestId.trim()),true)).map(r=>({requestId:r.requestId.trim(),startDate:validScheduleDate(r.startDate)?r.startDate:"",endDate:validScheduleDate(r.endDate)?r.endDate:"",note:cleanScheduleNote(r.note),color:["cyan","peach","gold","ok","lavender","pink"].includes(r.color)?r.color:""})).filter(r=>r.startDate&&r.endDate&&r.endDate>=r.startDate);}
+function scheduleOverlapCount(rows,c){if(!validScheduleDate(c.startDate)||!validScheduleDate(c.endDate))return 0;return(rows||[]).filter(r=>r.requestId!==c.requestId&&validScheduleDate(r.startDate)&&validScheduleDate(r.endDate)&&r.startDate<=c.endDate&&r.endDate>=c.startDate).length+1;}
+function assignScheduleLanes(rows){const ends=[],sorted=(rows||[]).filter(r=>validScheduleDate(r.startDate)&&validScheduleDate(r.endDate)&&r.endDate>=r.startDate).slice().sort((a,b)=>a.startDate.localeCompare(b.startDate)||a.endDate.localeCompare(b.endDate));return sorted.map(r=>{let lane=ends.findIndex(e=>e<r.startDate);if(lane<0)lane=ends.length;ends[lane]=r.endDate;return{...r,lane};});}
+function scheduleMonths(rows){const groups={};(rows||[]).forEach(r=>{if(!validScheduleDate(r.startDate)||!validScheduleDate(r.endDate)||r.endDate<r.startDate)return;const cursor=new Date(r.startDate.slice(0,7)+"-01T00:00:00Z"),last=r.endDate.slice(0,7);while(cursor.toISOString().slice(0,7)<=last){const key=cursor.toISOString().slice(0,7);(groups[key]||(groups[key]=[])).push(r);cursor.setUTCMonth(cursor.getUTCMonth()+1);}});return Object.keys(groups).sort().map(key=>({key,rows:groups[key]}));}
+function formatScheduleDate(v,lang){if(!validScheduleDate(v))return"";return new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}).format(new Date(v+"T00:00:00Z"));}
+function formatScheduleTimestamp(v,lang){if(!v)return"—";const d=new Date(v);if(!Number.isFinite(d.getTime()))return String(v);return new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{day:"2-digit",month:"short",year:"numeric"}).format(d);}
+function scheduleStatusClass(v){const s=String(v||"Pending Review").toLowerCase();if(["pending review","reviewing","request submitted"].includes(s))return"pending";if(s==="completed")return"completed";if(["cancelled","declined","rejected"].includes(s))return"cancelled";if(["in progress","waiting for feedback","revision"].includes(s))return"progress";return"neutral";}
+function scheduleStatusLabel(v,lang="en"){const s=String(v||"Pending Review");if(lang!=="id")return s;const labels={"Pending Review":"Menunggu Peninjauan","Reviewing":"Sedang Ditinjau","Request Submitted":"Permintaan Diajukan","In Progress":"Sedang Dikerjakan","Waiting for Feedback":"Menunggu Masukan","Revision":"Revisi","Completed":"Selesai","Cancelled":"Dibatalkan","Declined":"Ditolak","Rejected":"Ditolak","Paid":"Dibayar","Awaiting Payment":"Menunggu Pembayaran"};return labels[s]||s;}
 /* ============================================================ utils */
 const uid = (p = "x") => p + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -1793,7 +1924,7 @@ function loadSaved() {
    sees them. Only people who can edit the artifact can publish.
    ============================================================ */
 const SKEL_PRE = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
-const SKEL_POST = "</body></html>";
+const SKEL_POST = '</body></html>';
 const HEAD_STATIC = '<title>Malkiaa Studio</title><meta name="claude:viewport-fit-sides" content="cover"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">';
 function buildDoc(site) {
   const css = document.getElementById("app-css").textContent;
@@ -4351,6 +4482,7 @@ function AdoptablesPanel() {
 }
 
 function CreatorPage() {
+  const {lang}=useCreator();
   const [tab, setTab] = useState(() => { const t=ss.get("mk-tab")||"overview"; return t==="builder"?"overview":t==="offers"?"services":t; });
   const pick = (t) => { const next = t === "offers" ? "services" : t; setTab(next); ss.set("mk-tab", next); window.scrollTo({ top: 0 }); };
   return (
@@ -4362,7 +4494,7 @@ function CreatorPage() {
       </div>
       {tab === "overview" && <Overview setTab={pick} />}
       {tab === "profile" && <ProfilePanel />}
-      {tab === "orders" && <OrdersPanel />}
+      {tab === "orders" && <OrdersPanel lang={lang} />}
       {tab === "reviews" && <ReviewsPanel />}
       {tab === "media" && <MediaPanel />}
       {tab === "contact" && <ContactPanel />}
@@ -5118,39 +5250,72 @@ function OrderFlow({ id, go, lang }) {
 }
 
 /* ---- visitor: public commission board */
-function CommissionBoard() {
-  const [items, setItems] = useState(null);
-  const [msg, setMsg] = useState("");
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const result = await Store.api("public_board", {});
-        if (active) setItems(Array.isArray(result.items) ? result.items : []);
-      } catch (e) {
-        if (active) setMsg("The public commission board is temporarily unavailable. Please try again later.");
-      }
-    })();
-    return () => { active = false; };
-  }, []);
-  return (
-    <div className="page">
-      <PageHead crumb="PUBLIC COMMISSIONS" title="Commission Board">A public overview of current and previous commission requests. Client names are shown as entered in the order form.</PageHead>
-      <div className="note info" style={{ marginBottom: 14 }}>For privacy, this board only displays the commission number, client name, service, and status. Contact details, references, pricing, and private order notes are not displayed.</div>
-      {msg && <div className="note bad" role="alert">{msg}</div>}
-      {items === null && !msg ? <div className="card empty">Loading commission board...</div> : !items || !items.length ? <div className="card empty">No commission requests have been listed yet.</div> :
-        <div className="grid">
-          {items.map((item) => <section className="card span-6" key={item.id}>
-            <div className="meta" style={{ justifyContent: "space-between" }}><span className="tag">{item.id}</span><span className="tag">{item.status || "Pending Review"}</span></div>
-            <h3 style={{ marginTop: 12 }}>{item.clientName || "Client"}</h3>
-            <p className="muted" data-no-public-translate="true" style={{ marginTop: 4 }}>{item.serviceTitle || "Commission"}</p>
-            <small className="muted" style={{ display: "block", marginTop: 12 }}>Submitted {fmtDate(item.createdAt)}</small>
-          </section>)}
-        </div>}
-    </div>
-  );
+function CommissionBoard({lang="id"}) {
+  const [items,setItems]=useState(null),[msg,setMsg]=useState("");
+  const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
+  const schedules=normalizeCommissionSchedule(CONFIG.commissionSchedule||[]);
+  useEffect(()=>{let active=true;(async()=>{try{const result=await Store.api("public_board",{});if(active)setItems(Array.isArray(result.items)?result.items:[]);}catch(e){if(active)setMsg(lang==="id"?"Jadwal commission sementara tidak tersedia. Silakan coba lagi nanti.":"The public commission board is temporarily unavailable. Please try again later.");}})();return()=>{active=false;};},[lang]);
+  const records=(items||[]).map(item=>{const schedule=schedules.find(r=>r.requestId===item.id);return schedule?{...item,...schedule}:null;}).filter(Boolean);
+  const now=new Date(),today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+  const year=month.getFullYear(),monthIndex=month.getMonth(),first=new Date(year,monthIndex,1),last=new Date(year,monthIndex+1,0);
+  const monthStart=year+"-"+String(monthIndex+1).padStart(2,"0")+"-01",monthEnd=year+"-"+String(monthIndex+1).padStart(2,"0")+"-"+String(last.getDate()).padStart(2,"0");
+  const visible=records.filter(r=>r.startDate<=monthEnd&&r.endDate>=monthStart);
+  const days=Array.from({length:last.getDate()},(_,i)=>new Date(year,monthIndex,i+1));
+  const weekdays=lang==="id"?["Min","Sen","Sel","Rab","Kam","Jum","Sab"]:["Su","Mo","Tu","We","Th","Fr","Sa"];
+  const monthOptions=Array.from({length:12},(_,i)=>({value:String(i),label:new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{month:"long"}).format(new Date(2026,i,1))}));
+  const years=records.map(r=>[Number(r.startDate.slice(0,4)),Number(r.endDate.slice(0,4))]).flat().filter(Number.isFinite);
+  const minYear=Math.min(new Date().getFullYear()-1,...(years.length?years:[new Date().getFullYear()]));
+  const maxYear=Math.max(new Date().getFullYear()+2,...(years.length?years:[new Date().getFullYear()]));
+  const yearOptions=Array.from({length:maxYear-minYear+1},(_,i)=>minYear+i);
+  const monthLabel=new Intl.DateTimeFormat(lang==="id"?"id-ID":"en-US",{month:"long",year:"numeric"}).format(month);
+  const color=c=>c==="peach"?"var(--peach)":c==="gold"?"var(--gold)":c==="ok"?"var(--ok)":c==="lavender"?"var(--sch-lavender)":c==="pink"?"var(--sch-pink)":"var(--cyan)";
+  const moveMonth=delta=>setMonth(new Date(year,monthIndex+delta,1));
+  const renderOrder=r=>{
+    const status=r.status||"Pending Review";
+    return <article className="schedule-order-card" key={r.id} style={{borderLeftColor:color(r.color)}}>
+      <div className="schedule-order-top"><b className="schedule-order-id">{r.id}</b><span className={"tag status-badge "+scheduleStatusClass(status)}>{scheduleStatusLabel(status,lang)}</span></div>
+      <h3 className="schedule-order-client">{r.clientName||(lang==="id"?"Klien":"Client")}</h3>
+      <p className="schedule-order-service">{r.serviceTitle||(lang==="id"?"Komisi":"Commission")}</p>
+      <dl className="schedule-order-dates">
+        <div><dt>{lang==="id"?"Diajukan":"Submitted"}</dt><dd>{formatScheduleTimestamp(r.createdAt,lang)}</dd></div>
+        <div><dt>{lang==="id"?"Mulai":"Start"}</dt><dd>{formatScheduleDate(r.startDate,lang)}</dd></div>
+        <div><dt>{lang==="id"?"Target selesai":"Target finish"}</dt><dd>{formatScheduleDate(r.endDate,lang)}</dd></div>
+      </dl>
+      {r.note&&<p className="schedule-public-note">{r.note}</p>}
+    </article>;
+  };
+  return <div className="page commission-board-page">
+    <PageHead crumb={lang==="id"?"KOMISI PUBLIK":"PUBLIC COMMISSIONS"} title={lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}>{lang==="id"?"Kalender jadwal komisi berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</PageHead>
+    {msg&&<div className="note bad" role="alert">{msg}</div>}
+    <section className="schedule-section">
+      <header className="schedule-heading">
+        <div><h2>{lang==="id"?"Jadwal Pengerjaan":"Work Schedule"}</h2><p>{lang==="id"?"Kalender jadwal komisi berdasarkan bulan yang dipilih.":"Commission schedule calendar for the selected month."}</p></div>
+      </header>
+      <div className="schedule-controls" aria-label={lang==="id"?"Pilih bulan dan tahun":"Choose month and year"}>
+        <label><span>{lang==="id"?"BULAN":"MONTH"}</span><select value={String(monthIndex)} onChange={e=>setMonth(new Date(year,Number(e.target.value),1))}>{monthOptions.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></label>
+        <label><span>{lang==="id"?"TAHUN":"YEAR"}</span><select value={String(year)} onChange={e=>setMonth(new Date(Number(e.target.value),monthIndex,1))}>{yearOptions.map(y=><option key={y} value={String(y)}>{y}</option>)}</select></label>
+        <div className="schedule-month-arrows"><button type="button" aria-label={lang==="id"?"Bulan sebelumnya":"Previous month"} onClick={()=>moveMonth(-1)}>‹</button><b>{monthLabel}</b><button type="button" aria-label={lang==="id"?"Bulan berikutnya":"Next month"} onClick={()=>moveMonth(1)}>›</button></div>
+      </div>
+      <div className="schedule-calendar" role="grid" aria-label={monthLabel}>
+        <div className="schedule-calendar-grid">
+          {weekdays.map(d=><div className="schedule-weekday" role="columnheader" key={d}>{d}</div>)}
+          {Array.from({length:first.getDay()},(_,i)=><div className="schedule-day schedule-day-blank" role="gridcell" aria-hidden="true" key={"blank-"+i}/>)}
+          {days.map(day=>{
+            const key=year+"-"+String(monthIndex+1).padStart(2,"0")+"-"+String(day.getDate()).padStart(2,"0");
+            const active=visible.filter(r=>r.startDate<=key&&r.endDate>=key);
+            return <div key={key} className={"schedule-day"+(key===today?" is-today":"")} role="gridcell" aria-label={key+(active.length?(lang==="id"?" · "+active.length+" pesanan terjadwal":" · "+active.length+" scheduled orders"):"")}>
+              <span className="schedule-day-number">{day.getDate()}</span>
+              {active.length>0&&<span className="schedule-day-markers" aria-hidden="true">{active.slice(0,4).map(r=><i key={r.id} style={{background:color(r.color)}}/>)}{active.length>4&&<small>+{active.length-4}</small>}</span>}
+            </div>;
+          })}
+        </div>
+      </div>
+      <section className="schedule-orders" aria-label={lang==="id"?"Daftar order terjadwal":"Scheduled orders"}>
+        {items===null?<p className="schedule-no-orders">{lang==="id"?"Memuat jadwal…":"Loading schedules…"}</p>:visible.length?<div className="schedule-orders-grid">{visible.map(renderOrder)}</div>:<p className="schedule-no-orders">{lang==="id"?"Tidak ada jadwal di bulan ini":"No schedules this month"}</p>}
+      </section>
+    </section>
+  </div>;
 }
-
 /* ---- visitor: tracking */
 function Track() {
   const [rid, setRid] = useState(""); const [em, setEm] = useState(""); const [t, setT] = useState(null); const [msg, setMsg] = useState(""); const [busy, setBusy] = useState(false); const [q, setQ] = useState("");
@@ -5478,36 +5643,59 @@ function NotifPanel() {
   );
 }
 
-function OrdersPanel() {
-  const [list, setList] = useState(null); const [sel, setSel] = useState(null); const [err, setErr] = useState(""); const [deleting, setDeleting] = useState("");
-  const [connStatus] = useConnectionStatus();
-  const load = () => Store.allOrders().then((a) => setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch((e)=>setErr("Could not load requests: "+(e&&e.message||"")));
-  useEffect(() => {
-    load(); let channel=null;
-    if (_sbClient) channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
-    return ()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
-  },[connStatus]);
-  const deleteClientOrder = async (order) => {
-    if(!window.confirm("Permanently delete commission "+order.id+" for "+((order.form||{}).name||"this client")+"? This cannot be undone.")) return;
-    setDeleting(order.id); setErr("");
-    try { await Store.deleteOrder(order.id); if(sel&&sel.id===order.id)setSel(null); await load(); }
-    catch(e) { setErr("Could not delete commission "+order.id+": "+(e.message||"")); }
-    finally { setDeleting(""); }
+function OrdersPanel({lang="id"}) {
+  const {site,upd}=useCreator();
+  const [list,setList]=useState(null),[sel,setSel]=useState(null),[err,setErr]=useState(""),[deleting,setDeleting]=useState("");
+  const [scheduleError,setScheduleError]=useState("");
+  const [connStatus]=useConnectionStatus();
+  const schedules=Array.isArray(site.commissionSchedule)?site.commissionSchedule:[];
+  const updateSchedule=(order,field,value)=>{
+    const old=schedules.find(r=>r.requestId===order.id)||{requestId:order.id,startDate:"",endDate:"",note:"",color:""};
+    const next={...old,[field]:field==="note"?cleanScheduleNote(value):value};
+    if(next.startDate&&next.endDate&&next.endDate<next.startDate){
+      setScheduleError(lang==="id"?"Tanggal target selesai tidak boleh sebelum tanggal mulai.":"Target finish cannot be earlier than the start date.");
+      return;
+    }
+    setScheduleError("");
+    upd(n=>{
+      const rows=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id);
+      if(!next.startDate&&!next.endDate&&!next.note&&!next.color){n.commissionSchedule=rows;return;}
+      n.commissionSchedule=rows.concat(next);
+    });
   };
-  if(sel) return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
-  const n=(st)=>(list||[]).filter(o=>st.includes(o.status)).length;
-  const stats=[["Total",list?list.length:0],["Pending",n(["Pending Review"])],["Accepted",n(["Paid","Awaiting Payment"])],["In progress",n(["In Progress","Waiting for Feedback","Revision"])],["Completed",n(["Completed"])],["Rejected",n(["Rejected","Cancelled"])]];
-  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}
-    <div className="grid">{stats.map(([l,v])=><div key={l} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{l}</span><b>{v}</b></div>)}</div>
-    <section className="card"><div className="card-head"><h2>Client requests</h2><Btn kind="ghost" size="sm" onClick={load}>Refresh</Btn></div>
-      {list===null?<p className="muted">Loading...</p>:list.length===0?<p className="muted">No requests yet.</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
+  const removeSchedule=id=>{setScheduleError("");upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==id);});};
+  const load=()=>Store.allOrders().then(a=>setList(a.sort((x,y)=>(y.createdAt||y.created_at||"").localeCompare(x.createdAt||x.created_at||"")))).catch(e=>setErr((lang==="id"?"Tidak dapat memuat permintaan: ":"Could not load requests: ")+(e&&e.message||"")));
+  useEffect(()=>{
+    load();let channel=null;
+    if(_sbClient)channel=_sbClient.channel("commission_requests_changes").on("postgres_changes",{event:"INSERT",schema:"public",table:"commission_requests"},()=>{load();}).subscribe();
+    return()=>{if(channel&&_sbClient)_sbClient.removeChannel(channel);};
+  },[connStatus,lang]);
+  const deleteClientOrder=async order=>{
+    if(!window.confirm((lang==="id"?"Hapus permanen komisi ":"Permanently delete commission ")+order.id+(lang==="id"?" untuk ":" for ")+((order.form||{}).name||(lang==="id"?"klien ini":"this client"))+(lang==="id"?"? Tindakan ini tidak dapat dibatalkan.":"? This cannot be undone.")))return;
+    setDeleting(order.id);setErr("");
+    try{await Store.deleteOrder(order.id);upd(n=>{n.commissionSchedule=(n.commissionSchedule||[]).filter(r=>r.requestId!==order.id);});if(sel&&sel.id===order.id)setSel(null);await load();}
+    catch(e){setErr((lang==="id"?"Tidak dapat menghapus komisi ":"Could not delete commission ")+order.id+": "+(e.message||""));}
+    finally{setDeleting("");}
+  };
+  if(sel)return <OrderDetail o={sel} onBack={()=>{setSel(null);load();}} onSaved={()=>{}} />;
+  const n=st=>(list||[]).filter(o=>st.includes(o.status)).length;
+  const stats=[[lang==="id"?"Total":"Total",list?list.length:0],[lang==="id"?"Menunggu":"Pending",n(["Pending Review"])],[lang==="id"?"Diterima":"Accepted",n(["Paid","Awaiting Payment"])],[lang==="id"?"Dikerjakan":"In progress",n(["In Progress","Waiting for Feedback","Revision"])],[lang==="id"?"Selesai":"Completed",n(["Completed"])],[lang==="id"?"Ditolak":"Rejected",n(["Rejected","Cancelled"])]];
+  return <div className="panel"><StoreBanner />{err&&<div className="note info" role="status" style={{marginBottom:12}}>{err}</div>}{scheduleError&&<div className="note bad" role="alert" style={{marginBottom:12}}>{scheduleError}</div>}
+    <div className="grid">{stats.map(([label,value])=><div key={label} className="card stat" style={{gridColumn:"span 2"}}><span className="lbl">{label}</span><b>{value}</b></div>)}</div>
+    <section className="card"><div className="card-head"><h2>{lang==="id"?"Permintaan klien":"Client requests"}</h2><Btn kind="ghost" size="sm" onClick={load}>{lang==="id"?"Muat ulang":"Refresh"}</Btn></div>
+      {list===null?<p className="muted">{lang==="id"?"Memuat…":"Loading..."}</p>:list.length===0?<p className="muted">{lang==="id"?"Belum ada permintaan.":"No requests yet."}</p>:<div className="list">{list.map(o=><article key={o.id} className="rowi" style={{alignItems:"center",flexWrap:"wrap",gap:12}}>
         <button type="button" onClick={()=>setSel(o)} style={{flex:"1 1 240px",minWidth:0,textAlign:"left",border:0,background:"transparent",cursor:"pointer",padding:0,color:"inherit"}}>
-          <div className="grow"><b>{o.id} · {(o.form||{}).name||"Client"}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||"Commission"} · {fmtDate(o.createdAt||o.created_at)} · {idr((o.estimate||{}).total||0)}</small></div>
+          <div className="grow"><b>{o.id} · {(o.form||{}).name||(lang==="id"?"Klien":"Client")}</b><small className="muted" style={{display:"block",overflowWrap:"anywhere"}}>{(o.form||{}).email||"No email"} · {o.serviceTitle||(lang==="id"?"Komisi":"Commission")} · {formatScheduleTimestamp(o.createdAt||o.created_at,lang)} · {idr((o.estimate||{}).total||0)}</small></div>
         </button>
-        <span className="tag">{o.status||"Pending Review"}</span>
-        <div className="btns" style={{gap:6,flex:"0 0 auto"}}>
-          <Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?"Deleting...":"Delete"}</Btn>
-        </div>
+        <span className={"tag status-badge "+scheduleStatusClass(o.status)}>{scheduleStatusLabel(o.status,lang)}</span>
+        <details className="schedule-editor"><summary>{lang==="id"?"Jadwal":"Schedule"}</summary><div className="schedule-editor-fields">
+          <label>{lang==="id"?"Tanggal mulai":"Start date"}<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).startDate||""} onChange={e=>updateSchedule(o,"startDate",e.target.value)} /></label>
+          <label>{lang==="id"?"Target selesai":"Target finish"}<input type="date" value={(schedules.find(r=>r.requestId===o.id)||{}).endDate||""} onChange={e=>updateSchedule(o,"endDate",e.target.value)} /></label>
+          <label className="schedule-note-field">{lang==="id"?"Catatan publik (opsional)":"Public note (optional)"}<input maxLength="120" value={(schedules.find(r=>r.requestId===o.id)||{}).note||""} onChange={e=>updateSchedule(o,"note",e.target.value)} placeholder={lang==="id"?"Ditampilkan pada jadwal publik":"Shown on public schedule"} /></label>
+          <label>{lang==="id"?"Warna penanda":"Schedule color"}<select value={(schedules.find(r=>r.requestId===o.id)||{}).color||"cyan"} onChange={e=>updateSchedule(o,"color",e.target.value)}><option value="cyan">{lang==="id"?"Biru sian":"Cyan"}</option><option value="peach">{lang==="id"?"Kuning":"Yellow"}</option><option value="gold">{lang==="id"?"Emas":"Gold"}</option><option value="ok">{lang==="id"?"Hijau":"Green"}</option><option value="lavender">Lavender</option><option value="pink">Pink</option></select></label>
+          <div className="schedule-editor-actions"><button type="button" onClick={()=>removeSchedule(o.id)}>{lang==="id"?"Hapus jadwal":"Clear schedule"}</button>{schedules.find(r=>r.requestId===o.id)&&scheduleOverlapCount(schedules,schedules.find(r=>r.requestId===o.id))>3&&<small role="status">{lang==="id"?"Lebih dari 3 komisi bertumpang tindih. Ini hanya peringatan.":"More than 3 commissions overlap. Warning only."}</small>}</div>
+        </div></details>
+        <div className="btns" style={{gap:6,flex:"0 0 auto"}}><Btn kind="danger" size="sm" disabled={!!deleting} onClick={()=>deleteClientOrder(o)}>{deleting===o.id?(lang==="id"?"Menghapus…":"Deleting…"):(lang==="id"?"Hapus":"Delete")}</Btn></div>
       </article>)}</div>}
     </section>
     <NotifPanel />
@@ -5854,7 +6042,7 @@ function App() {
             {view.startsWith("adoptable-") && <AdoptableDetail id={view.slice(10)} go={go} currency={cur} lang={lang} owner={creatorOn} setToast={setToast} />}
             {view === "commission" && <Commission go={go} cur={cur} setCur={setCur} lang={lang} />}
             {view === "services" && <Services go={go} setCat={setCat} lang={lang} />}
-            {view === "board" && <CommissionBoard />}
+            {view === "board" && <CommissionBoard lang={lang} />}
             {view === "terms" && <Terms lang={lang} setLang={setLang} go={go} />}
             {view === "workflow" && <Workflow go={go} lang={lang} />}
             {view === "contact" && <Contact />}
