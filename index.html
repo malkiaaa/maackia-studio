@@ -1476,6 +1476,33 @@ html.is-android .home-dashboard > .home-intro-card::before {
   .schedule-order-dates dt{font-size:14px}
   .schedule-order-card .status-badge{font-size:14px!important}
 }
+
+/* Commission Schedule styles — kept in the application stylesheet. */
+
+:root{--sch-lavender:#E8DDFB;--sch-pink:#F6DDE8}
+.status-badge{border:0!important;letter-spacing:0;text-transform:none}
+.status-badge.pending{background:#FCE7B2!important;color:#3A2A00!important}
+.status-badge.progress{background:#BFEAF0!important;color:#12343A!important}
+.status-badge.completed{background:#C9E8D2!important;color:#153B22!important}
+.status-badge.cancelled{background:#F4C8CE!important;color:#4B151D!important}
+.status-badge.neutral{background:var(--powder)!important;color:var(--ink)!important}
+.commission-board-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.commission-board-card{min-width:0;grid-column:span 1;overflow-wrap:anywhere}
+.commission-dates{display:grid;gap:4px;margin-top:12px;color:var(--muted);font-size:.78rem}
+.schedule-section{margin-top:22px}.schedule-empty{padding:28px 14px;text-align:center;border:1px dashed var(--line);border-radius:18px;color:var(--muted)}
+.schedule-agenda{display:grid;gap:18px}.schedule-month-agenda{min-width:0}.schedule-month-agenda h3{margin:0 0 8px;font-size:.95rem}.schedule-month-lanes{display:grid;gap:6px;align-items:start}.schedule-month-lanes>div{min-width:0}.schedule-month-lanes .schedule-entry{height:100%;font-size:.78rem;overflow-wrap:anywhere}.schedule-entry{display:grid;gap:4px;min-width:0;padding:13px 14px;border-left:5px solid var(--cyan);border-radius:14px;background:color-mix(in srgb,var(--cyan) 18%,var(--card));overflow-wrap:anywhere}.schedule-entry small{color:var(--muted)}
+.schedule-status{justify-self:start;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:800;background:var(--powder);color:var(--ink)}
+.schedule-status.pending{background:#FCE7B2;color:#3A2A00}.schedule-status.progress{background:#BFEAF0;color:#12343A}.schedule-status.completed{background:#C9E8D2;color:#153B22}.schedule-status.cancelled{background:#F4C8CE;color:#4B151D}
+.schedule-calendar{display:none}.schedule-month-nav{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.schedule-month-nav button{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--card);font-size:1.4rem}
+.schedule-weekdays,.schedule-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.schedule-weekdays{text-align:center;color:var(--muted);font-size:.78rem}
+.schedule-day{min-height:94px;min-width:0;padding:5px;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.75rem}.schedule-day.today{outline:2px solid var(--cyan);outline-offset:-2px}.schedule-day>span{display:block;margin-top:3px;padding:2px 3px;border-radius:5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#1E3640;font-size:.62rem}
+.schedule-editor{flex:1 1 100%;min-width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}.schedule-editor summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:800}
+.schedule-editor-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.schedule-editor-fields label{display:grid;gap:4px;font-size:.76rem;font-weight:800}.schedule-editor-fields input,.schedule-editor-fields select{width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
+.schedule-note-field,.schedule-editor-actions{grid-column:1/-1}.schedule-editor-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.schedule-editor-actions button{min-height:44px;padding:7px 12px;border:1px solid var(--bad);border-radius:999px;background:transparent;color:var(--bad)}.schedule-editor-actions small{color:var(--warn)}
+@media(min-width:768px){.schedule-agenda{display:none}.schedule-calendar{display:block}}
+@media(max-width:767px){.commission-board-page{min-width:0;max-width:100%;overflow-x:clip}.commission-board-grid{grid-template-columns:minmax(0,1fr);gap:12px;width:100%;min-width:0}.commission-board-card{grid-column:1/-1;width:100%;max-width:100%;min-width:0;box-sizing:border-box}.schedule-editor-fields{grid-template-columns:minmax(0,1fr)}.schedule-note-field,.schedule-editor-actions{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){.schedule-entry,.schedule-month-nav button{transition:none!important;animation:none!important}}
+
 </style>
 
 <div id="root"></div>
@@ -1897,32 +1924,7 @@ function loadSaved() {
    sees them. Only people who can edit the artifact can publish.
    ============================================================ */
 const SKEL_PRE = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>';
-const SKEL_POST = `<style id="commission-schedule-css">
-:root{--sch-lavender:#E8DDFB;--sch-pink:#F6DDE8}
-.status-badge{border:0!important;letter-spacing:0;text-transform:none}
-.status-badge.pending{background:#FCE7B2!important;color:#3A2A00!important}
-.status-badge.progress{background:#BFEAF0!important;color:#12343A!important}
-.status-badge.completed{background:#C9E8D2!important;color:#153B22!important}
-.status-badge.cancelled{background:#F4C8CE!important;color:#4B151D!important}
-.status-badge.neutral{background:var(--powder)!important;color:var(--ink)!important}
-.commission-board-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-.commission-board-card{min-width:0;grid-column:span 1;overflow-wrap:anywhere}
-.commission-dates{display:grid;gap:4px;margin-top:12px;color:var(--muted);font-size:.78rem}
-.schedule-section{margin-top:22px}.schedule-empty{padding:28px 14px;text-align:center;border:1px dashed var(--line);border-radius:18px;color:var(--muted)}
-.schedule-agenda{display:grid;gap:18px}.schedule-month-agenda{min-width:0}.schedule-month-agenda h3{margin:0 0 8px;font-size:.95rem}.schedule-month-lanes{display:grid;gap:6px;align-items:start}.schedule-month-lanes>div{min-width:0}.schedule-month-lanes .schedule-entry{height:100%;font-size:.78rem;overflow-wrap:anywhere}.schedule-entry{display:grid;gap:4px;min-width:0;padding:13px 14px;border-left:5px solid var(--cyan);border-radius:14px;background:color-mix(in srgb,var(--cyan) 18%,var(--card));overflow-wrap:anywhere}.schedule-entry small{color:var(--muted)}
-.schedule-status{justify-self:start;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:800;background:var(--powder);color:var(--ink)}
-.schedule-status.pending{background:#FCE7B2;color:#3A2A00}.schedule-status.progress{background:#BFEAF0;color:#12343A}.schedule-status.completed{background:#C9E8D2;color:#153B22}.schedule-status.cancelled{background:#F4C8CE;color:#4B151D}
-.schedule-calendar{display:none}.schedule-month-nav{display:flex;align-items:center;justify-content:space-between;margin:12px 0}.schedule-month-nav button{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--card);font-size:1.4rem}
-.schedule-weekdays,.schedule-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.schedule-weekdays{text-align:center;color:var(--muted);font-size:.78rem}
-.schedule-day{min-height:94px;min-width:0;padding:5px;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.75rem}.schedule-day.today{outline:2px solid var(--cyan);outline-offset:-2px}.schedule-day>span{display:block;margin-top:3px;padding:2px 3px;border-radius:5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#1E3640;font-size:.62rem}
-.schedule-editor{flex:1 1 100%;min-width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}.schedule-editor summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:800}
-.schedule-editor-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.schedule-editor-fields label{display:grid;gap:4px;font-size:.76rem;font-weight:800}.schedule-editor-fields input,.schedule-editor-fields select{width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
-.schedule-note-field,.schedule-editor-actions{grid-column:1/-1}.schedule-editor-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.schedule-editor-actions button{min-height:44px;padding:7px 12px;border:1px solid var(--bad);border-radius:999px;background:transparent;color:var(--bad)}.schedule-editor-actions small{color:var(--warn)}
-@media(min-width:768px){.schedule-agenda{display:none}.schedule-calendar{display:block}}
-@media(max-width:767px){.commission-board-page{min-width:0;max-width:100%;overflow-x:clip}.commission-board-grid{grid-template-columns:minmax(0,1fr);gap:12px;width:100%;min-width:0}.commission-board-card{grid-column:1/-1;width:100%;max-width:100%;min-width:0;box-sizing:border-box}.schedule-editor-fields{grid-template-columns:minmax(0,1fr)}.schedule-note-field,.schedule-editor-actions{grid-column:auto}}
-@media(prefers-reduced-motion:reduce){.schedule-entry,.schedule-month-nav button{transition:none!important;animation:none!important}}
-</style>
-</body></html>`;
+const SKEL_POST = '</body></html>';
 const HEAD_STATIC = '<title>Malkiaa Studio</title><meta name="claude:viewport-fit-sides" content="cover"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">';
 function buildDoc(site) {
   const css = document.getElementById("app-css").textContent;
