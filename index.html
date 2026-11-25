@@ -1609,17 +1609,17 @@ const DEFAULT_SITE = {
     ],
     defaultNotes: [
       { id: "note-one-of-a-kind", text: "Each design is one-of-a-kind and sold once.", i18n: { id: { text: "Setiap desain unik dan hanya dijual satu kali." } } },
-      { id: "note-claim-email", text: "To claim, send me an email. I'll contact you to arrange payment and delivery.", i18n: { id: { text: "Untuk klaim, kirim email kepadaku. Aku akan menghubungimu untuk mengatur pembayaran dan pengiriman." } } },
-      { id: "note-reservation", text: "The design is reserved for 24 hours after I reply, pending payment.", i18n: { id: { text: "Desain dipesan selama 24 jam setelah aku membalas, sambil menunggu pembayaran." } } },
+      { id: "note-claim-email", text: "To claim, send me an email. I'll contact you to arrange payment and delivery.", i18n: { id: { text: "Untuk klaim, kirim email kepada saya. Saya akan menghubungi client untuk mengatur pembayaran dan pengiriman." } } },
+      { id: "note-reservation", text: "The design is reserved for 24 hours after I reply, pending payment.", i18n: { id: { text: "Desain dipesan selama 24 jam setelah saya membalas, sambil menunggu pembayaran." } } },
     ],
     defaultTerms: [
-      { id: "term-copyright", text: "I keep the copyright to the artwork; you own the character design.", i18n: { id: { text: "Hak cipta gambar tetap milikku; kamu memiliki desain karakternya." } } },
-      { id: "term-personal-use", text: "Personal use only (OC, roleplay, fanart, display). Commercial use requires my written permission.", i18n: { id: { text: "Hanya untuk penggunaan pribadi (OC, roleplay, fanart, dipamerkan). Penggunaan komersial memerlukan izin tertulis dariku." } } },
-      { id: "term-credit", text: "Please credit me when sharing the original artwork.", i18n: { id: { text: "Mohon cantumkan kredit untukku saat membagikan gambar aslinya." } } },
+      { id: "term-copyright", text: "I keep the copyright to the artwork; you own the character design.", i18n: { id: { text: "Hak cipta gambar tetap milik saya; client memiliki desain karakternya." } } },
+      { id: "term-personal-use", text: "Personal use only (OC, roleplay, fanart, display). Commercial use requires my written permission.", i18n: { id: { text: "Hanya untuk penggunaan pribadi (OC, roleplay, fanart, dipamerkan). Penggunaan komersial memerlukan izin tertulis dari saya." } } },
+      { id: "term-credit", text: "Please credit me when sharing the original artwork.", i18n: { id: { text: "Mohon cantumkan kredit untuk saya saat membagikan gambar aslinya." } } },
       { id: "term-no-nft-ai", text: "No NFT use and no use for training AI.", i18n: { id: { text: "Tidak boleh dipakai untuk NFT atau melatih AI." } } },
       { id: "term-no-refund", text: "No refunds once the files have been delivered.", i18n: { id: { text: "Tidak ada refund setelah file dikirim." } } },
-      { id: "term-resale-transfer", text: "Resale or transfer of ownership requires telling me first.", i18n: { id: { text: "Penjualan ulang atau pemindahan kepemilikan wajib diberitahukan kepadaku dulu." } } },
-      { id: "term-decline-sale", text: "I may decline a sale to any buyer.", i18n: { id: { text: "Aku berhak menolak penjualan kepada siapa pun." } } },
+      { id: "term-resale-transfer", text: "Resale or transfer of ownership requires telling me first.", i18n: { id: { text: "Penjualan ulang atau pemindahan kepemilikan wajib diberitahukan kepada saya terlebih dahulu." } } },
+      { id: "term-decline-sale", text: "I may decline a sale to any buyer.", i18n: { id: { text: "Saya berhak menolak penjualan kepada siapa pun." } } },
     ],
   },
   mascot: { image: "" },
@@ -1832,7 +1832,19 @@ function adoptableListText(entry, lang) {
 }
 function resolveAdoptableList(item, field, settings, defaultField) {
   const own = item && item[field];
-  return Array.isArray(own) && own.length ? own : (Array.isArray(settings && settings[defaultField]) ? settings[defaultField] : []);
+  if (Array.isArray(own) && own.length) return own;
+  const configured = settings && settings[defaultField];
+  if (Array.isArray(configured) && configured.length) return configured;
+  if (defaultField === "defaultTerms") return [
+    { id: "term-copyright", text: "I keep the copyright to the artwork; you own the character design.", i18n: { id: { text: "Hak cipta gambar tetap milik saya; client memiliki desain karakternya." } } },
+    { id: "term-personal-use", text: "Personal use only (OC, roleplay, fanart, display). Commercial use requires my written permission.", i18n: { id: { text: "Hanya untuk penggunaan pribadi (OC, roleplay, fanart, dipamerkan). Penggunaan komersial memerlukan izin tertulis dari saya." } } },
+    { id: "term-credit", text: "Please credit me when sharing the original artwork.", i18n: { id: { text: "Mohon cantumkan kredit untuk saya saat membagikan gambar aslinya." } } },
+    { id: "term-no-nft-ai", text: "No NFT use and no use for training AI.", i18n: { id: { text: "Tidak boleh dipakai untuk NFT atau melatih AI." } } },
+    { id: "term-no-refund", text: "No refunds once the files have been delivered.", i18n: { id: { text: "Tidak ada refund setelah file dikirim." } } },
+    { id: "term-resale-transfer", text: "Resale or transfer of ownership requires telling me first.", i18n: { id: { text: "Penjualan ulang atau pemindahan kepemilikan wajib diberitahukan kepada saya terlebih dahulu." } } },
+    { id: "term-decline-sale", text: "I may decline a sale to any buyer.", i18n: { id: { text: "Saya berhak menolak penjualan kepada siapa pun." } } },
+  ];
+  return Array.isArray(configured) ? configured : [];
 }
 function validateAdoptableList(items, label) {
   const errors = [];
@@ -3490,7 +3502,7 @@ function AdoptableDetail({ id, go, currency, lang, owner = false, setToast = () 
           </div>
           {adoptableText(item, "description", lang) && <section className="adoptable-detail-section"><h3>{lang === "id" ? "Info karakter" : "Character information"}</h3><p className="adoptable-description">{adoptableText(item, "description", lang)}</p></section>}
           {deliverables.length > 0 && <section className="adoptable-detail-section">
-            <h3>{lang === "id" ? "Yang kamu dapat" : "What you get"}</h3>
+            <h3>{lang === "id" ? "Yang didapat client" : "What you get"}</h3>
             <ul className="adoptable-check-list">{deliverables.map((entry) => <li key={entry.id}><span aria-hidden="true">✓</span><span>{adoptableListText(entry, lang)}</span></li>)}</ul>
           </section>}
           {hasNotes && <section className="adoptable-notes adoptable-detail-section">
@@ -4451,7 +4463,7 @@ function AdoptableListEditor({ label, items, fallbackItems = [], onChange, lang 
       {allowInherit && !hasOverride ? <>
         {current.length ? <ul className="adoptable-list-preview">{current.map((entry) => <li key={entry.id}>{adoptableListText(entry, lang)}</li>)}</ul> : <p className="adoptable-settings-help">{lang === "id" ? "Default global belum memiliki isi." : "No global defaults are configured yet."}</p>}
         <div className="adoptable-list-editor-actions"><Btn kind="ghost" size="sm" onClick={() => onChange(current.length ? clone(current) : [{ id: uid("adptext"), text: "", i18n: { id: { text: "" } } }])}>{lang === "id" ? "Sesuaikan untuk item ini" : "Customize for this item"}</Btn></div>
-        <small className="adoptable-settings-help">{lang === "id" ? "Item ini mengikuti default global sampai kamu membuat penyesuaian." : "This item follows the global defaults until you customize this list."}</small>
+        <small className="adoptable-settings-help">{lang === "id" ? "Item ini mengikuti default global sampai ada penyesuaian." : "This item follows the global defaults until you customize this list."}</small>
       </> : <>
         {current.map((entry, index) => <div className="adoptable-list-editor-item" key={entry.id || index}>
           <div className="adoptable-list-editor-item-head">
@@ -4517,14 +4529,14 @@ function AdoptableEditor({ initial, onCancel, onApply, lang = "en", settings = {
         <ImagePicker label="Full-size detail image" value={draft.image || ""} onChange={(value) => set("image", value)} maxDim={1800} />
         <AdoptableGalleryEditor images={Array.isArray(draft.gallery) ? draft.gallery : []} onChange={(value) => set("gallery", value)} lang={lang} />
         <ChipEditor label="Tags" items={Array.isArray(draft.tags) ? draft.tags : []} onChange={(value) => set("tags", value)} placeholder="e.g. fantasy" />
-        <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={draft.deliverables} fallbackItems={settings.defaultDeliverables} onChange={(value) => set("deliverables", value)} lang={lang} allowInherit />
+        <AdoptableListEditor label={lang === "id" ? "Yang didapat client" : "What you get"} items={draft.deliverables} fallbackItems={settings.defaultDeliverables} onChange={(value) => set("deliverables", value)} lang={lang} allowInherit />
         <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={draft.importantNotes} fallbackItems={settings.defaultNotes} onChange={(value) => set("importantNotes", value)} lang={lang} allowInherit />
         <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={draft.artistTerms} fallbackItems={settings.defaultTerms} onChange={(value) => set("artistTerms", value)} lang={lang} allowInherit />
       </div>
       {validationErrors.length > 0 && <div className="note warn" role="alert" style={{ marginTop: 12 }}><b>Cannot save this item yet:</b><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{validationErrors.map((error) => <li key={error}>{lang === "id" ? error
             .replace("Gallery can contain a maximum of 6 images.", "Galeri dapat berisi maksimal 6 gambar.")
             .replace(/Gallery image (\d+) must be a valid image URL\./, "Gambar galeri $1 harus menggunakan URL gambar yang valid.")
-            .replace("Deliverables can contain a maximum of 12 items.", "Daftar Yang kamu dapat maksimal 12 item.")
+            .replace("Deliverables can contain a maximum of 12 items.", "Daftar Yang didapat client maksimal 12 item.")
             .replace("Important notes can contain a maximum of 12 items.", "Catatan penting maksimal 12 item.")
             .replace("Artist terms can contain a maximum of 12 items.", "Ketentuan artis maksimal 12 item.")
             : error}</li>)}</ul></div>}
@@ -4615,7 +4627,7 @@ function AdoptablesPanel() {
           <h2>{lang === "id" ? "Default global" : "Global defaults"}</h2>
           <p className="adoptable-settings-help">{lang === "id" ? "Daftar ini digunakan oleh item yang tidak memiliki daftar khusus. ID item stabil dipakai untuk menjaga terjemahan saat urutan berubah." : "These lists are used by items without their own overrides. Stable item IDs keep translations attached when list order changes."}</p>
           <div className="form" style={{ marginTop: 14 }}>
-            <AdoptableListEditor label={lang === "id" ? "Yang kamu dapat" : "What you get"} items={settings.defaultDeliverables || []} onChange={(value) => updateDefault("defaultDeliverables", value)} lang={lang} />
+            <AdoptableListEditor label={lang === "id" ? "Yang didapat client" : "What you get"} items={settings.defaultDeliverables || []} onChange={(value) => updateDefault("defaultDeliverables", value)} lang={lang} />
             <AdoptableListEditor label={lang === "id" ? "Catatan penting" : "Important notes"} items={settings.defaultNotes || []} onChange={(value) => updateDefault("defaultNotes", value)} lang={lang} />
             <AdoptableListEditor label={lang === "id" ? "Ketentuan artis" : "Artist terms"} items={settings.defaultTerms || []} onChange={(value) => updateDefault("defaultTerms", value)} lang={lang} />
           </div>
